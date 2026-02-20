@@ -28,6 +28,7 @@ const showToast = (message: string, kind: 'entropy' | 'anomaly') => {
   const toast = document.createElement('div');
   toast.className = `toast ${kind}`;
   toast.dataset.cy = `${kind}-toast`;
+  toast.setAttribute('role', kind === 'entropy' ? 'alert' : 'status');
   toast.textContent = message;
   toastRegion.appendChild(toast);
 

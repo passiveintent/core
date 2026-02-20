@@ -55,7 +55,11 @@ describe('Privacy-First Intent Sandbox', () => {
     cy.wait(600);
     cy.window().then((win) => {
       const payload = win.localStorage.getItem('ui-telepathy');
-      expect(payload).to.not.equal(null);
+      expect(payload, 'ui-telepathy should be written to localStorage').to.be.a('string');
+
+      const parsed = JSON.parse(payload as string);
+      expect(parsed).to.have.property('bloomBase64');
+      expect(parsed).to.have.property('graph');
     });
   });
 });

@@ -395,6 +395,7 @@ export class MarkovGraph {
 /**
  * Minimum number of outgoing transitions a state must have before entropy or
  * divergence evaluation is considered statistically meaningful.
+ * Production value ensures statistical significance before triggering interventions.
  */
 const MIN_SAMPLE_TRANSITIONS = 3;
 

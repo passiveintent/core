@@ -15,7 +15,7 @@ const intentManager = new IntentManager({
   persistDebounceMs: 500,
   graph: {
     highEntropyThreshold: 0.8,
-    divergenceThreshold: 6
+    divergenceThreshold: 1.0
   },
   baseline
 });
@@ -52,11 +52,6 @@ routes.addEventListener('click', (event: Event) => {
   const route = button.dataset.route;
   if (!route) return;
 
-  // Only allow known routes from the baseline configuration to be displayed/tracked.
-  if (!baseline.states.includes(route)) {
-    // Ignore unexpected route values to avoid showing misleading content.
-    return;
-  }
   activeRoute.textContent = `Current Route: ${route}`;
   intentManager.track(route);
 });

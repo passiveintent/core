@@ -7,7 +7,7 @@
     "build": "tsc --project tsconfig.json --declaration --sourceMap",
     "test": "npm run build && node --test tests/intent-sdk.test.mjs",
     "test:e2e": "npm run build && cypress run",
-    "test:e2e:headed": "cypress open"
+    "test:e2e:headed": "npm run build && cypress run --headed --browser chrome"
   },
   "devDependencies": {
     "cypress": "^13.15.2",

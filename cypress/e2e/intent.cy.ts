@@ -29,9 +29,12 @@ describe('Privacy-First Intent Sandbox', () => {
     clickRoute('/return-policy');
     clickRoute('/home');
 
-    cy.get('[data-cy="entropy-toast"]', { timeout: 4000 })
-      .should('be.visible')
-      .and('contain', 'Rage Click Detected');
+    cy.window().then((win: Window & { __toastDurationMs?: number }) => {
+      const toastTimeout = (win.__toastDurationMs ?? 3500) + 500;
+      cy.get('[data-cy="entropy-toast"]', { timeout: toastTimeout })
+        .should('be.visible')
+        .and('contain', 'Rage Click Detected');
+    });
   });
 
   it('Test C: The Hesitation Discount (Trajectory Anomaly)', () => {
@@ -40,9 +43,12 @@ describe('Privacy-First Intent Sandbox', () => {
     clickRoute('/product');
     clickRoute('/help');
 
-    cy.get('[data-cy="anomaly-toast"]', { timeout: 4000 })
-      .should('be.visible')
-      .and('contain', 'Hesitation Detected');
+    cy.window().then((win: Window & { __toastDurationMs?: number }) => {
+      const toastTimeout = (win.__toastDurationMs ?? 3500) + 500;
+      cy.get('[data-cy="anomaly-toast"]', { timeout: toastTimeout })
+        .should('be.visible')
+        .and('contain', 'Hesitation Detected');
+    });
   });
 
   it('Test D: Persistence Debounce', () => {

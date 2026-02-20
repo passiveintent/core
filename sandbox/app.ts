@@ -20,6 +20,8 @@ const intentManager = new IntentManager({
   baseline
 });
 
+const TOAST_DURATION_MS = 3500;
+
 const activeRoute = document.getElementById('active-route') as HTMLDivElement;
 const routes = document.getElementById('routes') as HTMLDivElement;
 const toastRegion = document.getElementById('toast-region') as HTMLDivElement;
@@ -34,7 +36,7 @@ const showToast = (message: string, kind: 'entropy' | 'anomaly') => {
 
   window.setTimeout(() => {
     toast.remove();
-  }, 3500);
+  }, TOAST_DURATION_MS);
 };
 
 intentManager.on('high_entropy', () => {
@@ -61,4 +63,6 @@ routes.addEventListener('click', (event: Event) => {
   intentManager.track(route);
 });
 
-(window as typeof window & { __intentManager?: IntentManager }).__intentManager = intentManager;
+type SandboxWindow = typeof window & { __intentManager?: IntentManager; __toastDurationMs?: number };
+(window as SandboxWindow).__intentManager = intentManager;
+(window as SandboxWindow).__toastDurationMs = TOAST_DURATION_MS;

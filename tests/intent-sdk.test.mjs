@@ -115,7 +115,7 @@ test('IntentManager emits events, tracks seen states, and persists/restores', as
   assert.ok(highEntropyCount >= 1);
   assert.ok(anomalyCount >= 1);
 
-  await new Promise((resolve) => setTimeout(resolve, 10));
+  await manager.flushNow();
 
   const restored = new IntentManager({
     storageKey: 'intent-test',

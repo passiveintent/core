@@ -52,7 +52,7 @@ describe('Privacy-First Intent Sandbox', () => {
     clickRoute('/help');
     clickRoute('/return-policy');
 
-    cy.wait(2000);
+    cy.wait(600);
     cy.window().then((win) => {
       const payload = win.localStorage.getItem('ui-telepathy');
       expect(payload).to.not.equal(null);

@@ -23,10 +23,13 @@ describe('Privacy-First Intent Sandbox', () => {
   });
 
   it('Test B: The Rage-Click Healer (High Entropy)', () => {
+    // Create enough transitions from /home to trigger high entropy detection
     clickRoute('/home');
     clickRoute('/help');
     clickRoute('/home');
     clickRoute('/return-policy');
+    clickRoute('/home');
+    clickRoute('/search');
     clickRoute('/home');
 
     cy.get('[data-cy="entropy-toast"]', { timeout: 4000 })
@@ -35,8 +38,14 @@ describe('Privacy-First Intent Sandbox', () => {
   });
 
   it('Test C: The Hesitation Discount (Trajectory Anomaly)', () => {
+    // Build up normal behavior first
     clickRoute('/home');
     clickRoute('/search');
+    clickRoute('/product');
+    clickRoute('/cart');
+    // Then deviate to help (hesitation pattern)
+    clickRoute('/product');
+    clickRoute('/help');
     clickRoute('/product');
     clickRoute('/help');
 

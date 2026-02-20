@@ -1,10 +1,11 @@
 {
   "name": "privacy-first-intent-engine",
-  "version": "1.0.0",
+  "version": "0.1.0",
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "tsc -p tsconfig.json",
+    "build": "tsc --project tsconfig.json --declaration --sourceMap",
+    "test": "npm run build && node --test tests/intent-sdk.test.mjs",
     "test:e2e": "npm run build && cypress run",
     "test:e2e:headed": "cypress open"
   },

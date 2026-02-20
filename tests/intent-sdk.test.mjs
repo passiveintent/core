@@ -36,10 +36,12 @@ test('BloomFilter supports add/check and base64 round-trip', () => {
 
   assert.equal(bloom.check('home'), true);
   assert.equal(bloom.check('settings'), true);
+  assert.equal(bloom.check('notadded'), false);
 
   const restored = BloomFilter.fromBase64(bloom.toBase64(), { bitSize: 256, hashCount: 3 });
   assert.equal(restored.check('home'), true);
   assert.equal(restored.check('settings'), true);
+  assert.equal(restored.check('notadded'), false);
 });
 
 test('MarkovGraph calculates probabilities, entropy, and serialization', () => {

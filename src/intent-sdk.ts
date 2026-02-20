@@ -60,9 +60,15 @@ export interface MarkovGraphConfig {
   highEntropyThreshold?: number;
 
   /**
-   * Trigger anomaly when current trajectory deviates from baseline by this value.
+   * Trigger anomaly when average baseline log-likelihood (nats/step)
+   * falls below this absolute threshold.
    */
   divergenceThreshold?: number;
+
+  /**
+   * Smoothing epsilon used when baseline transition probabilities are unknown.
+   */
+  smoothingEpsilon?: number;
 }
 
 export interface IntentManagerConfig {
@@ -221,12 +227,12 @@ export class MarkovGraph {
 
   readonly highEntropyThreshold: number;
   readonly divergenceThreshold: number;
+  readonly smoothingEpsilon: number;
 
   constructor(config: MarkovGraphConfig = {}) {
     this.highEntropyThreshold = config.highEntropyThreshold ?? 0.75;
-    // Default is per-step divergence; raw sum threshold of 6 was replaced by
-    // a normalized per-step threshold of 0.5 (see evaluateTrajectory).
-    this.divergenceThreshold = config.divergenceThreshold ?? 0.5;
+    this.divergenceThreshold = config.divergenceThreshold ?? -2.0;
+    this.smoothingEpsilon = config.smoothingEpsilon ?? 0.01;
   }
 
   ensureState(state: string): number {
@@ -308,7 +314,7 @@ export class MarkovGraph {
   static logLikelihoodTrajectory(
     baseline: MarkovGraph,
     sequence: string[],
-    epsilon = 1e-6,
+    epsilon = 0.01,
   ): number {
     if (sequence.length < 2) return 0;
 
@@ -597,30 +603,23 @@ export class IntentManager {
       return;
     }
 
-    // Calculate real log-likelihood for the bounded window using the live graph.
-    let realLogLikelihood = 0;
-    for (let i = 0; i < this.recentTrajectory.length - 1; i++) {
-      const fromNode = this.recentTrajectory[i];
-      const toNode = this.recentTrajectory[i + 1];
-      const p = this.graph.getProbability(fromNode, toNode);
-      realLogLikelihood += Math.log(p > 0 ? p : 1e-6);
-    }
+    const expected = MarkovGraph.logLikelihoodTrajectory(
+      this.baseline,
+      this.recentTrajectory,
+      this.graph.smoothingEpsilon,
+    );
 
-    // Expected baseline likelihood for the same window.
-    const expected = MarkovGraph.logLikelihoodTrajectory(this.baseline, this.recentTrajectory);
-
-    // Normalize both values by the number of transitions to make divergence
-    // independent of trajectory length (per-step average log likelihood).
     const N = Math.max(1, this.recentTrajectory.length - 1);
-    const realAvg = realLogLikelihood / N;
     const expectedAvg = expected / N;
-    const divergence = Math.abs(realAvg - expectedAvg);
+    const divergence = expectedAvg;
 
-    if (divergence >= this.graph.divergenceThreshold) {
+    if (expectedAvg <= this.graph.divergenceThreshold) {
       this.emitter.emit('trajectory_anomaly', {
         stateFrom: from,
         stateTo: to,
-        realLogLikelihood,
+        // Preserved for payload compatibility; divergence detection now uses
+        // only baseline likelihood.
+        realLogLikelihood: expected,
         expectedBaselineLogLikelihood: expected,
         divergence,
       });

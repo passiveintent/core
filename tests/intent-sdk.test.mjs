@@ -99,7 +99,25 @@ test('MarkovGraph computes trajectory likelihood with smoothing for unknown tran
   assert.equal(knownOnly, Math.log(1));
 
   const unknownEdge = MarkovGraph.logLikelihoodTrajectory(baseline, ['A', 'C']);
-  assert.equal(unknownEdge, Math.log(1e-6));
+  assert.equal(unknownEdge, Math.log(0.01));
+});
+
+test('trajectory likelihood scores structured paths higher than noisy paths under baseline model', () => {
+  const baseline = new MarkovGraph();
+  baseline.incrementTransition('A', 'B');
+  baseline.incrementTransition('B', 'C');
+  baseline.incrementTransition('C', 'D');
+  baseline.incrementTransition('D', 'A');
+
+  const structured = ['A', 'B', 'C', 'D', 'A'];
+  const noisy = ['A', 'D', 'B', 'A', 'C'];
+  const nStructured = Math.max(1, structured.length - 1);
+  const nNoisy = Math.max(1, noisy.length - 1);
+
+  const structuredAvg = MarkovGraph.logLikelihoodTrajectory(baseline, structured) / nStructured;
+  const noisyAvg = MarkovGraph.logLikelihoodTrajectory(baseline, noisy) / nNoisy;
+
+  assert.ok(structuredAvg > noisyAvg);
 });
 
 test('IntentManager emits events, tracks seen states, and persists/restores', async () => {
@@ -114,7 +132,8 @@ test('IntentManager emits events, tracks seen states, and persists/restores', as
     persistDebounceMs: 5,
     graph: {
       highEntropyThreshold: 0,
-      divergenceThreshold: 0,
+      divergenceThreshold: -0.1,
+      smoothingEpsilon: 0.01,
     },
     baseline: baseline.toJSON(),
   });
@@ -156,7 +175,8 @@ test('IntentManager emits events, tracks seen states, and persists/restores', as
     storageKey: 'intent-test',
     graph: {
       highEntropyThreshold: 0,
-      divergenceThreshold: 0,
+      divergenceThreshold: -0.1,
+      smoothingEpsilon: 0.01,
     },
   });
 
@@ -221,6 +241,74 @@ test('simulateScenario is deterministic with a fixed seed', () => {
 
   assert.deepEqual(runA.sessionReplays, runB.sessionReplays);
   assert.deepEqual(runA.evaluation, runB.evaluation);
+});
+
+test('baseline trajectory sessions keep anomaly false positive rate below 0.1', () => {
+  const states = ['A', 'B', 'C', 'D', 'E', 'F'];
+  const baseline = new MarkovGraph();
+  for (let i = 0; i < states.length; i += 1) {
+    baseline.incrementTransition(states[i], states[(i + 1) % states.length]);
+  }
+
+  const manager = new IntentManager({
+    storageKey: 'fpr-baseline-check',
+    baseline: baseline.toJSON(),
+  });
+
+  let anomalies = 0;
+  const sessions = 20;
+  for (let session = 0; session < sessions; session += 1) {
+    let fired = false;
+    const off = manager.on('trajectory_anomaly', () => {
+      fired = true;
+    });
+
+    for (let step = 0; step < 40; step += 1) {
+      manager.track(states[(session + step) % states.length]);
+    }
+
+    off();
+    if (fired) anomalies += 1;
+  }
+
+  assert.ok(anomalies / sessions < 0.1);
+});
+
+test('adversarial trajectory sessions keep anomaly true positive rate above 0.8', () => {
+  const states = ['A', 'B', 'C', 'D', 'E', 'F'];
+  const baseline = new MarkovGraph();
+  for (let i = 0; i < states.length; i += 1) {
+    baseline.incrementTransition(states[i], states[(i + 1) % states.length]);
+  }
+
+  const manager = new IntentManager({
+    storageKey: 'tpr-adversarial-check',
+    baseline: baseline.toJSON(),
+  });
+
+  let rngState = 1337;
+  const nextInt = (max) => {
+    rngState = (rngState * 1664525 + 1013904223) >>> 0;
+    return rngState % max;
+  };
+
+  let detected = 0;
+  const sessions = 20;
+  for (let session = 0; session < sessions; session += 1) {
+    let fired = false;
+    const off = manager.on('trajectory_anomaly', () => {
+      fired = true;
+    });
+
+    for (let step = 0; step < 40; step += 1) {
+      manager.track(states[nextInt(states.length)]);
+    }
+
+    off();
+    if (fired) detected += 1;
+  }
+
+  assert.ok(detected / sessions > 0.8);
 });
 
 test('prediction matrix evaluation computes expected rates', () => {

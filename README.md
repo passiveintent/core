@@ -12,7 +12,7 @@ transition modeling, entropy monitoring, and trajectory anomaly detection.
   - Sparse graph representation for state transitions.
 - **Behavior signals**:
   - High-entropy navigation detection.
-  - Baseline trajectory divergence detection.
+  - Baseline trajectory likelihood threshold detection.
 - **Persistence support**:
   - Automatic `localStorage` snapshot/restore.
   - Debounced persistence to reduce UI overhead.
@@ -48,6 +48,22 @@ transition modeling, entropy monitoring, and trajectory anomaly detection.
   - `trajectory_anomaly`
 - `exportGraph()` exports transition graph JSON.
 - `flushNow()` forces immediate persistence.
+
+
+### Anomaly scoring semantics
+
+Trajectory anomaly detection now uses only baseline-model trajectory likelihood:
+
+- `expectedAvgLL = MarkovGraph.logLikelihoodTrajectory(baseline, trajectory, smoothingEpsilon) / steps`
+- Trigger when `expectedAvgLL <= divergenceThreshold`.
+
+`divergenceThreshold` is therefore an **absolute** negative log-likelihood threshold (nats per step),
+not a live-vs-baseline difference score.
+
+Default graph tuning:
+
+- `smoothingEpsilon = 0.01`
+- `divergenceThreshold = -2.0`
 
 ## Development
 

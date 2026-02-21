@@ -970,11 +970,13 @@ export class IntentManager {
    * Track a page view or custom state transition.
    */
   track(state: string): void {
-    const trackStart = this.benchmark.now();
+    // Use timer.now() for bot detection to ensure it works even when benchmark is disabled
+    const now = this.timer.now();
+    const trackStart = this.benchmark.enabled ? now : 0;
 
     // EntropyGuard: record timestamp and evaluate for bot-like patterns
     if (this.botProtection) {
-      this.recordTrackTimestamp(trackStart);
+      this.recordTrackTimestamp(now);
     }
 
     // Check if state is new to the Bloom filter (for dirty-flag tracking)

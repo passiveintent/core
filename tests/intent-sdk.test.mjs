@@ -209,6 +209,8 @@ test('IntentManager returns performance report when benchmark mode is enabled', 
   assert.ok(report.bloomCheck.count >= 1);
   assert.ok(report.memoryFootprint.stateCount >= 3);
   assert.ok(report.memoryFootprint.totalTransitions >= 2);
+
+  manager.flushNow();
 });
 
 test('simulation engine produces benchmark and evaluation outputs', () => {
@@ -278,6 +280,7 @@ test('baseline trajectory sessions keep anomaly false positive rate below 0.1', 
 
     off();
     if (fired) anomalies += 1;
+    manager.flushNow();
   }
 
   // Baseline (structured) trajectories should rarely trigger false positives
@@ -345,6 +348,7 @@ test('adversarial trajectory sessions keep anomaly true positive rate above 0.8'
 
     off();
     if (fired) detected += 1;
+    manager.flushNow();
   }
 
   // Random navigation should trigger anomalies with high probability when calibrated.
@@ -382,6 +386,7 @@ test('EntropyGuard: botProtection:false never suppresses events regardless of ca
 
   // highEntropyThreshold=0 means any entropy fires; events must flow through.
   assert.ok(eventCount > 0, `Expected high_entropy events with botProtection:false, got ${eventCount}`);
+  manager.flushNow();
 });
 
 test('EntropyGuard: botProtection:true suppresses high_entropy and trajectory_anomaly for rapid bot-like calls', () => {
@@ -407,6 +412,7 @@ test('EntropyGuard: botProtection:true suppresses high_entropy and trajectory_an
 
   assert.equal(entropyCount, 0, `Expected 0 entropy events after bot flag set, got ${entropyCount}`);
   assert.equal(anomalyCount, 0, `Expected 0 anomaly events after bot flag set, got ${anomalyCount}`);
+  manager.flushNow();
 });
 
 test('EntropyGuard: state_change events are still emitted for suspected bots', () => {
@@ -430,6 +436,7 @@ test('EntropyGuard: state_change events are still emitted for suspected bots', (
   assert.equal(changes[0].to, 'X');
   assert.equal(changes[1].from, 'X');
   assert.equal(changes[1].to, 'Y');
+  manager.flushNow();
 });
 
 test('EntropyGuard: Bloom filter and Markov graph still update when bot is suspected', () => {
@@ -450,6 +457,7 @@ test('EntropyGuard: Bloom filter and Markov graph still update when bot is suspe
   const graph = manager.exportGraph();
   assert.ok(graph.states.includes('P'), 'Expected P in graph states');
   assert.ok(graph.states.includes('Q'), 'Expected Q in graph states');
+  manager.flushNow();
 });
 
 test('EntropyGuard: events flow freely until bot threshold is crossed', () => {
@@ -489,6 +497,8 @@ test('EntropyGuard: events flow freely until bot threshold is crossed', () => {
   }
 
   assert.equal(suppressedCount, 0, `With botProtection:true, expected 0 entropy events; got ${suppressedCount}`);
+  withProtection.flushNow();
+  withBot.flushNow();
 });
 
 test('EntropyGuard: bot flag clears automatically after sufficient human-paced interactions', () => {
@@ -504,7 +514,6 @@ test('EntropyGuard: bot flag clears automatically after sufficient human-paced i
       storageKey: 'bot-recovery-test',
       graph: { highEntropyThreshold: 0 },
       botProtection: true,
-      benchmark: { enabled: true }, // required: benchmark.now() delegates to performance.now() only when enabled
     });
 
     let eventCount = 0;
@@ -531,6 +540,7 @@ test('EntropyGuard: bot flag clears automatically after sufficient human-paced i
 
     assert.equal(countAfterFastPhase, 0, 'Expected no events while bot flag was active');
     assert.ok(eventCount > 0, `Expected high_entropy events after bot flag cleared, got ${eventCount}`);
+    manager.flushNow();
   } finally {
     globalThis.performance.now = originalNow;
   }

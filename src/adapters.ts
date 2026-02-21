@@ -64,6 +64,7 @@ export type TimerHandle = any;
 export interface TimerAdapter {
   setTimeout(fn: () => void, delay: number): TimerHandle;
   clearTimeout(id: TimerHandle): void;
+  now(): number;
 }
 
 /**
@@ -83,6 +84,13 @@ export class BrowserTimerAdapter implements TimerAdapter {
   clearTimeout(id: TimerHandle): void {
     if (typeof globalThis.clearTimeout !== 'function') return;
     globalThis.clearTimeout(id);
+  }
+
+  now(): number {
+    if (typeof globalThis.performance !== 'undefined' && typeof globalThis.performance.now === 'function') {
+      return globalThis.performance.now();
+    }
+    return Date.now();
   }
 }
 

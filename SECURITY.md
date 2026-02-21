@@ -22,7 +22,7 @@ A public issue immediately discloses the flaw to every user of the repository â€
 
 Send an email to:
 
-**security@privacyfirstintentengine.dev** *(replace with your real address)*
+**purushpsm147@yahoo.co.in** 
 
 Please include all of the following in your report:
 

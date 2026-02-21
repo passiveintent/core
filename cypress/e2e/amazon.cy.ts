@@ -78,9 +78,9 @@ describe('Amazon Clone - Intent Engine Integration', () => {
   });
 
   describe('Rage Click Detection (High Entropy)', () => {
-    it('should track erratic navigation patterns without false positives', () => {
-      // The intent engine is calibrated to avoid false positives
-      // This test verifies that erratic navigation is tracked properly
+    it('should track rapid navigation transitions without triggering a false-positive entropy toast', () => {
+      // A simple back-and-forth pattern between two states has low entropy (predictable),
+      // so the engine should NOT fire high_entropy even after many transitions.
       cy.get('[data-cy="view-home"]').should('be.visible');
       
       // Extended rapid navigation back and forth (simulating confusion/frustration)
@@ -91,13 +91,13 @@ describe('Amazon Clone - Intent Engine Integration', () => {
         cy.get('[data-cy="logo"]').click();
       }
       
-      // Verify navigation is being tracked
+      // Verify all transitions are being counted
       cy.get('[data-cy="debug-transitions"]').invoke('text').then((text) => {
         expect(parseInt(text)).to.be.greaterThan(12);
       });
       
-      // The engine may or may not trigger entropy toast based on calibration
-      // This is expected behavior - avoiding false positives is important
+      // A predictable back-and-forth pattern must not trigger a false-positive entropy alert
+      cy.get('[data-cy="entropy-toast"]').should('not.exist');
     });
 
     it('should navigate between categories without errors', () => {
@@ -152,11 +152,23 @@ describe('Amazon Clone - Intent Engine Integration', () => {
       
       cy.get('[data-cy="nav-cart"]').click();
       cy.get('[data-cy="view-cart"]').should('be.visible');
+
+      // Even more hesitation to trigger the anomaly
+      for (let i = 0; i < 10; i++) {
+        cy.get('[data-cy="nav-customer-service"]').click();
+        cy.get('[data-cy="view-help"]').should('be.visible');
+        
+        cy.get('[data-cy="nav-cart"]').click();
+        cy.get('[data-cy="view-cart"]').should('be.visible');
+      }
       
       // Check for anomaly toast or confirm transitions tracked
       cy.get('[data-cy="debug-transitions"]').invoke('text').then((text) => {
         expect(parseInt(text)).to.be.greaterThan(7);
       });
+      
+      // Verify that the anomaly toast appears
+      cy.get('[data-cy="anomaly-toast"]').should('be.visible');
     });
 
     it('should track product browsing behavior correctly', () => {

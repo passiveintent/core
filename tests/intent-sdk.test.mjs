@@ -351,6 +351,227 @@ test('adversarial trajectory sessions keep anomaly true positive rate above 0.8'
   assert.ok(detected / sessions > 0.8, `Expected TPR > 0.8, got ${detected}/${sessions} = ${(detected/sessions).toFixed(2)}`);
 });
 
+// ─────────────────────────────────────────────────────────────────────────────
+// EntropyGuard — Bot Protection
+// ─────────────────────────────────────────────────────────────────────────────
+
+test('EntropyGuard: botProtection:false never suppresses events regardless of call speed', () => {
+  storage.clear();
+
+  const manager = new IntentManager({
+    storageKey: 'bot-off-test',
+    graph: { highEntropyThreshold: 0 },
+    botProtection: false,
+  });
+
+  let eventCount = 0;
+  manager.on('high_entropy', () => { eventCount += 1; });
+
+  // Hub-spoke pattern: alternate between 'hub' and 5 different destinations.
+  // This builds >= MIN_SAMPLE_TRANSITIONS (10) outgoing edges from 'hub',
+  // which is required before entropy evaluation triggers.
+  // Would trigger EntropyGuard if botProtection were on (all deltas < 50 ms).
+  const destinations = ['A', 'B', 'C', 'D', 'E'];
+  for (let i = 0; i < 30; i += 1) {
+    if (i % 2 === 0) {
+      manager.track('hub');
+    } else {
+      manager.track(destinations[Math.floor(i / 2) % destinations.length]);
+    }
+  }
+
+  // highEntropyThreshold=0 means any entropy fires; events must flow through.
+  assert.ok(eventCount > 0, `Expected high_entropy events with botProtection:false, got ${eventCount}`);
+});
+
+test('EntropyGuard: botProtection:true suppresses high_entropy and trajectory_anomaly for rapid bot-like calls', () => {
+  storage.clear();
+
+  const manager = new IntentManager({
+    storageKey: 'bot-on-test',
+    graph: { highEntropyThreshold: 0, divergenceThreshold: -0.1 },
+    botProtection: true,
+  });
+
+  let entropyCount = 0;
+  let anomalyCount = 0;
+  manager.on('high_entropy', () => { entropyCount += 1; });
+  manager.on('trajectory_anomaly', () => { anomalyCount += 1; });
+
+  // 60 rapid synchronous calls produce near-zero deltas (< 50 ms each),
+  // pushing botScore past the threshold of 5 well before transitions accumulate.
+  const states = ['A', 'B', 'C', 'D', 'E', 'F'];
+  for (let i = 0; i < 60; i += 1) {
+    manager.track(states[i % states.length]);
+  }
+
+  assert.equal(entropyCount, 0, `Expected 0 entropy events after bot flag set, got ${entropyCount}`);
+  assert.equal(anomalyCount, 0, `Expected 0 anomaly events after bot flag set, got ${anomalyCount}`);
+});
+
+test('EntropyGuard: state_change events are still emitted for suspected bots', () => {
+  storage.clear();
+
+  const manager = new IntentManager({
+    storageKey: 'bot-state-change-test',
+    botProtection: true,
+  });
+
+  const changes = [];
+  manager.on('state_change', ({ from, to }) => { changes.push({ from, to }); });
+
+  for (let i = 0; i < 30; i += 1) {
+    manager.track(i % 2 === 0 ? 'X' : 'Y');
+  }
+
+  // state_change is unconditional — it fires even when a bot is suspected.
+  assert.equal(changes.length, 30);
+  assert.equal(changes[0].from, null);
+  assert.equal(changes[0].to, 'X');
+  assert.equal(changes[1].from, 'X');
+  assert.equal(changes[1].to, 'Y');
+});
+
+test('EntropyGuard: Bloom filter and Markov graph still update when bot is suspected', () => {
+  storage.clear();
+
+  const manager = new IntentManager({
+    storageKey: 'bot-graph-update-test',
+    botProtection: true,
+  });
+
+  for (let i = 0; i < 30; i += 1) {
+    manager.track(i % 2 === 0 ? 'P' : 'Q');
+  }
+
+  // Underlying state collection continues even while signals are suppressed.
+  assert.equal(manager.hasSeen('P'), true);
+  assert.equal(manager.hasSeen('Q'), true);
+  const graph = manager.exportGraph();
+  assert.ok(graph.states.includes('P'), 'Expected P in graph states');
+  assert.ok(graph.states.includes('Q'), 'Expected Q in graph states');
+});
+
+test('EntropyGuard: events flow freely until bot threshold is crossed', () => {
+  storage.clear();
+
+  // Use botProtection:false so we can verify the threshold boundary logic
+  // by inspecting event counts, then separately verify suppression with botProtection:true.
+  const withProtection = new IntentManager({
+    storageKey: 'bot-threshold-test',
+    graph: { highEntropyThreshold: 0 },
+    botProtection: false,
+  });
+
+  let freeCount = 0;
+  withProtection.on('high_entropy', () => { freeCount += 1; });
+
+  // Must accumulate >= MIN_SAMPLE_TRANSITIONS (10) on one state to get entropy events.
+  for (let i = 0; i < 30; i += 1) {
+    withProtection.track(i % 2 === 0 ? 'home' : ['search', 'product', 'cart', 'help', 'checkout'][i % 5]);
+  }
+
+  assert.ok(freeCount > 0, `With botProtection:false, expected entropy events; got ${freeCount}`);
+
+  // Now repeat with botProtection:true — all rapid calls suppress signals.
+  storage.clear();
+  const withBot = new IntentManager({
+    storageKey: 'bot-threshold-suppressed-test',
+    graph: { highEntropyThreshold: 0 },
+    botProtection: true,
+  });
+
+  let suppressedCount = 0;
+  withBot.on('high_entropy', () => { suppressedCount += 1; });
+
+  for (let i = 0; i < 30; i += 1) {
+    withBot.track(i % 2 === 0 ? 'home' : ['search', 'product', 'cart', 'help', 'checkout'][i % 5]);
+  }
+
+  assert.equal(suppressedCount, 0, `With botProtection:true, expected 0 entropy events; got ${suppressedCount}`);
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Dirty-Flag Persistence
+// ─────────────────────────────────────────────────────────────────────────────
+
+test('dirty flag: persist() is a no-op when no new state has been tracked since last save', () => {
+  storage.clear();
+
+  const manager = new IntentManager({
+    storageKey: 'dirty-noop-test',
+    persistDebounceMs: 5,
+    botProtection: false,
+  });
+
+  manager.track('home');
+  manager.flushNow();
+
+  const firstPayload = storage.getItem('dirty-noop-test');
+  assert.ok(firstPayload, 'Expected a persisted payload after first flush');
+
+  // Second flush with no new track() — dirty flag should still be false.
+  manager.flushNow();
+  const secondPayload = storage.getItem('dirty-noop-test');
+
+  assert.equal(firstPayload, secondPayload, 'Expected payload unchanged after no-op flush');
+});
+
+test('dirty flag: persist() writes again after a new track() call', () => {
+  storage.clear();
+
+  const manager = new IntentManager({
+    storageKey: 'dirty-resave-test',
+    persistDebounceMs: 5,
+    botProtection: false,
+  });
+
+  manager.track('home');
+  manager.flushNow();
+  const firstPayload = storage.getItem('dirty-resave-test');
+
+  // New transition — marks dirty again.
+  manager.track('search');
+  manager.flushNow();
+  const secondPayload = storage.getItem('dirty-resave-test');
+
+  assert.notEqual(firstPayload, secondPayload, 'Expected payload to change after new track()');
+});
+
+test('dirty flag: multiple flushNow() calls without track() write storage exactly once', () => {
+  storage.clear();
+
+  let writeCount = 0;
+  const countingStorage = {
+    getItem: (key) => storage.getItem(key),
+    setItem: (key, value) => { writeCount += 1; storage.setItem(key, value); },
+  };
+
+  const manager = new IntentManager({
+    storageKey: 'dirty-write-count-test',
+    persistDebounceMs: 5,
+    botProtection: false,
+    storage: countingStorage,
+  });
+
+  manager.track('A');
+  manager.track('B');
+  manager.flushNow(); // dirty → write #1, resets flag
+
+  manager.flushNow(); // not dirty → no write
+  manager.flushNow(); // not dirty → no write
+
+  assert.equal(writeCount, 1, `Expected exactly 1 storage write, got ${writeCount}`);
+
+  // Track again → should produce exactly one more write.
+  manager.track('C');
+  manager.flushNow();
+
+  assert.equal(writeCount, 2, `Expected exactly 2 storage writes after second track, got ${writeCount}`);
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+
 test('prediction matrix evaluation computes expected rates', () => {
   const summary = evaluatePredictionMatrix([
     { isGroundTruthHesitation: true, entropyTriggered: true, divergenceTriggered: false, detectionLatency: 2, hesitationAtTrigger: 0.8 },

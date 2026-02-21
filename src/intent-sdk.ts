@@ -930,7 +930,6 @@ export class IntentManager {
 
   /* EntropyGuard: bot detection state */
   private isSuspectedBot = false;
-  private botScore = 0;
   /** Fixed-size circular buffer for track() timestamps (avoids allocations) */
   private readonly trackTimestamps: number[] = new Array(BOT_DETECTION_WINDOW).fill(0);
   /** Current index in the circular buffer */
@@ -1216,30 +1215,33 @@ export class IntentManager {
       return;
     }
 
-    // Already flagged as bot, no need to re-evaluate
-    if (this.isSuspectedBot) {
-      return;
-    }
-
+    // Always re-evaluate: the sliding window naturally decays old bot signals
+    // as new human-like timestamps fill the buffer, allowing recovery from
+    // false positives (e.g. a fast-navigating-then-slowing-down user).
     this.evaluateBotPatterns();
   }
 
   /**
-   * Evaluate timing patterns for bot-like behavior.
-   * Increments botScore for impossibly fast clicks or robotic (low variance) patterns.
+   * Evaluate timing patterns for bot-like behavior using a pure
+   * sliding-window score computed fresh from the current circular buffer.
+   *
+   * Because the score is recalculated on every call rather than accumulated
+   * into a permanent counter, old bot-like timestamps naturally age out as
+   * new human-paced interactions fill the buffer.  This prevents false
+   * positives from permanently silencing events for users who navigate
+   * quickly at first and then slow to normal browsing speed.
    */
   private evaluateBotPatterns(): void {
     const count = this.trackTimestampCount;
     if (count < 2) return;
 
-    // Calculate deltas between consecutive timestamps
-    // We read from the circular buffer in chronological order
-    let fastClickCount = 0;
-    let sumDelta = 0;
-    let sumDeltaSq = 0;
+    // ── Compute a fresh window score from the current buffer contents ──
+    let windowBotScore = 0;
+    let mean = 0;
+    let m2 = 0;
     let deltaCount = 0;
 
-    // Find the oldest timestamp index for chronological traversal
+    // Oldest entry in chronological order.
     const oldestIndex = count < BOT_DETECTION_WINDOW
       ? 0
       : this.trackTimestampIndex; // wraps around when buffer is full
@@ -1249,40 +1251,35 @@ export class IntentManager {
       const nextIdx = (oldestIndex + i + 1) % BOT_DETECTION_WINDOW;
       const delta = this.trackTimestamps[nextIdx] - this.trackTimestamps[currIdx];
 
-      // Check for impossibly fast delta
+      // Each impossibly-fast delta scores 1 point.
       if (delta >= 0 && delta < BOT_MIN_DELTA_MS) {
-        fastClickCount++;
+        windowBotScore++;
       }
 
-      // Accumulate for variance calculation (only positive deltas)
+      // Accumulate for variance calculation (only positive deltas).
+      // Using Welford's online algorithm for numerical stability.
       if (delta > 0) {
-        sumDelta += delta;
-        sumDeltaSq += delta * delta;
         deltaCount++;
+        const deltaFromMean = delta - mean;
+        mean += deltaFromMean / deltaCount;
+        const deltaFromNewMean = delta - mean;
+        m2 += deltaFromMean * deltaFromNewMean;
       }
     }
 
-    // Increment botScore for fast clicks
-    if (fastClickCount > 0) {
-      this.botScore += fastClickCount;
-    }
-
-    // Calculate variance of deltas (robotic clicking detection)
-    // Variance = E[X²] - E[X]² (using Welford-like approach)
+    // Robotic (extremely low variance) timing scores 1 additional point.
+    // Variance = M2 / N (population variance)
     if (deltaCount >= 3) {
-      const mean = sumDelta / deltaCount;
-      const variance = (sumDeltaSq / deltaCount) - (mean * mean);
-
-      // Extremely low variance indicates robotic/automated clicking
+      const variance = m2 / deltaCount;
       if (variance >= 0 && variance < BOT_MAX_VARIANCE) {
-        this.botScore++;
+        windowBotScore++;
       }
     }
 
-    // Check if we've exceeded the bot threshold
-    if (this.botScore >= BOT_SCORE_THRESHOLD) {
-      this.isSuspectedBot = true;
-    }
+    // Window-bounded decision: flag OR recover based solely on recent behavior.
+    // As human-paced calls replace fast ones in the circular buffer the score
+    // drops automatically, clearing the flag without any explicit timer.
+    this.isSuspectedBot = windowBotScore >= BOT_SCORE_THRESHOLD;
   }
 
   private restore(graphConfig: MarkovGraphConfig): { bloom: BloomFilter; graph: MarkovGraph } | null {

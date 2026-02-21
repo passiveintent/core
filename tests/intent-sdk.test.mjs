@@ -491,6 +491,51 @@ test('EntropyGuard: events flow freely until bot threshold is crossed', () => {
   assert.equal(suppressedCount, 0, `With botProtection:true, expected 0 entropy events; got ${suppressedCount}`);
 });
 
+test('EntropyGuard: bot flag clears automatically after sufficient human-paced interactions', () => {
+  storage.clear();
+
+  // Control performance.now() so we can simulate fast then slow timing.
+  let mockTime = 0;
+  const originalNow = globalThis.performance.now;
+  globalThis.performance.now = () => mockTime;
+
+  try {
+    const manager = new IntentManager({
+      storageKey: 'bot-recovery-test',
+      graph: { highEntropyThreshold: 0 },
+      botProtection: true,
+      benchmark: { enabled: true }, // required: benchmark.now() delegates to performance.now() only when enabled
+    });
+
+    let eventCount = 0;
+    manager.on('high_entropy', () => { eventCount += 1; });
+
+    // Phase 1 — rapid calls (0 ms delta): all deltas < BOT_MIN_DELTA_MS (50 ms).
+    // After 12 calls the circular buffer (size 10) is full of zero-delta entries,
+    // so windowBotScore ≥ BOT_SCORE_THRESHOLD and isSuspectedBot becomes true.
+    // Hub-spoke pattern so hub accumulates outgoing transitions.
+    const destinations = ['A', 'B', 'C', 'D', 'E'];
+    for (let i = 0; i < 12; i++) {
+      manager.track(i % 2 === 0 ? 'hub' : destinations[Math.floor(i / 2) % destinations.length]);
+    }
+    const countAfterFastPhase = eventCount;
+
+    // Phase 2 — human-paced calls: 200 ms between each.
+    // BOT_DETECTION_WINDOW = 10; after 10 slow calls, all 10 buffer slots hold
+    // 200 ms deltas, so windowBotScore drops to 0 and isSuspectedBot resets.
+    // These calls also push hub above MIN_SAMPLE_TRANSITIONS (10) if needed.
+    for (let i = 0; i < 15; i++) {
+      mockTime += 200;
+      manager.track(i % 2 === 0 ? 'hub' : destinations[i % destinations.length]);
+    }
+
+    assert.equal(countAfterFastPhase, 0, 'Expected no events while bot flag was active');
+    assert.ok(eventCount > 0, `Expected high_entropy events after bot flag cleared, got ${eventCount}`);
+  } finally {
+    globalThis.performance.now = originalNow;
+  }
+});
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Dirty-Flag Persistence
 // ─────────────────────────────────────────────────────────────────────────────

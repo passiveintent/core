@@ -1,4 +1,12 @@
+/**
+ * Copyright (c) 2026 Purushottam <purushpsm147@yahoo.co.in>
+ * 
+ * This source code is licensed under the AGPL-3.0-only license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
+
 import { IntentManager, MarkovGraph } from './intent-sdk.js';
+import { MemoryStorageAdapter } from './adapters.js';
 import type { PerformanceReport } from './performance-instrumentation.js';
 
 interface BaselineCalibration {
@@ -327,6 +335,7 @@ export class BenchmarkSimulationEngine {
       baseline: baselineBuilder.toJSON(),
       persistDebounceMs: 60_000,
       benchmark: { enabled: true },
+      botProtection: false, // Disable bot detection for deterministic simulations
       graph: {
         divergenceThreshold: 3.5,
         baselineMeanLL: calibrated.mean,
@@ -336,7 +345,10 @@ export class BenchmarkSimulationEngine {
 
     const startedAt = performance.now();
     // Use a fresh manager for initial memory measurement
-    const firstManager = new IntentManager(managerConfig);
+    const firstManager = new IntentManager({
+      ...managerConfig,
+      storage: new MemoryStorageAdapter(),
+    });
     const startMemory = firstManager.getPerformanceReport().memoryFootprint.serializedGraphBytes;
     let lastPerformanceReport = firstManager.getPerformanceReport();
 
@@ -344,7 +356,10 @@ export class BenchmarkSimulationEngine {
       // Create a fresh IntentManager per session for clean evaluation.
       // This ensures entropy detection starts fresh (no cross-session pollution)
       // and divergence detection uses the fixed baseline properly.
-      const manager = new IntentManager(managerConfig);
+      const manager = new IntentManager({
+        ...managerConfig,
+        storage: new MemoryStorageAdapter(),
+      });
 
       const entropyValues: number[] = [];
       const divergenceValues: number[] = [];
@@ -392,6 +407,7 @@ export class BenchmarkSimulationEngine {
 
       offEntropy();
       offDivergence();
+      manager.flushNow();
 
       sessionResults.push({
         isGroundTruthHesitation,

@@ -1,4 +1,11 @@
 /**
+ * Copyright (c) 2026 Purushottam <purushpsm147@yahoo.co.in>
+ * 
+ * This source code is licensed under the AGPL-3.0-only license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
+
+/**
  * Privacy-First Intent Engine ("UI Telepathy")
  * --------------------------------------------------------
  * Goals:
@@ -140,6 +147,14 @@ export interface IntentManagerConfig {
    * If not provided, errors are silently swallowed to avoid crashing the main thread.
    */
   onError?: (err: Error) => void;
+
+  /**
+   * Enable EntropyGuard bot detection.
+   * When enabled, tracks timing patterns to detect automated/bot traffic
+   * and silently disables entropy/trajectory evaluation for suspected bots.
+   * Default: true. Set to false for E2E testing environments (e.g., Cypress).
+   */
+  botProtection?: boolean;
 }
 
 /**
@@ -818,6 +833,33 @@ const MAX_WINDOW_LENGTH = 32;
  */
 const MIN_SAMPLE_TRANSITIONS = 10;
 
+/* ============================================ */
+/* EntropyGuard Constants                       */
+/* ============================================ */
+
+/**
+ * Number of recent track() timestamps to keep for bot detection.
+ * Uses a fixed-size circular buffer to avoid allocations.
+ */
+const BOT_DETECTION_WINDOW = 10;
+
+/**
+ * Minimum time delta (ms) between track() calls.
+ * Deltas below this are considered "impossibly fast" for humans.
+ */
+const BOT_MIN_DELTA_MS = 50;
+
+/**
+ * Maximum variance threshold for delta timings.
+ * Robotic clicking tends to have extremely low variance.
+ */
+const BOT_MAX_VARIANCE = 100;
+
+/**
+ * Score threshold at which we flag the session as a suspected bot.
+ */
+const BOT_SCORE_THRESHOLD = 5;
+
 type Listener<T> = (payload: T) => void;
 
 /**
@@ -877,10 +919,23 @@ export class IntentManager {
   private readonly storage: StorageAdapter;
   private readonly timer: TimerAdapter;
   private readonly onError?: (err: Error) => void;
+  private readonly botProtection: boolean;
 
   private persistTimer: TimerHandle | null = null;
   private previousState: string | null = null;
   private recentTrajectory: string[] = [];
+
+  /* Dirty-flag persistence: only persist when state actually changed */
+  private isDirty = false;
+
+  /* EntropyGuard: bot detection state */
+  private isSuspectedBot = false;
+  /** Fixed-size circular buffer for track() timestamps (avoids allocations) */
+  private readonly trackTimestamps: number[] = new Array(BOT_DETECTION_WINDOW).fill(0);
+  /** Current index in the circular buffer */
+  private trackTimestampIndex = 0;
+  /** Number of timestamps recorded (up to BOT_DETECTION_WINDOW) */
+  private trackTimestampCount = 0;
 
   constructor(config: IntentManagerConfig = {}) {
     this.storageKey = config.storageKey ?? 'ui-telepathy';
@@ -889,6 +944,7 @@ export class IntentManager {
     this.storage = config.storage ?? new BrowserStorageAdapter();
     this.timer = config.timer ?? new BrowserTimerAdapter();
     this.onError = config.onError;
+    this.botProtection = config.botProtection ?? true;
 
     const graphConfig: MarkovGraphConfig = {
       ...config.graph,
@@ -914,7 +970,17 @@ export class IntentManager {
    * Track a page view or custom state transition.
    */
   track(state: string): void {
-    const trackStart = this.benchmark.now();
+    // Use timer.now() for bot detection to ensure it works even when benchmark is disabled
+    const now = this.timer.now();
+    const trackStart = this.benchmark.enabled ? now : 0;
+
+    // EntropyGuard: record timestamp and evaluate for bot-like patterns
+    if (this.botProtection) {
+      this.recordTrackTimestamp(now);
+    }
+
+    // Check if state is new to the Bloom filter (for dirty-flag tracking)
+    const isNewToBloom = !this.bloom.check(state);
 
     const bloomAddStart = this.benchmark.now();
     this.bloom.add(state);
@@ -932,8 +998,14 @@ export class IntentManager {
       this.graph.incrementTransition(from, state);
       this.benchmark.record('incrementTransition', incrementStart);
 
+      // Mark dirty: new transition was added
+      this.isDirty = true;
+
       this.evaluateEntropy(state);
       this.evaluateTrajectory(from, state);
+    } else if (isNewToBloom) {
+      // Mark dirty: Bloom filter was updated with a new state
+      this.isDirty = true;
     }
 
     this.emitter.emit('state_change', { from, to: state });
@@ -984,6 +1056,12 @@ export class IntentManager {
   private evaluateEntropy(state: string): void {
     const start = this.benchmark.now();
 
+    // EntropyGuard: silently skip for suspected bots
+    if (this.isSuspectedBot) {
+      this.benchmark.record('entropyComputation', start);
+      return;
+    }
+
     // Skip if there are fewer than MIN_SAMPLE_TRANSITIONS outgoing transitions (too small a sample).
     if (this.graph.rowTotal(state) < MIN_SAMPLE_TRANSITIONS) {
       this.benchmark.record('entropyComputation', start);
@@ -1006,6 +1084,12 @@ export class IntentManager {
 
   private evaluateTrajectory(from: string, to: string): void {
     const start = this.benchmark.now();
+
+    // EntropyGuard: silently skip for suspected bots
+    if (this.isSuspectedBot) {
+      this.benchmark.record('divergenceComputation', start);
+      return;
+    }
 
     // Stabilization gate: wait until window reaches minimum size for statistical stability.
     if (this.recentTrajectory.length < MIN_WINDOW_LENGTH) {
@@ -1075,6 +1159,11 @@ export class IntentManager {
   }
 
   private persist(): void {
+    // Dirty-flag optimization: skip persistence if nothing changed
+    if (!this.isDirty) {
+      return;
+    }
+
     // LFU prune before serializing — keeps storage bounded.
     this.graph.prune();
 
@@ -1096,6 +1185,8 @@ export class IntentManager {
     };
     try {
       this.storage.setItem(this.storageKey, JSON.stringify(payload));
+      // Reset dirty flag after successful save
+      this.isDirty = false;
     } catch (err) {
       // QuotaExceededError, SecurityError, or Private Browsing restrictions.
       // Surface through the optional error callback; never crash the main thread.
@@ -1103,6 +1194,94 @@ export class IntentManager {
         this.onError(err);
       }
     }
+  }
+
+  /* ================================================================== */
+  /*  EntropyGuard: Bot Detection                                        */
+  /* ================================================================== */
+
+  /**
+   * Record a track() timestamp and evaluate for bot-like patterns.
+   * Uses a fixed-size circular buffer to avoid allocations in the hot path.
+   */
+  private recordTrackTimestamp(timestamp: number): void {
+    // Store timestamp in circular buffer
+    this.trackTimestamps[this.trackTimestampIndex] = timestamp;
+    this.trackTimestampIndex = (this.trackTimestampIndex + 1) % BOT_DETECTION_WINDOW;
+    if (this.trackTimestampCount < BOT_DETECTION_WINDOW) {
+      this.trackTimestampCount++;
+    }
+
+    // Need at least 2 timestamps to calculate a delta
+    if (this.trackTimestampCount < 2) {
+      return;
+    }
+
+    // Always re-evaluate: the sliding window naturally decays old bot signals
+    // as new human-like timestamps fill the buffer, allowing recovery from
+    // false positives (e.g. a fast-navigating-then-slowing-down user).
+    this.evaluateBotPatterns();
+  }
+
+  /**
+   * Evaluate timing patterns for bot-like behavior using a pure
+   * sliding-window score computed fresh from the current circular buffer.
+   *
+   * Because the score is recalculated on every call rather than accumulated
+   * into a permanent counter, old bot-like timestamps naturally age out as
+   * new human-paced interactions fill the buffer.  This prevents false
+   * positives from permanently silencing events for users who navigate
+   * quickly at first and then slow to normal browsing speed.
+   */
+  private evaluateBotPatterns(): void {
+    const count = this.trackTimestampCount;
+    if (count < 2) return;
+
+    // ── Compute a fresh window score from the current buffer contents ──
+    let windowBotScore = 0;
+    let mean = 0;
+    let m2 = 0;
+    let deltaCount = 0;
+
+    // Oldest entry in chronological order.
+    const oldestIndex = count < BOT_DETECTION_WINDOW
+      ? 0
+      : this.trackTimestampIndex; // wraps around when buffer is full
+
+    for (let i = 0; i < count - 1; i++) {
+      const currIdx = (oldestIndex + i) % BOT_DETECTION_WINDOW;
+      const nextIdx = (oldestIndex + i + 1) % BOT_DETECTION_WINDOW;
+      const delta = this.trackTimestamps[nextIdx] - this.trackTimestamps[currIdx];
+
+      // Each impossibly-fast delta scores 1 point.
+      if (delta >= 0 && delta < BOT_MIN_DELTA_MS) {
+        windowBotScore++;
+      }
+
+      // Accumulate for variance calculation (only positive deltas).
+      // Using Welford's online algorithm for numerical stability.
+      if (delta > 0) {
+        deltaCount++;
+        const deltaFromMean = delta - mean;
+        mean += deltaFromMean / deltaCount;
+        const deltaFromNewMean = delta - mean;
+        m2 += deltaFromMean * deltaFromNewMean;
+      }
+    }
+
+    // Robotic (extremely low variance) timing scores 1 additional point.
+    // Variance = M2 / N (population variance)
+    if (deltaCount >= 3) {
+      const variance = m2 / deltaCount;
+      if (variance >= 0 && variance < BOT_MAX_VARIANCE) {
+        windowBotScore++;
+      }
+    }
+
+    // Window-bounded decision: flag OR recover based solely on recent behavior.
+    // As human-paced calls replace fast ones in the circular buffer the score
+    // drops automatically, clearing the flag without any explicit timer.
+    this.isSuspectedBot = windowBotScore >= BOT_SCORE_THRESHOLD;
   }
 
   private restore(graphConfig: MarkovGraphConfig): { bloom: BloomFilter; graph: MarkovGraph } | null {

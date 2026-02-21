@@ -120,6 +120,31 @@ describe('Amazon Clone - Intent Engine Integration', () => {
         expect(parseInt(text)).to.be.greaterThan(4);
       });
     });
+
+    it('should fire the entropy toast when a user scatters navigation across many destinations from home', () => {
+      // High entropy requires a SINGLE state to fan out to MANY different destinations.
+      // Cycling home → [search, cart, help, product] × 3 produces 12 outgoing transitions
+      // from /home across 4 unique destinations → normalized entropy ≈ 1.0, well above
+      // the 0.75 threshold.  This is the positive-case complement of the false-positive test.
+      cy.get('[data-cy="view-home"]').should('be.visible');
+
+      for (let i = 0; i < 3; i++) {
+        cy.get('[data-cy="search-btn"]').click();
+        cy.get('[data-cy="logo"]').click();
+
+        cy.get('[data-cy="nav-cart"]').click();
+        cy.get('[data-cy="logo"]').click();
+
+        cy.get('[data-cy="nav-customer-service"]').click();
+        cy.get('[data-cy="logo"]').click();
+
+        cy.get('[data-cy="product-card-1"]').click();
+        cy.get('[data-cy="logo"]').click();
+      }
+
+      // The entropy toast must appear — the engine detected genuinely unpredictable navigation.
+      cy.get('[data-cy="entropy-toast"]').should('be.visible');
+    });
   });
 
   describe('Hesitation Detection (Trajectory Anomaly)', () => {
@@ -269,6 +294,48 @@ describe('Amazon Clone - Intent Engine Integration', () => {
       // Revisiting doesn't increase count
       cy.get('[data-cy="logo"]').click();
       cy.get('[data-cy="debug-states"]').should('contain', '3');
+    });
+
+    it('should restore Bloom filter and graph state from localStorage after a page reload', () => {
+      // Navigate through several states to build a known history in the engine.
+      cy.get('[data-cy="search-btn"]').click();
+      cy.get('[data-cy="view-search"]').should('be.visible');
+
+      cy.get('[data-cy="search-result-1"]').click();
+      cy.get('[data-cy="view-product"]').should('be.visible');
+
+      cy.get('[data-cy="nav-cart"]').click();
+      cy.get('[data-cy="view-cart"]').should('be.visible');
+
+      // Wait for the debounced persistence flush.
+      cy.wait(700);
+
+      // Sanity-check: Bloom filter knows about visited states before reload.
+      cy.window().then((win) => {
+        const mgr = (win as any).__intentManager;
+        expect(mgr.hasSeen('/search')).to.be.true;
+        expect(mgr.hasSeen('/product')).to.be.true;
+        // A state never visited must not be in the filter.
+        expect(mgr.hasSeen('/never-visited-state')).to.be.false;
+      });
+
+      // Reload WITHOUT clearing localStorage — simulates a returning visitor.
+      // This exercises the restore() → fromBinary() deserialization code path.
+      cy.reload();
+
+      // After reload the engine must have reconstructed its Bloom filter from the
+      // binary snapshot so previously-seen states are still recognised.
+      cy.window().then((win) => {
+        const mgr = (win as any).__intentManager;
+        expect(mgr.hasSeen('/search')).to.be.true;
+        expect(mgr.hasSeen('/product')).to.be.true;
+        expect(mgr.hasSeen('/never-visited-state')).to.be.false;
+      });
+
+      // The app must remain fully functional after restoration.
+      cy.get('[data-cy="view-home"]').should('be.visible');
+      cy.get('[data-cy="search-btn"]').click();
+      cy.get('[data-cy="view-search"]').should('be.visible');
     });
   });
 

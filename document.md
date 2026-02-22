@@ -238,7 +238,12 @@ function onRouteChange(route: string) {
 
 ### 2. Hesitation Discount
 
-Offer a time-limited discount when a user shows trajectory anomaly behavior near the checkout funnel — the statistical signal of "I want to buy but I'm not sure."
+Detect genuine purchase hesitation by correlating two independent signals:
+
+- **Spatial signal** (`trajectory_anomaly`) — the user's path diverges from how typical converters navigate.
+- **Temporal signal** (`dwell_time_anomaly`) — the user is lingering statistically longer than their own previous visits to that state.
+
+A single signal is a weak proxy. Both firing **within the same short window** is a high-confidence indicator of "I want to buy but I'm not sure." This is the same multi-signal correlation approach used in UEBA and SIEM tooling to reduce false positives.
 
 ```ts
 import { IntentManager, SerializedMarkovGraph } from 'edge-signal';
@@ -265,12 +270,48 @@ const intent = new IntentManager({
     baselineMeanLL: -0.52,
     baselineStdLL: 0.18,
   },
+  // Enable temporal intent detection
+  dwellTime: {
+    enabled: true,
+    minSamples: 5,          // learn quickly within a session
+    zScoreThreshold: 2.0,   // lower individual threshold — the combo gate does the heavy lifting
+  },
+  eventCooldownMs: 15_000,  // prevent re-triggering within 15 s at the SDK level
 });
 
-intent.on('trajectory_anomaly', ({ zScore }) => {
-  // User's path diverges significantly from typical converters
-  if (isNearCheckout()) {
+// Time-bound correlation: both signals must fire within 30 seconds of each other.
+// Without this window, a trajectory anomaly on /home could pair with a dwell
+// anomaly on /terms-of-service ten minutes later — a spurious combination.
+let lastTrajectoryAnomaly = 0;
+let lastDwellAnomaly = 0;
+const CORRELATION_WINDOW_MS = 30_000; // 30 seconds
+
+function maybeShowDiscount(): void {
+  const now = Date.now();
+  const isCorrelated =
+    (now - lastTrajectoryAnomaly < CORRELATION_WINDOW_MS) &&
+    (now - lastDwellAnomaly < CORRELATION_WINDOW_MS);
+
+  if (isCorrelated && isNearCheckout()) {
     showHesitationDiscount('10% off — just for you. Offer expires in 10 min.');
+    // Reset timestamps to prevent spamming after the discount is shown
+    lastTrajectoryAnomaly = 0;
+    lastDwellAnomaly = 0;
+  }
+}
+
+intent.on('trajectory_anomaly', () => {
+  lastTrajectoryAnomaly = Date.now();
+  maybeShowDiscount();
+});
+
+intent.on('dwell_time_anomaly', ({ zScore }) => {
+  // Only positive z-scores mean lingering; negative means rushing through.
+  // Use a slightly relaxed threshold here (1.5) since the correlation window
+  // already filters coincidental pairings.
+  if (zScore > 1.5) {
+    lastDwellAnomaly = Date.now();
+    maybeShowDiscount();
   }
 });
 
@@ -282,6 +323,10 @@ function isNearCheckout(): boolean {
 **Calibrating the baseline:**
 
 Run `npm run test:perf:matrix` after pointing `scripts/scenario-matrix.mjs` at representative session replays from your analytics platform. It outputs the `baselineMeanLL` and `baselineStdLL` values to embed in your config.
+
+**Why dwell-time stats are session-scoped — a privacy feature, not a limitation:**
+
+Dwell-time statistics are held in memory only and are never persisted to `localStorage`. This is a deliberate privacy boundary. Permanently storing per-user temporal profiles (how long someone reads each page, across every visit, over months) would enable invasive behavioral fingerprinting — correlating reading speed and attention patterns to build a persistent identity. EdgeSignal intentionally keeps all temporal math strictly session-scoped. The warm-up period (`minSamples`) resets on every page load as a direct consequence of this guarantee. For checkout funnels this trade-off is acceptable, and arguably beneficial: the signal is always grounded in the current session's behaviour, not stale historical data from a different context.
 
 ---
 

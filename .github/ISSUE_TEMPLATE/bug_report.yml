@@ -87,7 +87,7 @@ body:
         A minimal code snippet or repository link that reproduces the issue. Reports without a reproduction are significantly harder to diagnose and may be deprioritized.
       placeholder: |
         ```ts
-        import { IntentSDK } from 'edge-signal';
+        import { IntentManager } from 'edge-signal';
         // ...
         ```
     validations:

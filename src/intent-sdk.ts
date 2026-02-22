@@ -1251,6 +1251,8 @@ export class IntentManager {
   private lastTrajectoryAnomalyZScore = 0;
   private lastDwellAnomalyAt = -Infinity;
   private lastDwellAnomalyZScore = 0;
+  /** The state where the user dwelled anomalously — anchors hesitation_detected.state. */
+  private lastDwellAnomalyState = '';
   private readonly hesitationCorrelationWindowMs: number;
 
   constructor(config: IntentManagerConfig = {}) {
@@ -1604,7 +1606,7 @@ export class IntentManager {
         });
         this.lastTrajectoryAnomalyAt = now;
         this.lastTrajectoryAnomalyZScore = zScore;
-        this.maybeEmitHesitation(to);
+        this.maybeEmitHesitation();
       }
     }
 
@@ -1668,7 +1670,8 @@ export class IntentManager {
         if (zScore > 0) {
           this.lastDwellAnomalyAt = now;
           this.lastDwellAnomalyZScore = zScore;
-          this.maybeEmitHesitation(state);
+          this.lastDwellAnomalyState = state;
+          this.maybeEmitHesitation();
         }
       }
     }
@@ -1679,8 +1682,13 @@ export class IntentManager {
    * `dwell_time_anomaly` have both fired within `hesitationCorrelationWindowMs`.
    * Called from both evaluateTrajectory and evaluateDwellTime after they update
    * their respective timestamps.
+   *
+   * `hesitation_detected.state` is always the dwell-anomaly state (where the user
+   * lingered), regardless of which signal fires second.  This is consistent with
+   * the interface docs and avoids the caller-provided value varying between the
+   * two call sites.
    */
-  private maybeEmitHesitation(state: string): void {
+  private maybeEmitHesitation(): void {
     const now = this.timer.now();
     const correlated =
       now - this.lastTrajectoryAnomalyAt < this.hesitationCorrelationWindowMs &&
@@ -1693,7 +1701,7 @@ export class IntentManager {
     this.lastDwellAnomalyAt = -Infinity;
 
     this.emitter.emit('hesitation_detected', {
-      state,
+      state: this.lastDwellAnomalyState,
       trajectoryZScore: this.lastTrajectoryAnomalyZScore,
       dwellZScore: this.lastDwellAnomalyZScore,
     });
@@ -1742,7 +1750,7 @@ export class IntentManager {
       // QuotaExceededError, SecurityError, or Private Browsing restrictions.
       // Surface through the optional error callback; never crash the main thread.
       if (err instanceof Error) {
-        if (err.name === 'QuotaExceededError' || err.message.includes('quota')) {
+        if (err.name === 'QuotaExceededError' || err.message.toLowerCase().includes('quota')) {
           this.engineHealth = 'quota_exceeded';
         }
         if (this.onError) {

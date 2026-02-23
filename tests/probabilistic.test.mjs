@@ -9,7 +9,7 @@ import {
   BenchmarkSimulationEngine,
   evaluatePredictionMatrix,
 } from '../dist/src/intent-sdk-performance.js';
-import { MemoryStorage, setupTestEnvironment, storage } from './helpers/test-env.mjs';
+import { setupTestEnvironment, storage } from './helpers/test-env.mjs';
 
 setupTestEnvironment();
 

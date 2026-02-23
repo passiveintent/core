@@ -33,7 +33,7 @@
     "build": "tsup",
     "build:tsc": "tsc --project tsconfig.json --declaration --sourceMap",
     "test": "npm run test:unit",
-    "test:unit": "npm run build:tsc && node --test tests/intent-sdk.test.mjs",
+    "test:unit": "npm run build:tsc && node --test tests/*.test.mjs",
     "test:perf:run": "npm run build:tsc && node scripts/perf-runner.mjs",
     "test:perf:assert": "node scripts/perf-regression.mjs",
     "test:perf:matrix": "npm run build:tsc && node scripts/scenario-matrix.mjs --check-golden",
@@ -44,7 +44,11 @@
     "test:perf:update-matrix-golden": "npm run build:tsc && node scripts/scenario-matrix.mjs --update-golden",
     "test:e2e": "npm run build:tsc && cypress run",
     "test:e2e:headed": "npm run build:tsc && cypress run --headed --browser chrome",
-    "prepublishOnly": "npm run build"
+    "prepublishOnly": "npm run build",
+    "typecheck": "tsc --project tsconfig.json --noEmit",
+    "lint": "npm run typecheck",
+    "test:ci": "npm run lint && npm run build && npm run test:unit && npm run test:perf:assert",
+    "verify:package": "npm run build:tsc && node scripts/verify-package.mjs"
   },
   "devDependencies": {
     "cypress": "^13.15.2",

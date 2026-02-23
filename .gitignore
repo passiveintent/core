@@ -1,6 +1,8 @@
 node_modules/
 dist/
-package-lock.json
 .env
 cypress/screenshots/
 cypress/downloads/
+
+# Internal product roadmap — not for public distribution
+Product Roadmap/

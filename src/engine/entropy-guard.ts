@@ -5,9 +5,37 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+/**
+ * Heuristic bot detector based on inter-event timing statistics.
+ *
+ * Two scoring criteria are evaluated over a sliding window of the last
+ * `BOT_DETECTION_WINDOW` (10) `track()` call timestamps:
+ *
+ *   1. **Speed criterion** — each consecutive delta < `BOT_MIN_DELTA_MS` (50 ms)
+ *      increments the score.  Real users rarely navigate faster than 50 ms
+ *      per page; automation tools do it consistently.
+ *
+ *   2. **Variance criterion** — if the variance of all deltas in the window
+ *      falls below `BOT_MAX_VARIANCE` (100 ms²), the score gains 1 extra point.
+ *      Human timing has natural jitter; bots that pace calls with `setInterval`
+ *      produce near-zero variance even if each individual call is plausible.
+ *
+ * The `isSuspectedBot` flag flips to `true` when the combined score ≥
+ * `BOT_SCORE_THRESHOLD` (5) and stays `true` until enough slow, high-
+ * variance calls push the score back below the threshold.
+ *
+ * **No false negatives by design:** if bot protection is disabled at the
+ * `IntentManager` level, this class is never called.  When enabled, the
+ * tradeoff is a small false-positive risk for users on very fast connections
+ * or programmatic navigation (e.g. router `push()` in rapid succession).
+ */
+
 const BOT_DETECTION_WINDOW = 10;
+/** Minimum realistic human inter-navigation delta in milliseconds. */
 const BOT_MIN_DELTA_MS = 50;
+/** Maximum variance (ms²) for the timing-uniformity criterion. */
 const BOT_MAX_VARIANCE = 100;
+/** Combined score threshold above which the session is classified as a bot. */
 const BOT_SCORE_THRESHOLD = 5;
 
 export class EntropyGuard {
@@ -42,6 +70,8 @@ export class EntropyGuard {
     let windowBotScore = 0;
     const deltas: number[] = [];
 
+    // Ring-buffer oldest entry: if the window is not yet full, oldest is index 0;
+    // otherwise it's the slot that was written next (trackTimestampIndex wraps around).
     const oldestIndex = count < BOT_DETECTION_WINDOW
       ? 0
       : this.trackTimestampIndex;

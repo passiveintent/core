@@ -36,6 +36,18 @@ export interface PerformanceReport {
   memoryFootprint: MemoryFootprintReport;
 }
 
+/**
+ * Circular-buffer reservoir for per-operation timing samples.
+ *
+ * Once `maxSamples` is reached, new samples overwrite old ones at position
+ * `count % maxSamples` (not true reservoir / random sampling).  This means
+ * percentile estimates (p95, p99) are computed over the *most-recent*
+ * `maxSamples` observations rather than a statistically unbiased sample of
+ * all observations.  For the SDK’s benchmark use-case (detecting regressions
+ * in the steady-state hot path) recency bias is acceptable.  If you need
+ * unbiased percentiles across an arbitrary run duration, increase `maxSamples`
+ * in the `BenchmarkConfig` to cover the full session.
+ */
 interface BenchmarkAccumulator {
   count: number;
   totalMs: number;
@@ -83,6 +95,15 @@ const textEncoder = typeof TextEncoder !== 'undefined' ? new TextEncoder() : nul
 
 type OpName = 'track' | 'bloomAdd' | 'bloomCheck' | 'incrementTransition' | 'entropyComputation' | 'divergenceComputation';
 
+/**
+ * Optional performance recorder for the SDK’s internal hot-path operations.
+ *
+ * Disabled by default (`enabled: false`) — all `now()` and `record()` calls
+ * are no-ops when disabled, so there is zero overhead in production unless
+ * callers explicitly opt in via `IntentManagerConfig.benchmark.enabled: true`.
+ *
+ * Exposes p95/p99 latency and a memory-footprint snapshot via `report()`.
+ */
 export class BenchmarkRecorder {
   readonly enabled: boolean;
   private readonly maxSamples: number;

@@ -97,6 +97,13 @@ interface PersistedPayload {
   graph?: SerializedMarkovGraph;
 }
 
+/**
+ * Shared mutable context passed through each `trackStages` pipeline function.
+ *
+ * Fields are populated incrementally — `from` and `isNewToBloom` start as
+ * sentinel values and are set by the Bloom and transition-context stages
+ * before the graph/signal stage reads them.
+ */
 interface TrackContext {
   state: string;
   now: number;
@@ -236,6 +243,11 @@ export class IntentManager {
       this.runGraphAndSignalStage,
       this.runEmitAndPersistStage,
     ];
+    // Pipeline design: stages are an array of bound arrow functions rather
+    // than a monolithic method so that future versions can insert, replace, or
+    // reorder steps (e.g. add a rate-limit stage or an A/B experiment hook)
+    // without touching the core track() loop.  Each stage mutates `ctx` in
+    // place so no intermediate allocations are required.
   }
 
   on<K extends keyof IntentEventMap>(
@@ -319,6 +331,10 @@ export class IntentManager {
         const prev2 = this.recentTrajectory[this.recentTrajectory.length - 3];
         const bigramFrom = `${prev2}\u2192${ctx.from}`;
         const bigramTo = `${ctx.from}\u2192${ctx.state}`;
+        // U+2192 (→) separates bigram tokens.  The arrow character is chosen
+        // deliberately: it is unlikely to appear in real state labels (which
+        // are typically URL paths or semantic page names) so it acts as a
+        // collision-resistant join key without requiring a separate namespace.
         if (this.graph.rowTotal(ctx.from) >= this.bigramFrequencyThreshold) {
           this.graph.incrementTransition(bigramFrom, bigramTo);
         }

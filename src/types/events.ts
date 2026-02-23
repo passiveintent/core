@@ -91,30 +91,86 @@ export interface BloomFilterConfig {
 }
 
 export interface MarkovGraphConfig {
+  /** Normalized entropy threshold [0, 1] above which `high_entropy` fires. Default: 0.75. */
   highEntropyThreshold?: number;
+  /**
+   * Z-score (or raw average log-likelihood) threshold for `trajectory_anomaly`.
+   * Interpreted as a *magnitude*: the sign is forced negative internally so
+   * that a lower (more anomalous) value triggers the event.
+   * Default: 3.5.  Decrease to increase sensitivity; increase to reduce noise.
+   */
   divergenceThreshold?: number;
+  /**
+   * Pre-computed mean of average per-step log-likelihood over a representative
+   * set of *normal* sessions.  Required together with `baselineStdLL` to enable
+   * Z-score calibration.  When absent, the raw `divergenceThreshold` is used instead.
+   */
   baselineMeanLL?: number;
+  /**
+   * Pre-computed standard deviation of average per-step log-likelihood over
+   * normal sessions.  Pair with `baselineMeanLL`.
+   */
   baselineStdLL?: number;
+  /** Laplace smoothing probability applied to unseen transitions. Default: 0.01. */
   smoothingEpsilon?: number;
+  /**
+   * Maximum number of live states before LFU pruning is triggered.
+   * Higher values give better recall at the cost of more memory and larger
+   * serialized payloads.  Default: 500.
+   */
   maxStates?: number;
 }
 
 export interface IntentManagerConfig {
   bloom?: BloomFilterConfig;
   graph?: MarkovGraphConfig;
+  /** Convenience alias — sets `graph.baselineMeanLL` without nesting. */
   baselineMeanLL?: number;
+  /** Convenience alias — sets `graph.baselineStdLL` without nesting. */
   baselineStdLL?: number;
+  /** localStorage key used to persist the Bloom filter and Markov graph. Default: `'edge-signal'`. */
   storageKey?: string;
+  /** Debounce delay in ms before writing to storage after a `track()` call. Default: 2000. */
   persistDebounceMs?: number;
+  /**
+   * Pre-trained baseline graph (from `MarkovGraph.toJSON()`) representing
+   * the expected normal navigation pattern.  Required for `trajectory_anomaly`
+   * detection.  If absent, trajectory evaluation is skipped.
+   */
   baseline?: SerializedMarkovGraph;
   benchmark?: BenchmarkConfig;
+  /** Override the storage backend (useful for tests or custom persistence layers). */
   storage?: StorageAdapter;
+  /** Override the timer backend (useful for deterministic tests). */
   timer?: TimerAdapter;
+  /** Non-fatal error callback — surfaces storage errors and invalid `track('')` calls. */
   onError?: (err: Error) => void;
+  /** Enable heuristic bot detection via timing analysis. Default: `true`. */
   botProtection?: boolean;
+  /**
+   * Minimum milliseconds between consecutive emissions of the same cooldown-gated
+   * event type (`high_entropy`, `trajectory_anomaly`, `dwell_time_anomaly`).
+   * 0 disables throttling (every qualifying call fires). Default: 0.
+   */
   eventCooldownMs?: number;
+  /**
+   * Maximum gap (ms) between a `trajectory_anomaly` and a `dwell_time_anomaly`
+   * for them to be correlated into a `hesitation_detected` event. Default: 30 000.
+   */
   hesitationCorrelationWindowMs?: number;
   dwellTime?: DwellTimeConfig;
+  /**
+   * Enable second-order (bigram) Markov transitions.
+   * Bigram states are encoded as `"prev→from"` → `"from→to"` using U+2192
+   * as a separator chosen to be collision-resistant against normal state labels.
+   * Requires more memory; useful when single-step transitions are not
+   * discriminative enough for the application’s navigation graph.
+   */
   enableBigrams?: boolean;
+  /**
+   * Minimum number of outgoing transitions a unigram state must have before
+   * bigram transitions are recorded for it.  Guards against sparse bigram
+   * pollution in the early learning phase.  Default: 5.
+   */
   bigramFrequencyThreshold?: number;
 }

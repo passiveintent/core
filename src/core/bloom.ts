@@ -8,6 +8,18 @@
 import { base64ToUint8, uint8ToBase64 } from '../persistence/codec.js';
 import type { BloomFilterConfig } from '../types/events.js';
 
+/**
+ * FNV-1a hash with a configurable seed.
+ *
+ * Used in a Kirsch-Mitzenmacher double-hashing scheme:
+ *   h_i(x) = (h1(x) + i * h2(x)) mod m
+ *
+ * Two independent hashes (h1 via seed 0x811c9dc5, h2 via seed 0x01000193)
+ * are combined to derive `hashCount` virtual hash functions with a single
+ * pair of underlying hash calls.  This avoids computing k distinct hash
+ * functions while preserving near-optimal false-positive rates.
+ * Reference: Kirsch & Mitzenmacher (2006), "Less Hashing, Same Performance".
+ */
 function fnv1a(input: string, seed = 0x811c9dc5): number {
   let hash = seed >>> 0;
   for (let i = 0; i < input.length; i += 1) {
@@ -22,11 +34,28 @@ function fnv1a(input: string, seed = 0x811c9dc5): number {
   return hash >>> 0;
 }
 
+/**
+ * Space-efficient probabilistic set membership test.
+ *
+ * Guarantees no false negatives (anything added will always be found).
+ * Allows tunable false positives — use `computeOptimal` to size the filter
+ * for a target FPR given an expected item count.
+ *
+ * The bit array can be serialized to base64 via `toBase64()` and restored
+ * via `fromBase64()`, enabling persistence across sessions without storing
+ * the raw state strings (privacy-preserving by design).
+ */
 export class BloomFilter {
   readonly bitSize: number;
   readonly hashCount: number;
   private readonly bits: Uint8Array;
 
+  /**
+   * @param config    Optional sizing parameters (bitSize, hashCount).
+   * @param existingBits  Pre-populated bit array from a prior `toBase64()` round-trip.
+   *                      Must match the expected `byteSize` derived from `bitSize` or
+   *                      it will be silently discarded and a fresh array allocated.
+   */
   constructor(config: BloomFilterConfig = {}, existingBits?: Uint8Array) {
     this.bitSize = config.bitSize ?? 2048;
     this.hashCount = config.hashCount ?? 4;
@@ -56,6 +85,15 @@ export class BloomFilter {
     return true;
   }
 
+  /**
+   * Compute the optimal filter size for a given load and false-positive rate.
+   *
+   * Formulas (standard Bloom filter theory):
+   *   m = ceil( -n * ln(p) / ln(2)^2 )   — optimal bit count
+   *   k = max(1, round( (m/n) * ln(2) ))  — optimal hash function count
+   *
+   * where n = expectedItems, p = targetFPR.
+   */
   static computeOptimal(
     expectedItems: number,
     targetFPR: number,

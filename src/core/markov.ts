@@ -7,18 +7,37 @@
 
 import type { MarkovGraphConfig } from '../types/events.js';
 
+/**
+ * Map probability [0, 1] to an 8-bit integer [0, 255].
+ *
+ * Only used by `getQuantizedRow` / `getQuantizedProbability` for
+ * memory-compact exports (e.g. sending probability vectors over postMessage).
+ * The *canonical* hot-path (`getProbability`) always works with raw floats
+ * from live counts to avoid quantization error accumulation.
+ */
 function quantizeProbability(probability: number): number {
   if (probability <= 0) return 0;
   if (probability >= 1) return 255;
   return Math.round(probability * 255) & 0xff;
 }
 
+/** Inverse of `quantizeProbability`. */
 function dequantizeProbability(value: number): number {
   return (value & 0xff) / 255;
 }
 
+/**
+ * Outgoing transition counts for a single source state.
+ *
+ * Using a nested `Map<number, number>` keeps the representation sparse:
+ * states that never transition to each other consume no memory.  For typical
+ * navigation graphs (5–50 states, fan-out 2–8) this is cheaper than a dense
+ * N×N matrix and avoids serializing zero entries in the binary codec.
+ */
 interface TransitionRow {
+  /** Sum of all outgoing transition counts from this state. Pre-maintained to avoid O(k) map iteration on every probability query. */
   total: number;
+  /** Destination state index → raw observation count. */
   toCounts: Map<number, number>;
 }
 
@@ -32,8 +51,19 @@ export interface SerializedMarkovGraph {
 }
 
 /**
- * Sparse Markov graph for transitions between states.
- * Uses nested Maps (sparse) and supports quantized probability export.
+ * Sparse Markov graph for first-order (and optional second-order bigram) state transitions.
+ *
+ * **Index stability design:**
+ * States are assigned an integer index on first encounter and that index
+ * is never re-numbered.  This makes the binary codec trivially verifiable
+ * (indices in the encoded rows map directly to the states array) and means
+ * serialized data stays valid even after LFU pruning, because pruned slots
+ * are *tombstoned* (set to `''`) rather than compacted.
+ *
+ * **Sparse Map representation:**
+ * `rows` is a `Map<fromIndex, TransitionRow>` rather than a flat array.
+ * Navigation graphs are typically sparse (most state pairs are never
+ * observed), so flat N×N matrices would waste memory and inflate encoded size.
  */
 export class MarkovGraph {
   private readonly rows = new Map<number, TransitionRow>();
@@ -57,6 +87,13 @@ export class MarkovGraph {
     this.maxStates = config.maxStates ?? 500;
   }
 
+  /**
+   * Return the integer index for a state label, allocating a new slot if
+   * needed.  Reuses tombstoned (freed) slots from LFU pruning before
+   * appending to the end of `indexToState`, keeping the array compact.
+   *
+   * Empty string is rejected because `''` is the internal tombstone marker.
+   */
   ensureState(state: string): number {
     if (state === '') throw new Error('MarkovGraph: state label must not be empty string');
     const existing = this.stateToIndex.get(state);
@@ -213,6 +250,13 @@ export class MarkovGraph {
     return this.rows.get(from)?.total ?? 0;
   }
 
+  /**
+   * Total number of allocated index slots, including tombstoned (freed) ones.
+   *
+   * ⚠ This is NOT the count of live states.  Use `stateToIndex.size`
+   * (via `prune` or `fromJSON`) when you need the live count.
+   * The value is useful for sizing serialization buffers.
+   */
   stateCount(): number {
     return this.indexToState.length;
   }

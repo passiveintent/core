@@ -134,7 +134,7 @@ export class IntentManager {
   private readonly dwellTimeMinSamples: number;
   private readonly dwellTimeZScoreThreshold: number;
   /**
-   * Per-state Welford accumulators: [count, mean, m2].
+   * Per-state Welford accumulators: { count, meanMs, m2 }.
    *
    * **Session-scoped — intentionally not persisted.**
    * Persisting per-state timing distributions across page reloads would

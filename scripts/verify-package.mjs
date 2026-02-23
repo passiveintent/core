@@ -1,16 +1,17 @@
-import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdtempSync, mkdirSync, rmSync, unlinkSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { execSync } from 'node:child_process';
 
 const tempRoot = mkdtempSync(join(tmpdir(), 'edge-signal-pack-'));
 
+let tarballPath = '';
 try {
   const tarballName = execSync('npm pack --silent', { encoding: 'utf-8' }).trim();
-  const tarballPath = join(process.cwd(), tarballName);
+  tarballPath = join(process.cwd(), tarballName);
   const consumerDir = join(tempRoot, 'consumer');
 
-  execSync(`mkdir -p "${consumerDir}"`);
+  mkdirSync(consumerDir, { recursive: true });
   writeFileSync(
     join(consumerDir, 'package.json'),
     JSON.stringify({ name: 'consumer-smoke', version: '1.0.0', type: 'module' }, null, 2),
@@ -42,7 +43,7 @@ console.log('package smoke test passed');
   console.log('verify-package: success');
 } finally {
   try {
-    execSync('rm -f edge-signal-*.tgz');
+    if (tarballPath) unlinkSync(tarballPath);
   } catch {
     // ignore cleanup errors
   }

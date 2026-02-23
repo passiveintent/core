@@ -7,7 +7,7 @@ import {
   IntentManager,
   MarkovGraph,
 } from '../dist/src/intent-sdk.js';
-import { MemoryStorage, setupTestEnvironment, storage } from './helpers/test-env.mjs';
+import { setupTestEnvironment, storage } from './helpers/test-env.mjs';
 
 setupTestEnvironment();
 

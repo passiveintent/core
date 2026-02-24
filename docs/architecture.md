@@ -1,3 +1,10 @@
+<!--
+  Copyright (c) 2026 Purushottam <purushpsm147@yahoo.co.in>
+
+  This source code is licensed under the AGPL-3.0-only license found in the
+  LICENSE file in the root directory of this source tree.
+-->
+
 # EdgeSignal — Documentation
 
 > **EdgeSignal** — the privacy-first, on-device behavioral intent engine built for B2B SaaS retention. Detect frustrated navigation in **< 2 milliseconds** — locally, with zero data egress, no server round-trips, and no GDPR exposure.

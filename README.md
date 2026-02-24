@@ -1,6 +1,15 @@
+<!--
+  Copyright (c) 2026 Purushottam <purushpsm147@yahoo.co.in>
+
+  This source code is licensed under the AGPL-3.0-only license found in the
+  LICENSE file in the root directory of this source tree.
+-->
+
 # EdgeSignal: A Privacy-First Intent Engine
 
 [![Coverage: 97%](https://img.shields.io/badge/coverage-97%25-brightgreen)](#run-tests)
+[![Bundle Size](https://img.shields.io/bundlephobia/minzip/edge-signal)](https://bundlephobia.com/package/edge-signal)
+[![Open in StackBlitz](https://developer.stackblitz.com/img/open_in_stackblitz_small.svg)](https://stackblitz.com/github/purushpsm147/EdgeSignal-Privacy-First-Intent-Engine)
 
 A lightweight TypeScript SDK for on-device intent modeling.
 It combines a Bloom filter for fast membership checks and a sparse Markov graph for transition learning, entropy signals, and trajectory anomaly detection.
@@ -16,6 +25,10 @@ It combines a Bloom filter for fast membership checks and a sparse Markov graph 
 - Selective bigram Markov transitions: optional second-order transition learning with frequency-gated recording.
 - Event cooldown: configurable per-channel cooldown prevents event flooding.
 - Clean teardown: `destroy()` API for SPA lifecycle management.
+
+## Why EdgeSignal vs. Mixpanel / Amplitude
+
+Mixpanel and Amplitude are cloud-based analytics platforms: every event they capture leaves the user's browser and lands on a third-party server, creating GDPR/CCPA exposure, adding 50–200 ms of network latency per batch flush, and requiring you to buy a plan before you can query your own data. EdgeSignal runs the entire inference pipeline **inside the browser** — no data ever egresses, no vendor SDK is loaded, and signal evaluation completes in [under 0.004 ms on average (p95 < 0.006 ms)](./benchmarks/baseline.json). The serialized graph state fits in [~1.4 KB of localStorage](./benchmarks/baseline.json), meaning EdgeSignal works offline, survives cookie consent banners, and adds zero marginal cost per user. The trade-off is intentional: EdgeSignal detects *intent signals* (rage clicks, hesitation, trajectory anomalies) rather than replacing a full event warehouse — use it alongside, or instead of, heavyweight analytics when privacy, latency, or cost is the constraint. For a full scenario accuracy breakdown see the [evaluation matrix](./benchmarks/evaluation-matrix.json).
 
 ## Install
 
@@ -75,6 +88,136 @@ intent.track('/product');
 // force immediate save (optional)
 intent.flushNow();
 ```
+
+## Framework integration
+
+### Next.js (App Router — `app/` directory)
+
+```tsx
+// app/providers/intent-provider.tsx
+'use client';
+
+import { useEffect, useRef } from 'react';
+import { usePathname } from 'next/navigation';
+import {
+  IntentManager,
+  BrowserStorageAdapter,
+  BrowserTimerAdapter,
+} from 'edge-signal';
+
+export function IntentProvider({ children }: { children: React.ReactNode }) {
+  const pathname = usePathname();
+  const intentRef = useRef<IntentManager | null>(null);
+
+  useEffect(() => {
+    intentRef.current = new IntentManager({
+      storageKey: 'edge-signal',
+      storage: new BrowserStorageAdapter(),
+      timer: new BrowserTimerAdapter(),
+    });
+    return () => {
+      intentRef.current?.destroy();
+      intentRef.current = null;
+    };
+  }, []);
+
+  useEffect(() => {
+    intentRef.current?.track(pathname);
+  }, [pathname]);
+
+  return <>{children}</>;
+}
+```
+
+Mount the provider in your root layout:
+
+```tsx
+// app/layout.tsx
+import { IntentProvider } from './providers/intent-provider';
+
+export default function RootLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <html lang="en">
+      <body>
+        <IntentProvider>{children}</IntentProvider>
+      </body>
+    </html>
+  );
+}
+```
+
+### Vue 3 (`onMounted` / `onUnmounted`)
+
+```vue
+<!-- src/composables/useIntent.ts -->
+<script setup lang="ts">
+import { onMounted, onUnmounted, watch } from 'vue';
+import { useRoute } from 'vue-router';
+import {
+  IntentManager,
+  BrowserStorageAdapter,
+  BrowserTimerAdapter,
+} from 'edge-signal';
+
+let intent: IntentManager | null = null;
+const route = useRoute();
+
+onMounted(() => {
+  intent = new IntentManager({
+    storageKey: 'edge-signal',
+    storage: new BrowserStorageAdapter(),
+    timer: new BrowserTimerAdapter(),
+  });
+  intent.track(route.fullPath);
+});
+
+watch(() => route.fullPath, (path) => {
+  intent?.track(path);
+});
+
+onUnmounted(() => {
+  intent?.destroy();
+  intent = null;
+});
+</script>
+```
+
+### Angular (`ngOnInit` / `ngOnDestroy`)
+
+```ts
+// intent.service.ts
+import { Injectable, OnDestroy } from '@angular/core';
+import { Router, NavigationEnd } from '@angular/router';
+import { filter, Subscription } from 'rxjs';
+import {
+  IntentManager,
+  BrowserStorageAdapter,
+  BrowserTimerAdapter,
+} from 'edge-signal';
+
+@Injectable({ providedIn: 'root' })
+export class IntentService implements OnDestroy {
+  private intent = new IntentManager({
+    storageKey: 'edge-signal',
+    storage: new BrowserStorageAdapter(),
+    timer: new BrowserTimerAdapter(),
+  });
+  private sub: Subscription;
+
+  constructor(router: Router) {
+    this.sub = router.events
+      .pipe(filter((e): e is NavigationEnd => e instanceof NavigationEnd))
+      .subscribe((e) => this.intent.track(e.urlAfterRedirects));
+  }
+
+  ngOnDestroy(): void {
+    this.sub.unsubscribe();
+    this.intent.destroy();
+  }
+}
+```
+
+Inject `IntentService` in your root `AppComponent` (or import it in the root module) so it is instantiated on app start.
 
 ## API highlights
 
@@ -274,7 +417,23 @@ npx cypress open
 
 ## License
 
-This project is dual-licensed:
+EdgeSignal is dual-licensed:
 
-1. **AGPLv3:** Free for open-source projects, personal use, and testing. Under this license, any modifications or integrations in a network-accessible service must also be open-sourced.
-2. **Commercial License:** For use in closed-source, proprietary, or commercial applications without the AGPLv3 copyleft restrictions, a commercial license must be purchased. Contact purushpsm147@yahoo.co.in or successfulindian147@gmail.com for commercial licensing details.
+### AGPLv3 — Free
+
+Use EdgeSignal at no cost under the [GNU Affero General Public License v3.0](./LICENSE) if **all** of the following apply:
+
+- Your project is open-source **and** you publish the complete source code.
+- You are not incorporating EdgeSignal into a proprietary or closed-source product.
+- If you run EdgeSignal as part of a network service, your entire application is also released under AGPLv3.
+
+### Commercial License — Paid
+
+A commercial license removes the AGPLv3 copyleft obligations. You need one if:
+
+- You ship EdgeSignal inside a **closed-source or proprietary** product.
+- You run it in a **SaaS / network service** without releasing your application source.
+- You re-sell or white-label it inside an analytics or AdTech platform.
+
+See [**PRICING.md**](./PRICING.md) for tier details (Indie · Startup · Growth · Enterprise).  
+Contact [purushpsm147@yahoo.co.in](mailto:purushpsm147@yahoo.co.in) or [successfulindian147@gmail.com](mailto:successfulindian147@gmail.com) to purchase a license.

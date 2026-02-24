@@ -3,6 +3,7 @@ dist/
 .env
 cypress/screenshots/
 cypress/downloads/
+coverage/
 
 # Internal product roadmap — not for public distribution
 Product Roadmap/

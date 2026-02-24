@@ -18,21 +18,24 @@ EdgeSignal takes the opposite approach. It is a tiny, tree-shakeable TypeScript 
 
 ## Table of Contents
 
-1. [What It Is](#what-it-is)
-2. [Strengths](#strengths)
-3. [Known Limitations](#known-limitations)
-4. [Installation](#installation)
-5. [Quick Start](#quick-start)
-6. [Real-World Recipes](#real-world-recipes)
+1. [EdgeSignal vs. Native Edge AI (The Anti-Creepy Intent Engine)](#edgesignal-vs-native-edge-ai-the-anti-creepy-intent-engine)
+2. [What It Is](#what-it-is)
+3. [Strengths](#strengths)
+4. [Known Limitations](#known-limitations)
+5. [Installation](#installation)
+6. [Quick Start](#quick-start)
+7. [Real-World Recipes](#real-world-recipes)
    - [Zero-Latency Churn Healer](#1-zero-latency-churn-healer)
    - [Dynamic Lead Capture (Progressive Profiling)](#2-dynamic-lead-capture-progressive-profiling)
    - [The Intervention Ladder](#3-the-intervention-ladder)
    - [Rage-Click Healer](#4-rage-click-healer)
    - [GA4 Bridge — Proving ROI Without Sending Behavioral Data](#5-ga4-bridge--proving-roi-without-sending-behavioral-data)
    - [A/B Testing Holdout — Measuring ROI Without a Server](#6-ab-testing-holdout--measuring-roi-without-a-server)
-7. [Configuration Reference](#configuration-reference)
-8. [Testing Guide](#testing-guide)
-9. [Technical Deep Dive](#technical-deep-dive)
+   - [Predictive UI Prefetching (Performance as Intent)](#7-predictive-ui-prefetching-performance-as-intent)
+8. [Cross-Tab Synchronization](#cross-tab-synchronization)
+9. [Configuration Reference](#configuration-reference)
+10. [Testing Guide](#testing-guide)
+11. [Technical Deep Dive](#technical-deep-dive)
    - [Architecture Overview](#architecture-overview)
    - [Bloom Filter](#bloom-filter)
    - [Markov Graph](#markov-graph)
@@ -51,16 +54,63 @@ EdgeSignal takes the opposite approach. It is a tiny, tree-shakeable TypeScript 
    - [A/B Testing Holdout](#ab-testing-holdout)
    - [Binary Serialization](#binary-serialization)
    - [LFU Pruning](#lfu-pruning)
-10. [Performance](#performance)
-11. [Bundle Size](#bundle-size)
-12. [Privacy & GDPR Compliance](#privacy--gdpr-compliance)
+12. [Performance](#performance)
+13. [Bundle Size](#bundle-size)
+14. [Privacy & GDPR Compliance](#privacy--gdpr-compliance)
    - [Verified Privacy Claims](#verified-privacy-claims)
    - [GDPR Article Mapping](#gdpr-article-mapping)
    - [No Consent Required](#no-consent-required)
    - [CCPA / ePrivacy](#ccpa--eprivacy)
    - [EdgeSignal vs. Traditional Analytics](#edgesignal-vs-traditional-analytics)
    - [Privacy-Preserving Intent Decay](#privacy-preserving-intent-decay)
-13. [License](#license)
+15. [License](#license)
+
+---
+
+## EdgeSignal vs. Native Edge AI (The Anti-Creepy Intent Engine)
+
+> **Product positioning:** EdgeSignal is not a lighter version of a black-box behavioral AI platform. It is an architecturally different category of tool — built from first principles around auditability, explicit consent avoidance, and a minimal device footprint.
+
+### Explainable Math vs. Black-Box AI
+
+Competing intent platforms (such as Intent HQ / Intent Edge) rely on opaque neural models trained on aggregated population data. Their output is a score or segment label with no human-readable explanation of how it was produced. This creates compliance risk: if a user asks "why did you show me this offer?", the platform cannot answer in plain language.
+
+EdgeSignal uses only **transparent, auditable algorithms**:
+
+| Algorithm | What it does | How a compliance officer can audit it |
+|---|---|---|
+| **Markov chain transition graph** | Counts how often the user moved from state A to state B | Inspect `intent.getGraph()` — every transition count is a plain integer |
+| **Bloom filter** | Tracks which states have ever been visited | Examine the raw `Uint8Array` bitset — no hidden data |
+| **Welford online z-score** | Measures whether dwell time is anomalously long or short | Formula is O(1) and published in every statistics textbook |
+| **Shannon entropy** | Quantifies navigation randomness | A one-line formula: $H = -\sum p_i \log p_i$ |
+
+Because every inference step is deterministic math with integer inputs, a compliance officer can reproduce any EdgeSignal decision on paper, given the stored graph. No black box. No population model. No proprietary weights.
+
+### Explicit In-App Action Tracking vs. Background Sensor Harvesting
+
+Some native mobile SDK competitors harvest OS-level sensor data — accelerometer readings, background app usage, ambient light levels, or inter-app navigation events — to build a behavioral profile without the user's awareness.
+
+**EdgeSignal does none of this.** Specifically:
+
+- **No OS permissions are requested.** EdgeSignal is a bundled JavaScript library. It never calls `navigator.permissions.request()`, `DeviceMotionEvent`, or any platform permission API.
+- **No accelerometer or sensor data is read.** The SDK has no code path that accesses `DeviceMotionEvent`, `DeviceOrientationEvent`, `Gyroscope`, `Accelerometer`, or any Web Sensors API.
+- **No background app usage is monitored.** EdgeSignal has no service worker, no background sync registration, and no push subscription. It is inert when the tab is not in focus (the dwell timer pauses automatically when `document.hidden === true`).
+- **Intent is inferred solely from the user's explicit journey through your application.** Every data point is a state label your application code explicitly passes to `intent.track()`. If your code doesn't call `track()`, EdgeSignal knows nothing.
+
+This is not a limitation — it is the design. Users cannot be profiled without their application explicitly opting in to each tracked state.
+
+### 6 kB Footprint vs. Heavy Native SDK Integration
+
+Native edge AI SDKs typically require platform-specific binary dependencies (iOS CocoaPod, Android AAR), background entitlements, and multi-megabyte model files downloaded at runtime.
+
+EdgeSignal ships as a single **≈ 6 kB gzip tree-shakeable ESM module** with zero runtime dependencies. It works identically in:
+
+- **Web browsers** (Chrome, Firefox, Safari, Edge) — no install prompt, no permission dialog, no app store review
+- **SSR frameworks** (Next.js, Nuxt, Remix, SvelteKit) — via `MemoryStorageAdapter`, no `typeof window` guard required
+- **Edge runtimes** (Cloudflare Workers, Deno Deploy, Vercel Edge) — pure JavaScript, no Node.js built-ins
+- **Node.js and Bun** — works out of the box for server-side behavioral modeling
+
+There is no native SDK to integrate, no background entitlement to justify, and no app store policy to navigate. A developer can add EdgeSignal to a production Next.js application in under five minutes.
 
 ---
 
@@ -134,13 +184,49 @@ The Bloom filter never returns false negatives, but can return false positives �
 
 `persist()` writes to `localStorage`. Browsers allow 5–10 MB per origin. The library's binary format keeps the payload to ~1.4 kB for 100 states, but extremely large graphs (thousands of states) can hit quota limits. Subscribe to `onError` to handle `QuotaExceededError` gracefully.
 
-### 4. No cross-tab synchronization
-
-The in-memory graph is not kept in sync across browser tabs. Each tab maintains its own learned state. If your application needs a unified model, flush the state server-side and provide it as a `baseline` config on initialization.
-
-### 5. Quantization rounding
+### 4. Quantization rounding
 
 Transition probabilities stored in the binary format are quantized to 8-bit precision (`uint8`, 256 levels). The maximum rounding error per probability is ±1/255 ≈ ±0.004. This is negligible for all practical thresholds.
+
+---
+
+## Cross-Tab Synchronization
+
+### Enabling Cross-Tab Sync
+
+Power users open multiple tabs — your app's `/dashboard`, `/billing`, and `/settings` pages side by side. Without coordination, each tab maintains its own independent Markov graph, which means a churn signal detected on the billing tab is invisible to the dashboard tab.
+
+Enable `crossTabSync: true` to unify the intent model instantly across all open tabs using the browser's `BroadcastChannel` API:
+
+```ts
+const intent = new IntentManager({
+  storageKey: 'my-app-intent',
+  crossTabSync: true,
+});
+```
+
+### Business Value
+
+**Power users open multiple tabs. EdgeSignal unifies their intent model instantly across all open tabs without ever sending a ping to a server.**
+
+When a user transitions from `/settings` to `/billing` in one tab and simultaneously opens `/pricing` in another, both tabs share a single up-to-date Markov graph. This means:
+
+- A `high_entropy` event triggered by confused navigation across tabs fires in the tab where your UI intervention is registered — not just the tab where the last `track()` call happened.
+- The `hasSeen()` Bloom filter reflects the full cross-tab journey, so lead capture and intervention gates evaluate the user's complete in-session behavior rather than a single-tab slice.
+- A/B holdout groups are consistent: all tabs for a given session stay in the same `treatment` or `control` group.
+
+All synchronization happens via `BroadcastChannel`, a browser-native zero-latency inter-tab messaging API. No WebSocket. No server round-trip. No network request of any kind.
+
+### Security Architecture
+
+The cross-tab sync layer includes strict payload validation and length limits specifically designed to prevent XSS vulnerabilities in one tab from poisoning the machine-learning model in all other tabs:
+
+- **Schema validation:** Incoming sync messages are validated against the expected binary wire format (version byte `0x02`) before any deserialization. Malformed payloads are silently dropped.
+- **Length limits:** Sync payloads exceeding the configured `maxStates` graph size are rejected before parsing. An attacker who achieves XSS in one tab cannot inflate the graph to an unbounded size in sibling tabs.
+- **Origin isolation:** `BroadcastChannel` messages are scoped to the same origin and browsing context group. A cross-origin iframe cannot inject into the sync channel.
+- **No eval / dynamic execution:** The sync receiver deserializes only typed binary arrays (`Uint8Array`). No JSON `eval`, no `Function()` constructor, no dynamic property writes outside the pre-validated state index space.
+
+The net effect is that the sync layer provides the behavioral unification benefits of a shared session without creating a new XSS amplification surface.
 
 ---
 
@@ -658,6 +744,74 @@ intent.on('conversion', () => {
 
 ---
 
+### 7. Predictive UI Prefetching (Performance as Intent)
+
+EdgeSignal doesn't just catch churn — it can make your app feel **instantly responsive**. Because the on-device Markov graph knows which routes a user is statistically likely to visit next, you can use that prediction to prefetch those routes before the user clicks, eliminating perceived load time entirely.
+
+```ts
+import { IntentManager } from 'edge-signal';
+import router from 'next/router'; // or your framework's router
+
+const intent = new IntentManager({
+  storageKey: 'app-prefetch-intent',
+  graph: { maxStates: 200 },
+});
+
+intent.on('state_change', ({ to }) => {
+  // Predict the most probable next states with probability >= 40 %
+  const likelyNextStates = intent.predictNextStates(0.4);
+
+  likelyNextStates
+    // ─── COMPLIANCE GUARDRAIL: see warning below ───────────────────────────────
+    .filter(state => !isSensitiveRoute(state))
+    // ───────────────────────────────────────────────────────────────────────────
+    .forEach(state => {
+      // router.prefetch() fetches the page bundle without navigating to it.
+      // The page appears to load instantly when the user clicks.
+      router.prefetch(state);
+    });
+});
+
+// Track every route change
+router.events.on('routeChangeComplete', (url) => intent.track(url));
+```
+
+**Why this works:**
+
+`intent.predictNextStates(threshold)` returns all outgoing states from the current node whose transition probability exceeds `threshold`. After 5–10 navigations, the Markov graph has enough signal to predict the next page with high accuracy on well-worn paths (e.g., `/dashboard` → `/billing` → `/upgrade`). Combining this with a framework router's prefetch API means those bundles are already in the browser's memory before the user clicks.
+
+The result is not just a performance gain — it is a **retention signal**. A fast, responsive app has measurably lower bounce rates. EdgeSignal turns behavioral data that was already being collected for churn detection into a free performance dividend.
+
+> ⚠️ **COMPLIANCE GUARDRAIL — REQUIRED READING FOR ALL DEVELOPERS**
+>
+> You **MUST** filter the states returned by `predictNextStates()` before passing them to `router.prefetch()`. **Never prefetch authenticated, destructive, or state-mutating actions.**
+>
+> Prefetching a route causes the browser to proactively issue an HTTP `GET` request for that URL. If that URL is an authenticated endpoint that performs an action on `GET` (e.g., a confirmation step that auto-executes on visit), prefetching it can trigger the action **without the user's intent** — an effect identical to a CSRF attack.
+>
+> **Routes you must always exclude from prefetching:**
+>
+> | Route pattern | Risk if prefetched |
+> |---|---|
+> | `/logout`, `/signout` | Silently logs the user out |
+> | `/api/delete-account` | Triggers account deletion |
+> | `/api/confirm-*` | Executes one-time confirmation actions |
+> | `/api/unsubscribe` | Silently cancels a subscription |
+> | Any route that mutates state on HTTP `GET` | Unintended data modification |
+>
+> Implement the `isSensitiveRoute` guard above as an allowlist (not a blocklist):
+>
+> ```ts
+> // ✅ SAFE — allowlist approach: only prefetch explicitly approved routes
+> function isSensitiveRoute(state: string): boolean {
+>   const PREFETCH_ALLOWLIST = ['/dashboard', '/features', '/pricing', '/docs'];
+>   return !PREFETCH_ALLOWLIST.some(allowed => state.startsWith(allowed));
+> }
+> ```
+>
+> A blocklist approach (checking for known bad routes) is **not sufficient** — it relies on you having enumerated every dangerous route in your application, now and in the future. An allowlist fails safe: unknown routes are never prefetched.
+
+---
+
 ## Configuration Reference
 
 ```ts
@@ -738,6 +892,11 @@ interface IntentManagerConfig {
   holdoutConfig?: {
     percentage: number; // probability (0–100) of being placed in control
   };
+
+  // Cross-tab synchronization via BroadcastChannel (default: false)
+  // Unifies the intent model across all open tabs for the same origin.
+  // Payloads are schema-validated and length-limited before deserialization.
+  crossTabSync?: boolean;
 
   // Built-in performance instrumentation
   benchmark?: {

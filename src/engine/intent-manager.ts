@@ -151,6 +151,22 @@ export class IntentManager {
   private readonly bigramFrequencyThreshold: number;
 
   /* ================================================================== */
+  /*  Tab-Visibility Dwell-Time Correction                               */
+  /* ================================================================== */
+
+  /**
+   * Timestamp (ms, from timer.now()) when the tab last became hidden.
+   * `null` while the tab is visible or before the first hide event.
+   */
+  private tabHiddenAt: number | null = null;
+  /**
+   * Bound `visibilitychange` handler — stored so `destroy()` can call
+   * `removeEventListener` with the exact same function reference and fully
+   * clean up in SPA teardown paths.  `null` in non-browser environments.
+   */
+  private readonly visibilityChangeListener: (() => void) | null;
+
+  /* ================================================================== */
   /*  Failsafe Killswitch — Baseline Drift Protection                   */
   /* ================================================================== */
 
@@ -274,6 +290,33 @@ export class IntentManager {
     // reorder steps (e.g. add a rate-limit stage or an A/B experiment hook)
     // without touching the core track() loop.  Each stage mutates `ctx` in
     // place so no intermediate allocations are required.
+
+    // Tab-visibility correction for dwell-time anomaly detection.
+    // When the user switches tabs the monotonic timer keeps ticking, which
+    // would inflate dwellMs and fire spurious dwell_time_anomaly events.
+    // The fix: when the tab becomes hidden we snapshot tabHiddenAt; when it
+    // becomes visible again we add the hidden duration to previousStateEnteredAt
+    // so the dwell calculation automatically ignores the off-screen gap.
+    // Only wired in browser environments that expose the Page Visibility API.
+    if (typeof document !== 'undefined') {
+      this.visibilityChangeListener = () => {
+        if (document.hidden) {
+          this.tabHiddenAt = this.timer.now();
+        } else if (this.tabHiddenAt !== null) {
+          const hiddenDuration = this.timer.now() - this.tabHiddenAt;
+          // Only offset the dwell baseline when we are actively tracking a state.
+          // If no state has been entered yet (previousState === null) there is no
+          // dwell accumulation in progress, so no adjustment is needed.
+          if (this.previousState !== null) {
+            this.previousStateEnteredAt += hiddenDuration;
+          }
+          this.tabHiddenAt = null;
+        }
+      };
+      document.addEventListener('visibilitychange', this.visibilityChangeListener);
+    } else {
+      this.visibilityChangeListener = null;
+    }
   }
 
   on<K extends keyof IntentEventMap>(
@@ -434,6 +477,9 @@ export class IntentManager {
   destroy(): void {
     this.flushNow();
     this.emitter.removeAll();
+    if (this.visibilityChangeListener !== null) {
+      document.removeEventListener('visibilitychange', this.visibilityChangeListener);
+    }
   }
 
   /**

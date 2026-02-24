@@ -1698,3 +1698,125 @@ test('driftProtection: rolling window resets allow anomaly counter to restart', 
 });
 
 
+
+// ── Tab-Visibility Dwell-Time Correction ────────────────────────────────────
+
+test('visibilitychange: hidden time is excluded from dwellMs so no spurious dwell_time_anomaly fires', () => {
+  storage.clear();
+  let mockTime = 1000;
+  const originalNow = globalThis.performance.now;
+  globalThis.performance.now = () => mockTime;
+
+  // Set up a minimal document mock with a controllable `hidden` flag.
+  let docHidden = false;
+  let capturedListener = null;
+  const originalDocument = globalThis.document;
+  globalThis.document = {
+    get hidden() { return docHidden; },
+    addEventListener(_evt, fn) { capturedListener = fn; },
+    removeEventListener() {},
+  };
+
+  try {
+    const manager = new IntentManager({
+      storageKey: 'visibility-dwell-test',
+      storage,
+      botProtection: false,
+      dwellTime: { enabled: true, minSamples: 5, zScoreThreshold: 2.0 },
+    });
+
+    assert.ok(capturedListener !== null, 'visibilitychange listener must have been registered');
+
+    const anomalies = [];
+    manager.on('dwell_time_anomaly', (p) => anomalies.push(p));
+
+    // Build 8 uniform dwell samples: ~100 ms on A, ~100 ms on B
+    for (let i = 0; i < 8; i++) {
+      mockTime += 100; manager.track('A');
+      mockTime += 100; manager.track('B');
+    }
+    assert.equal(anomalies.length, 0, 'no anomalies during uniform baseline phase');
+
+    // User switches away — tab becomes hidden
+    docHidden = true;
+    capturedListener();               // fire visibilitychange (hidden)
+    mockTime += 30000;                // 30 seconds hidden — would inflate dwellMs massively
+
+    // User returns — tab becomes visible
+    docHidden = false;
+    capturedListener();               // fire visibilitychange (visible)
+
+    // Navigate away from B — dwell on B should reflect only ~100 ms, not 30 100 ms.
+    // We record the anomaly list to inspect the actual dwellMs payload if one fires.
+    mockTime += 100; manager.track('A');
+    mockTime += 100; manager.track('B');
+
+    assert.equal(anomalies.length, 0,
+      'dwell_time_anomaly must NOT fire after tab-switch because hidden time was excluded');
+
+    // Positive control: introduce a genuine anomalous dwell AFTER the correction
+    // and confirm the payload dwellMs reflects only visible time (not hidden time).
+    mockTime += 2000; // genuine long dwell on B (~2 000 ms visible — anomalous vs ~100 ms mean)
+    manager.track('A');
+
+    assert.ok(anomalies.length >= 1,
+      'dwell_time_anomaly MUST fire for a genuine long dwell after the tab-switch fix');
+    const payload = anomalies[anomalies.length - 1];
+    // dwellMs must be ~2 000 ms, NOT ~32 100 ms (hidden + genuine)
+    assert.ok(payload.dwellMs < 5000,
+      `dwellMs should be ~2 000 ms (genuine dwell only), got ${payload.dwellMs} ms`);
+
+    manager.flushNow();
+  } finally {
+    globalThis.performance.now = originalNow;
+    globalThis.document = originalDocument;
+  }
+});
+
+test('visibilitychange: destroy() removes the visibilitychange listener', () => {
+  storage.clear();
+  const originalDocument = globalThis.document;
+
+  let capturedListener = null;
+  let removedListener = null;
+  globalThis.document = {
+    hidden: false,
+    addEventListener(_evt, fn) { capturedListener = fn; },
+    removeEventListener(_evt, fn) { removedListener = fn; },
+  };
+
+  try {
+    const manager = new IntentManager({
+      storageKey: 'visibility-destroy-test',
+      storage,
+      botProtection: false,
+    });
+
+    assert.ok(capturedListener !== null, 'listener must be registered on construction');
+    manager.destroy();
+    assert.equal(removedListener, capturedListener,
+      'destroy() must remove the exact same listener reference that was registered');
+  } finally {
+    globalThis.document = originalDocument;
+  }
+});
+
+test('visibilitychange: no listener is attached in non-browser (SSR) environment', () => {
+  storage.clear();
+  const originalDocument = globalThis.document;
+  // Simulate SSR: document is undefined
+  delete globalThis.document;
+
+  try {
+    // Must not throw even without document
+    const manager = new IntentManager({
+      storageKey: 'visibility-ssr-test',
+      storage,
+      botProtection: false,
+    });
+    manager.track('home');
+    manager.destroy(); // must not throw
+  } finally {
+    globalThis.document = originalDocument;
+  }
+});

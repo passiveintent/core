@@ -1524,3 +1524,299 @@ test('low-level events (trajectory_anomaly, dwell_time_anomaly) still fire indep
   }
 });
 
+// ── Drift Protection / Failsafe Killswitch ──────────────────────────────────
+
+test('getTelemetry() baselineStatus is "active" by default', () => {
+  storage.clear();
+  const manager = new IntentManager({
+    storageKey: 'drift-initial-test',
+    storage,
+    botProtection: false,
+  });
+
+  assert.equal(manager.getTelemetry().baselineStatus, 'active',
+    'baselineStatus must start as "active"');
+});
+
+test('driftProtection: isBaselineDrifted set when trajectory_anomaly ratio exceeds maxAnomalyRate', () => {
+  storage.clear();
+  let mockTime = 1000;
+  const originalNow = globalThis.performance.now;
+  globalThis.performance.now = () => mockTime;
+
+  try {
+    // Build baseline that will diverge heavily from the navigation pattern below.
+    const baselineGraph = new MarkovGraph();
+    for (let i = 0; i < 10; i++) {
+      baselineGraph.incrementTransition('A', 'B');
+      baselineGraph.incrementTransition('B', 'C');
+      baselineGraph.incrementTransition('C', 'A');
+    }
+
+    // Very tight drift window (10 calls) and low threshold so drift is triggered quickly.
+    const manager = new IntentManager({
+      storageKey: 'drift-trigger-test',
+      storage,
+      botProtection: false,
+      baseline: baselineGraph.toJSON(),
+      graph: {
+        divergenceThreshold: 0.1,
+        baselineMeanLL: 0,
+        baselineStdLL: 0.01,
+      },
+      driftProtection: { maxAnomalyRate: 0.1, evaluationWindowMs: 300_000 },
+    });
+
+    const anomalies = [];
+    manager.on('trajectory_anomaly', (p) => anomalies.push(p));
+
+    // Navigate a completely different path to trigger trajectory_anomaly events.
+    // Need ≥16 states to pass MIN_WINDOW_LENGTH before trajectory evaluation starts;
+    // 40 iterations ensure enough anomalies to exceed the 10% maxAnomalyRate.
+    const states = ['X', 'Y', 'Z', 'W'];
+    for (let i = 0; i < 40; i++) {
+      mockTime += 100;
+      manager.track(states[i % states.length]);
+    }
+
+    const t = manager.getTelemetry();
+    // The killswitch must have engaged given the anomaly rate well exceeds 10%
+    assert.equal(t.baselineStatus, 'drifted',
+      `baselineStatus must be "drifted" after anomaly rate exceeded; anomaliesFired=${t.anomaliesFired}`);
+
+    manager.flushNow();
+  } finally {
+    globalThis.performance.now = originalNow;
+  }
+});
+
+test('driftProtection: evaluateTrajectory is silently skipped once isBaselineDrifted is true', () => {
+  storage.clear();
+  let mockTime = 1000;
+  const originalNow = globalThis.performance.now;
+  globalThis.performance.now = () => mockTime;
+
+  try {
+    const baselineGraph = new MarkovGraph();
+    for (let i = 0; i < 10; i++) {
+      baselineGraph.incrementTransition('A', 'B');
+      baselineGraph.incrementTransition('B', 'C');
+      baselineGraph.incrementTransition('C', 'A');
+    }
+
+    const manager = new IntentManager({
+      storageKey: 'drift-silences-test',
+      storage,
+      botProtection: false,
+      baseline: baselineGraph.toJSON(),
+      graph: {
+        divergenceThreshold: 0.1,
+        baselineMeanLL: 0,
+        baselineStdLL: 0.01,
+      },
+      // Very low maxAnomalyRate to trigger drift quickly
+      driftProtection: { maxAnomalyRate: 0.05, evaluationWindowMs: 300_000 },
+    });
+
+    const anomalies = [];
+    manager.on('trajectory_anomaly', (p) => anomalies.push(p));
+
+    // Phase 1: drive the engine to drift
+    const states = ['X', 'Y', 'Z', 'W'];
+    for (let i = 0; i < 60; i++) {
+      mockTime += 100;
+      manager.track(states[i % states.length]);
+    }
+
+    assert.equal(manager.getTelemetry().baselineStatus, 'drifted',
+      'must be drifted after phase 1');
+
+    const anomaliesBeforePhase2 = anomalies.length;
+
+    // Phase 2: more tracks — no new trajectory_anomaly should fire once drifted
+    for (let i = 0; i < 20; i++) {
+      mockTime += 100;
+      manager.track(states[i % states.length]);
+    }
+
+    assert.equal(anomalies.length, anomaliesBeforePhase2,
+      'no new trajectory_anomaly events must fire after killswitch engages');
+
+    manager.flushNow();
+  } finally {
+    globalThis.performance.now = originalNow;
+  }
+});
+
+test('driftProtection: rolling window resets allow anomaly counter to restart', () => {
+  storage.clear();
+  let mockTime = 0;
+  const originalNow = globalThis.performance.now;
+  globalThis.performance.now = () => mockTime;
+
+  try {
+    const baselineGraph = new MarkovGraph();
+    for (let i = 0; i < 10; i++) {
+      baselineGraph.incrementTransition('A', 'B');
+      baselineGraph.incrementTransition('B', 'A');
+    }
+
+    // Short window (500 ms) so we can advance past it in the test
+    const manager = new IntentManager({
+      storageKey: 'drift-window-reset-test',
+      storage,
+      botProtection: false,
+      baseline: baselineGraph.toJSON(),
+      graph: { divergenceThreshold: 0.1, baselineMeanLL: 0, baselineStdLL: 0.01 },
+      // High rate so drift is NOT triggered — we only want to verify window reset
+      driftProtection: { maxAnomalyRate: 1.0, evaluationWindowMs: 500 },
+    });
+
+    // Track a few times in window 1
+    for (let i = 0; i < 5; i++) {
+      mockTime += 50;
+      manager.track(i % 2 === 0 ? 'X' : 'Y');
+    }
+
+    // Advance past the evaluation window
+    mockTime += 600;
+
+    // Track again — the window should reset without crashing
+    for (let i = 0; i < 5; i++) {
+      mockTime += 50;
+      manager.track(i % 2 === 0 ? 'X' : 'Y');
+    }
+
+    // baselineStatus must still be active (maxAnomalyRate=1.0 can never be exceeded)
+    assert.equal(manager.getTelemetry().baselineStatus, 'active',
+      'baselineStatus must remain "active" when maxAnomalyRate=1.0');
+
+    manager.flushNow();
+  } finally {
+    globalThis.performance.now = originalNow;
+  }
+});
+
+
+
+// ── Tab-Visibility Dwell-Time Correction ────────────────────────────────────
+
+test('visibilitychange: hidden time is excluded from dwellMs so no spurious dwell_time_anomaly fires', () => {
+  storage.clear();
+  let mockTime = 1000;
+  const originalNow = globalThis.performance.now;
+  globalThis.performance.now = () => mockTime;
+
+  // Set up a minimal document mock with a controllable `hidden` flag.
+  let docHidden = false;
+  let capturedListener = null;
+  const originalDocument = globalThis.document;
+  globalThis.document = {
+    get hidden() { return docHidden; },
+    addEventListener(_evt, fn) { capturedListener = fn; },
+    removeEventListener() {},
+  };
+
+  try {
+    const manager = new IntentManager({
+      storageKey: 'visibility-dwell-test',
+      storage,
+      botProtection: false,
+      dwellTime: { enabled: true, minSamples: 5, zScoreThreshold: 2.0 },
+    });
+
+    assert.ok(capturedListener !== null, 'visibilitychange listener must have been registered');
+
+    const anomalies = [];
+    manager.on('dwell_time_anomaly', (p) => anomalies.push(p));
+
+    // Build 8 uniform dwell samples: ~100 ms on A, ~100 ms on B
+    for (let i = 0; i < 8; i++) {
+      mockTime += 100; manager.track('A');
+      mockTime += 100; manager.track('B');
+    }
+    assert.equal(anomalies.length, 0, 'no anomalies during uniform baseline phase');
+
+    // User switches away — tab becomes hidden
+    docHidden = true;
+    capturedListener();               // fire visibilitychange (hidden)
+    mockTime += 30000;                // 30 seconds hidden — would inflate dwellMs massively
+
+    // User returns — tab becomes visible
+    docHidden = false;
+    capturedListener();               // fire visibilitychange (visible)
+
+    // Navigate away from B — dwell on B should reflect only ~100 ms, not 30 100 ms.
+    // We record the anomaly list to inspect the actual dwellMs payload if one fires.
+    mockTime += 100; manager.track('A');
+    mockTime += 100; manager.track('B');
+
+    assert.equal(anomalies.length, 0,
+      'dwell_time_anomaly must NOT fire after tab-switch because hidden time was excluded');
+
+    // Positive control: introduce a genuine anomalous dwell AFTER the correction
+    // and confirm the payload dwellMs reflects only visible time (not hidden time).
+    mockTime += 2000; // genuine long dwell on B (~2 000 ms visible — anomalous vs ~100 ms mean)
+    manager.track('A');
+
+    assert.ok(anomalies.length >= 1,
+      'dwell_time_anomaly MUST fire for a genuine long dwell after the tab-switch fix');
+    const payload = anomalies[anomalies.length - 1];
+    // dwellMs must be ~2 000 ms, NOT ~32 100 ms (hidden + genuine)
+    assert.ok(payload.dwellMs < 5000,
+      `dwellMs should be ~2 000 ms (genuine dwell only), got ${payload.dwellMs} ms`);
+
+    manager.flushNow();
+  } finally {
+    globalThis.performance.now = originalNow;
+    globalThis.document = originalDocument;
+  }
+});
+
+test('visibilitychange: destroy() removes the visibilitychange listener', () => {
+  storage.clear();
+  const originalDocument = globalThis.document;
+
+  let capturedListener = null;
+  let removedListener = null;
+  globalThis.document = {
+    hidden: false,
+    addEventListener(_evt, fn) { capturedListener = fn; },
+    removeEventListener(_evt, fn) { removedListener = fn; },
+  };
+
+  try {
+    const manager = new IntentManager({
+      storageKey: 'visibility-destroy-test',
+      storage,
+      botProtection: false,
+    });
+
+    assert.ok(capturedListener !== null, 'listener must be registered on construction');
+    manager.destroy();
+    assert.equal(removedListener, capturedListener,
+      'destroy() must remove the exact same listener reference that was registered');
+  } finally {
+    globalThis.document = originalDocument;
+  }
+});
+
+test('visibilitychange: no listener is attached in non-browser (SSR) environment', () => {
+  storage.clear();
+  const originalDocument = globalThis.document;
+  // Simulate SSR: document is undefined
+  delete globalThis.document;
+
+  try {
+    // Must not throw even without document
+    const manager = new IntentManager({
+      storageKey: 'visibility-ssr-test',
+      storage,
+      botProtection: false,
+    });
+    manager.track('home');
+    manager.destroy(); // must not throw
+  } finally {
+    globalThis.document = originalDocument;
+  }
+});

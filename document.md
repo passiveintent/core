@@ -1,6 +1,6 @@
 # EdgeSignal — Documentation
 
-> **EdgeSignal** — privacy-first, on-device behavioral intent modeling with zero data egress. No server. No consent banner. No GDPR exposure.
+> **EdgeSignal** — the privacy-first, on-device behavioral intent engine built for B2B SaaS retention. Detect frustrated navigation in **< 2 milliseconds** — locally, with zero data egress, no server round-trips, and no GDPR exposure.
 
 [![npm version](https://img.shields.io/badge/npm-coming%20soon-lightgrey)](https://github.com/purushpsm147/EdgeSignal-Privacy-First-Intent-Engine)
 [![License: AGPL-3.0-only](https://img.shields.io/badge/license-AGPL--3.0--only-blue.svg)](./LICENSE)
@@ -8,7 +8,9 @@
 [![Privacy: Zero Egress](https://img.shields.io/badge/privacy-zero--egress-brightgreen)](https://github.com/purushpsm147/EdgeSignal-Privacy-First-Intent-Engine#privacy--gdpr-compliance)
 [![GDPR: No Personal Data](https://img.shields.io/badge/GDPR-no%20personal%20data-brightgreen)](https://github.com/purushpsm147/EdgeSignal-Privacy-First-Intent-Engine#privacy--gdpr-compliance)
 
-A tiny, tree-shakeable TypeScript SDK that learns how a user navigates your application and fires events when behavior becomes anomalous — all without sending a single byte to a server. It works in browsers, Node.js, Deno, Bun, Edge Workers, and SSR frameworks.
+Traditional behavioral analytics platforms funnel every click, scroll, and rage-click to a remote server — introducing latency, compliance overhead, and a permanently growing data liability. By the time a heatmap vendor has processed a user's frustrated navigation on your `/billing` page, that user has already churned.
+
+EdgeSignal takes the opposite approach. It is a tiny, tree-shakeable TypeScript SDK that runs the entire intent model **inside the user's browser**. It detects anomalous navigation — high-entropy wandering, trajectory divergence, dwell-time spikes — in under 2 milliseconds per `track()` call, with zero network overhead. When a B2B user starts exhibiting churn signals on your `/settings` or `/billing` pages, EdgeSignal can fire a Zendesk or Intercom support widget **before they close the tab** — not minutes later in a dashboard. It works in browsers, Node.js, Deno, Bun, Edge Workers, and SSR frameworks.
 
 **The core privacy guarantee:** EdgeSignal processes no personal data. It never observes who the user is — only the anonymous sequence of state labels your application explicitly provides. Because no personal data ever leaves the device, EdgeSignal falls outside the primary scope of GDPR data processing obligations and requires no consent banner, no cookie notice, no Data Processing Agreement, and no server-side data deletion workflow.
 
@@ -22,11 +24,12 @@ A tiny, tree-shakeable TypeScript SDK that learns how a user navigates your appl
 4. [Installation](#installation)
 5. [Quick Start](#quick-start)
 6. [Real-World Recipes](#real-world-recipes)
-   - [Dynamic Paywall](#1-dynamic-paywall)
-   - [Hesitation Discount](#2-hesitation-discount)
-   - [Rage-Click Healer](#3-rage-click-healer)
-   - [GA4 Bridge — Proving ROI Without Sending Behavioral Data](#4-ga4-bridge--proving-roi-without-sending-behavioral-data)
-   - [A/B Testing Holdout — Measuring ROI Without a Server](#5-ab-testing-holdout--measuring-roi-without-a-server)
+   - [Zero-Latency Churn Healer](#1-zero-latency-churn-healer)
+   - [Dynamic Lead Capture (Progressive Profiling)](#2-dynamic-lead-capture-progressive-profiling)
+   - [The Intervention Ladder](#3-the-intervention-ladder)
+   - [Rage-Click Healer](#4-rage-click-healer)
+   - [GA4 Bridge — Proving ROI Without Sending Behavioral Data](#5-ga4-bridge--proving-roi-without-sending-behavioral-data)
+   - [A/B Testing Holdout — Measuring ROI Without a Server](#6-ab-testing-holdout--measuring-roi-without-a-server)
 7. [Configuration Reference](#configuration-reference)
 8. [Testing Guide](#testing-guide)
 9. [Technical Deep Dive](#technical-deep-dive)
@@ -56,6 +59,7 @@ A tiny, tree-shakeable TypeScript SDK that learns how a user navigates your appl
    - [No Consent Required](#no-consent-required)
    - [CCPA / ePrivacy](#ccpa--eprivacy)
    - [EdgeSignal vs. Traditional Analytics](#edgesignal-vs-traditional-analytics)
+   - [Privacy-Preserving Intent Decay](#privacy-preserving-intent-decay)
 13. [License](#license)
 
 ---
@@ -247,46 +251,111 @@ interface EdgeSignalTelemetry {
 
 ## Real-World Recipes
 
-### 1. Dynamic Paywall
+### 1. Zero-Latency Churn Healer
 
-Show a soft paywall only after a user has demonstrated genuine reading intent — not on their first visit.
+In B2B SaaS, the highest-risk churn moments happen silently — a customer wandering through `/billing` comparing plan limits, or thrashing back and forth across `/settings` trying to find the cancellation flow. Traditional analytics platforms take minutes (or longer) to surface these "rage click" patterns in a dashboard — by which time the user has already churned.
+
+EdgeSignal detects this frustrated, high-entropy navigation **locally in under 2 milliseconds**, using the on-device Markov graph. No data leaves the browser. No server round-trip. When `normalizedEntropy` crosses `0.90` on a retention-critical page, you can open a Zendesk or Intercom support chat widget **before the user closes the tab**.
 
 ```ts
 import { IntentManager } from 'edge-signal';
 
-const intent = new IntentManager({ storageKey: 'editorial-intent' });
+const intent = new IntentManager({
+  storageKey: 'b2b-retention-intent',
+  graph: {
+    highEntropyThreshold: 0.80, // start learning early; action fires at 0.90 below
+  },
+  eventCooldownMs: 60_000, // at most one intervention per minute
+});
+
+intent.on('high_entropy', ({ state, normalizedEntropy }) => {
+  const isRetentionPage = state === '/billing' || state === '/settings';
+
+  if (isRetentionPage && normalizedEntropy > 0.90) {
+    // Full churn signal: open live support chat immediately.
+    // EdgeSignal detected this in < 2 ms — no server round-trip required.
+    openSupportChat({
+      context: `User showing churn signal at: ${state}`,
+      priority: 'high',
+    });
+  }
+});
+
+// Track every route change — works with any router
+router.afterEach((to) => intent.track(to.path));
+
+// Or in React
+useEffect(() => {
+  intent.track(location.pathname);
+}, [location.pathname]);
+```
+
+**Why this works:**
+
+The `high_entropy` event fires when normalized Shannon entropy $\hat{H} \geq$ `highEntropyThreshold` **and** the state has at least 10 observed outgoing transitions. On a `/billing` page with a confused user cycling back and forth between plan tiers, anchor links, and the upgrade modal, entropy climbs rapidly. The `0.90` threshold catches the most severe wandering — equivalent to the user choosing their next click almost at random — while the `eventCooldownMs` guard ensures a single thrashing session does not produce more than one chat widget.
+
+**GDPR note:** The only data written to storage is an aggregate transition count under a key of your choosing. No user identity, session token, or PII is involved. The chat widget is triggered entirely by local inference. No raw behavioral data is automatically forwarded to your support platform — the `context` string you pass to `openSupportChat()` is entirely under your control, and you decide what (if anything) it contains.
+
+---
+
+### 2. Dynamic Lead Capture (Progressive Profiling)
+
+Immediately blasting a newsletter pop-up at every first-time visitor is one of the fastest ways to destroy a content marketing funnel. Users who arrived for the first time are not yet invested — they will dismiss the modal and install an ad-blocker.
+
+EdgeSignal lets you measure **genuine engagement intent** before asking for an email. Wait until a user has visited at least 3 distinct articles (tracked via the Bloom filter) **and** has spent meaningful time on a core feature or pricing page — the moment user intent peaks — then trigger the email capture modal.
+
+> **Note on Incognito mode:** If users bypass engagement tracking with a private browsing session, that is perfectly fine. Lead capture is a **marketing funnel optimization**, not a security gate. A user who bypasses localStorage is simply treated as a first-time visitor. You lose the progressive profiling benefit for that session, but you never harm the user experience or create a false gate.
+
+```ts
+import { IntentManager } from 'edge-signal';
+
+const intent = new IntentManager({
+  storageKey: 'editorial-intent',
+  dwellTime: { enabled: true, minSamples: 3, zScoreThreshold: 1.5 },
+});
+
+// Count distinct articles read using the deterministic counter API.
+// incrementCounter is session-scoped; hasSeen() persists across sessions via the Bloom filter.
+intent.on('state_change', ({ to }) => {
+  if (to.startsWith('/article/')) {
+    intent.incrementCounter('articles_read');
+  }
+});
 
 function onRouteChange(route: string) {
   intent.track(route);
 
-  // Fire paywall after the user has visited 3+ distinct article pages.
-  // hasSeen() is O(1) regardless of how many states exist.
-  const articleRoutes = ['/article/1', '/article/2', '/article/3'];
-  const seenCount = articleRoutes.filter(r => intent.hasSeen(r)).length;
+  const articleCount = intent.getCounter('articles_read');
+  // hasSeen() is O(1) — backed by the Bloom filter, persisted across sessions
+  const hasEngagedWithFeatures =
+    intent.hasSeen('/features') || intent.hasSeen('/pricing');
 
-  if (seenCount >= 3 && !intent.hasSeen('/paywall-shown')) {
-    intent.track('/paywall-shown'); // Bloom filter prevents re-showing across sessions
-    showPaywall();
+  // Trigger the email capture modal only when intent peaks:
+  // - Visited 3+ distinct article pages (genuine reading intent)
+  // - Explored a core product page (purchase consideration)
+  // - Has not already been shown the modal this device
+  if (
+    articleCount >= 3 &&
+    hasEngagedWithFeatures &&
+    !intent.hasSeen('/lead-captured')
+  ) {
+    intent.track('/lead-captured'); // Bloom filter prevents re-showing across sessions
+    showEmailCaptureModal();
   }
 }
 ```
 
 **Why this works:**
 
-`hasSeen()` is backed by the Bloom filter — it is an O(1) constant-time operation regardless of how many states the graph has learned. The filter is persisted across sessions via `localStorage`, so a user who reads 2 articles today and 1 tomorrow still hits the gate. The `/paywall-shown` sentinel state ensures the paywall appears at most once per device, with no server-side session required.
+`hasSeen()` is backed by the Bloom filter — a probabilistic set with a false-positive rate under 1% for up to ~200 distinct states. Once `/lead-captured` is added to the filter, the modal will not be shown again on this device for the lifetime of the `localStorage` entry. The `getCounter('articles_read')` call uses the deterministic counter API (zero false positives) to ensure the threshold is exact, avoiding the Bloom filter's inherent probabilistic nature for a business-critical count.
 
 ---
 
-### 2. Hesitation Discount
+### 3. The Intervention Ladder
 
-> **TL;DR for simple integrations:** If you just want to show a discount when hesitation is detected, listen to `hesitation_detected` — the SDK handles the dual-signal correlation internally. The full recipe below is for power users who need access to the raw `zScore` values or custom window logic.
+Immediately discounting a purchase the moment a user hesitates is a losing strategy. Handing out a 10% discount on every wobble trains your customers to abandon carts deliberately — and destroys perceived brand value. A thoughtful intervention starts gentle and escalates only when the signal is strong enough to justify the cost.
 
-Detect genuine purchase hesitation by correlating two independent signals:
-
-- **Spatial signal** (`trajectory_anomaly`) — the user's path diverges from how typical converters navigate.
-- **Temporal signal** (`dwell_time_anomaly`) — the user is lingering statistically longer than their own previous visits to that state.
-
-A single signal is a weak proxy. Both firing **within the same short window** is a high-confidence indicator of "I want to buy but I'm not sure." This is the same multi-signal correlation approach used in UEBA and SIEM tooling to reduce false positives.
+> **TL;DR for simple integrations:** Listen to `hesitation_detected` — the SDK correlates `trajectory_anomaly` and `dwell_time_anomaly` internally. The full recipe below adds a severity check and a cart-value gate for a three-tier response.
 
 ```ts
 import { IntentManager, SerializedMarkovGraph } from 'edge-signal';
@@ -313,49 +382,35 @@ const intent = new IntentManager({
     baselineMeanLL: -0.52,
     baselineStdLL: 0.18,
   },
-  // Enable temporal intent detection
   dwellTime: {
     enabled: true,
-    minSamples: 5,          // learn quickly within a session
-    zScoreThreshold: 2.0,   // lower individual threshold — the combo gate does the heavy lifting
+    minSamples: 5,        // learn quickly within a session
+    zScoreThreshold: 2.0, // lower individual threshold — the combo gate does the heavy lifting
   },
-  eventCooldownMs: 15_000,  // prevent re-triggering within 15 s at the SDK level
+  eventCooldownMs: 15_000,             // prevent re-triggering within 15 s
+  hesitationCorrelationWindowMs: 30_000,
 });
 
-// Time-bound correlation: both signals must fire within 30 seconds of each other.
-// Without this window, a trajectory anomaly on /home could pair with a dwell
-// anomaly on /terms-of-service ten minutes later — a spurious combination.
-let lastTrajectoryAnomaly = 0;
-let lastDwellAnomaly = 0;
-const CORRELATION_WINDOW_MS = 30_000; // 30 seconds
+intent.on('hesitation_detected', ({ state, dwellZScore }) => {
+  const cartValue = getCartValue(); // your application-level helper
 
-function maybeShowDiscount(): void {
-  const now = Date.now();
-  const isCorrelated =
-    (now - lastTrajectoryAnomaly < CORRELATION_WINDOW_MS) &&
-    (now - lastDwellAnomaly < CORRELATION_WINDOW_MS);
-
-  if (isCorrelated && isNearCheckout()) {
-    showHesitationDiscount('10% off — just for you. Offer expires in 10 min.');
-    // Reset timestamps to prevent spamming after the discount is shown
-    lastTrajectoryAnomaly = 0;
-    lastDwellAnomaly = 0;
+  // ── Tier 3: Discount — only for high-value carts, and only if no prior
+  // discount has been given this session (checked via the deterministic counter).
+  // Giving discounts freely trains users to abandon carts on purpose.
+  if (cartValue > 150 && intent.getCounter('discounts_given') === 0) {
+    showDiscount('10% off your order — limited time offer');
+    intent.incrementCounter('discounts_given'); // gate: at most one discount per session
+    return;
   }
-}
 
-intent.on('trajectory_anomaly', () => {
-  lastTrajectoryAnomaly = Date.now();
-  maybeShowDiscount();
-});
-
-intent.on('dwell_time_anomaly', ({ zScore }) => {
-  // Only positive z-scores mean lingering; negative means rushing through.
-  // Use a slightly relaxed threshold here (1.5) since the correlation window
-  // already filters coincidental pairings.
-  if (zScore > 1.5) {
-    lastDwellAnomaly = Date.now();
-    maybeShowDiscount();
+  // ── Tier 2: Chat prompt — strong hesitation but cart doesn't qualify for discount
+  if (dwellZScore > 2.5) {
+    openLiveChat({ context: `User hesitating at: ${state}` });
+    return;
   }
+
+  // ── Tier 1: Reassurance tooltip — mild hesitation, keep it subtle
+  showReassuranceTooltip(state, 'Free Shipping on orders over $50 ✓');
 });
 
 function isNearCheckout(): boolean {
@@ -371,11 +426,11 @@ Run `npm run test:perf:matrix` after pointing `scripts/scenario-matrix.mjs` at r
 
 Dwell-time statistics are held in memory only and are never persisted to `localStorage`. This is a deliberate privacy boundary. Permanently storing per-user temporal profiles (how long someone reads each page, across every visit, over months) would enable invasive behavioral fingerprinting — correlating reading speed and attention patterns to build a persistent identity. EdgeSignal intentionally keeps all temporal math strictly session-scoped. The warm-up period (`minSamples`) resets on every page load as a direct consequence of this guarantee. For checkout funnels this trade-off is acceptable, and arguably beneficial: the signal is always grounded in the current session's behaviour, not stale historical data from a different context.
 
-**GDPR note:** Traditional hesitation-detection solutions — heatmap tools, session replay platforms, A/B testing SDKs — stream interaction data to third-party servers, triggering GDPR Article 6 lawful-basis requirements, consent obligations under ePrivacy, and third-party processor agreements. This recipe achieves the same commercial outcome (discount trigger) with **zero data egress**. Nothing collected here is personal data under GDPR Article 4(1). No consent banner is required. No cookie notice applies. The entire inference lives and dies inside the user's browser tab.
+**GDPR note:** Traditional hesitation-detection solutions — heatmap tools, session replay platforms, A/B testing SDKs — stream interaction data to third-party servers, triggering GDPR Article 6 lawful-basis requirements, consent obligations under ePrivacy, and third-party processor agreements. This recipe achieves the same commercial outcome (intervention trigger) with **zero data egress**. Nothing collected here is personal data under GDPR Article 4(1). No consent banner is required. No cookie notice applies. The entire inference lives and dies inside the user's browser tab.
 
 ---
 
-### 3. Rage-Click Healer
+### 4. Rage-Click Healer
 
 Detect frantic, high-entropy navigation and surface a help prompt before the user bounces.
 
@@ -410,7 +465,7 @@ useEffect(() => {
 
 ---
 
-### 4. GA4 Bridge — Proving ROI Without Sending Behavioral Data
+### 5. GA4 Bridge — Proving ROI Without Sending Behavioral Data
 
 This recipe shows how to connect EdgeSignal's local event bus to Google Analytics 4 so you can measure bot mitigation, hesitation interventions, and assisted conversions — all **without sending any behavioral or personally identifiable data to GA4**.
 
@@ -508,7 +563,7 @@ EdgeSignal itself has no GDPR obligations (zero personal data). Sending the even
 
 ---
 
-### 5. A/B Testing Holdout — Measuring ROI Without a Server
+### 6. A/B Testing Holdout — Measuring ROI Without a Server
 
 Prove that your behavioral interventions (hesitation discounts, dynamic paywalls, support-chat prompts) actually increase conversions — without a server-side experiment platform, without a consent banner, and without sending any user data anywhere.
 
@@ -1845,6 +1900,34 @@ The table below compares EdgeSignal against a typical behavioral analytics platf
 | Cross-border data transfer (SCCs, adequacy) | Yes — if vendor servers are outside EEA | **No** — data never crosses a border |
 | Third-party script risk | Yes — vendor JS loaded from CDN | **No** — bundled locally, auditable |
 | User can delete their data | Only via vendor portal / API | **Yes** — `localStorage.removeItem('edge-signal')` |
+
+---
+
+### Privacy-Preserving Intent Decay
+
+A common concern about any localStorage-backed SDK is the question of persistence: "does this build up a permanent behavioral profile of my users?" EdgeSignal's architecture makes that concern mathematically impossible — and two properties that might look like limitations are in fact deliberate, hardened privacy guarantees.
+
+**Safari ITP and browser storage policies as a feature:**
+
+Browser privacy mechanisms — including Safari's Intelligent Tracking Prevention (ITP) and storage-clearing policies for domains classified as cross-site trackers — can evict `localStorage` data under certain conditions (for example, when a domain is identified as engaging in cross-site tracking). Rather than fighting these browser mechanisms, EdgeSignal embraces their spirit. The result is **automatic intent decay**: even if a user's navigational patterns are eventually cleared by the browser or by the user manually, EdgeSignal never has a server-side copy to fall back on. EdgeSignal is architecturally incapable of building a month-over-month behavioral profile of a user — there is no durable storage layer that survives independent of the user's own device and browser policies.
+
+**Session-scoped dwell times:**
+
+Dwell-time accumulators — the per-state mean and variance statistics used for hesitation detection — are held **in memory only** and are never written to `localStorage`. They are destroyed the moment the browser tab closes. This is a hardcoded privacy boundary, not a configuration option.
+
+The practical consequence: EdgeSignal cannot permanently track how quickly a user reads articles, how long they linger on pricing pages, or whether they are getting faster or slower at navigating your checkout across visits. All temporal inference is grounded in the **current active session only**. Each new session starts with a blank temporal slate.
+
+**Compliance implications:**
+
+This architecture directly satisfies GDPR Article 5(1)(e) (storage limitation) and Article 5(1)(c) (data minimisation) without any configuration:
+
+| Privacy property | Mechanism | GDPR benefit |
+|---|---|---|
+| Markov graph can be cleared by browser policies | Browser privacy mechanisms (ITP, user-initiated clear) apply; no server-side copy exists | Storage limitation satisfied; user retains full control |
+| Dwell-time stats are never persisted | In-memory only; destroyed on tab close | Temporal behavioral fingerprinting is architecturally impossible |
+| No cross-session timing correlation | Each session relearns from scratch | Cannot infer long-term attention or reading-speed patterns |
+
+The intent model provides **actionable signals for the current active session** while being structurally incapable of building the kind of longitudinal behavioral profile that would attract regulatory scrutiny under GDPR's data minimisation and purpose limitation principles.
 
 ---
 

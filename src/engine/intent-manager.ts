@@ -8,13 +8,14 @@
 import { BenchmarkRecorder } from '../performance-instrumentation.js';
 import type { BenchmarkConfig, PerformanceReport } from '../performance-instrumentation.js';
 import { BrowserStorageAdapter, BrowserTimerAdapter } from '../adapters.js';
-import type { StorageAdapter, TimerAdapter, TimerHandle } from '../adapters.js';
+import type { AsyncStorageAdapter, StorageAdapter, TimerAdapter, TimerHandle } from '../adapters.js';
 import { base64ToUint8, uint8ToBase64 } from '../persistence/codec.js';
 import { BloomFilter } from '../core/bloom.js';
 import { MarkovGraph } from '../core/markov.js';
 import { EntropyGuard } from './entropy-guard.js';
 import { dwellStd, updateDwellStats } from './dwell.js';
 import { normalizeRouteState } from '../utils/route-normalizer.js';
+import { BroadcastSync } from '../sync/broadcast-sync.js';
 import type { SerializedMarkovGraph } from '../core/markov.js';
 import type {
   BotDetectedPayload,
@@ -125,6 +126,15 @@ export class IntentManager {
   private readonly persistDebounceMs: number;
   private readonly benchmark: BenchmarkRecorder;
   private readonly storage: StorageAdapter;
+  /** Async storage backend — present only when created via `createAsync`. */
+  private readonly asyncStorage: AsyncStorageAdapter | null;
+  /**
+   * Guards against overlapping async `setItem` calls.
+   * When `true`, a promise-based write is already in flight;
+   * subsequent `persist()` calls return early and rely on `isDirty` to
+   * ensure the accumulated state is saved once the in-flight write completes.
+   */
+  private isAsyncWriting = false;
   private readonly timer: TimerAdapter;
   private readonly onError?: (err: Error) => void;
   private readonly botProtection: boolean;
@@ -217,6 +227,9 @@ export class IntentManager {
   /* EntropyGuard: bot detection state */
   private readonly entropyGuard = new EntropyGuard();
 
+  /* Cross-tab synchronization via BroadcastChannel */
+  private readonly broadcastSync: BroadcastSync | null;
+
   /* ================================================================== */
   /*  GDPR-Compliant Telemetry                                           */
   /* ================================================================== */
@@ -250,6 +263,10 @@ export class IntentManager {
     this.persistDebounceMs = config.persistDebounceMs ?? 2000;
     this.benchmark = new BenchmarkRecorder(config.benchmark);
     this.storage = config.storage ?? new BrowserStorageAdapter();
+    this.asyncStorage = config.asyncStorage ?? null;
+    // When asyncStorage is set, it is used for all writes (in persist()).
+    // The sync storage adapter is only consulted by restore() to read the
+    // pre-loaded payload (injected by createAsync); its setItem is never called.
     this.timer = config.timer ?? new BrowserTimerAdapter();
     this.onError = config.onError;
     this.botProtection = config.botProtection ?? true;
@@ -301,6 +318,13 @@ export class IntentManager {
     this.graph = restored?.graph ?? new MarkovGraph(graphConfig);
     this.baseline = config.baseline ? MarkovGraph.fromJSON(config.baseline, graphConfig) : null;
 
+    // Cross-tab synchronization — only initialized when explicitly opted in.
+    // The channel name is derived from storageKey so that multiple independent
+    // IntentManager instances (different storageKeys) never share messages.
+    this.broadcastSync = (config.crossTabSync === true)
+      ? new BroadcastSync(`edgesignal-sync:${this.storageKey}`, this.graph, this.bloom)
+      : null;
+
     this.trackStages = [
       this.runBotProtectionStage,
       this.runBloomStage,
@@ -347,6 +371,54 @@ export class IntentManager {
     listener: (payload: IntentEventMap[K]) => void,
   ): () => void {
     return this.emitter.on(event, listener);
+  }
+
+  /**
+   * Async factory for environments with asynchronous storage backends
+   * (React Native AsyncStorage, Capacitor Preferences, IndexedDB wrappers, etc.).
+   *
+   * `createAsync` awaits the initial `getItem` call to pre-load any persisted
+   * Bloom filter + Markov graph **before** constructing the engine, so that
+   * the synchronous `track()` hot-path is never blocked by I/O.  Once the
+   * initial read completes, the engine is instantiated synchronously using
+   * a lightweight bridge adapter that vends the pre-read payload to
+   * `restore()` — no further synchronous storage access is performed.
+   *
+   * Subsequent `persist()` calls use `config.asyncStorage.setItem()` in a
+   * fire-and-forget manner, guarded by an in-flight write flag to prevent
+   * overlapping writes.
+   *
+   * ```ts
+   * const adapter: AsyncStorageAdapter = {
+   *   getItem: (key) => AsyncStorage.getItem(key),
+   *   setItem: (key, value) => AsyncStorage.setItem(key, value),
+   * };
+   * const intent = await IntentManager.createAsync({ asyncStorage: adapter });
+   * ```
+   *
+   * @throws {Error} When `config.asyncStorage` is not provided.
+   */
+  static async createAsync(config: IntentManagerConfig): Promise<IntentManager> {
+    if (!config.asyncStorage) {
+      throw new Error('IntentManager.createAsync() requires config.asyncStorage');
+    }
+    const storageKey = config.storageKey ?? 'edge-signal';
+    // Await the single I/O call up-front so the constructor stays synchronous.
+    const raw = await config.asyncStorage.getItem(storageKey);
+
+    // Build a minimal sync bridge that serves the pre-read payload to restore()
+    // and is otherwise a no-op for setItem (async writes go through asyncStorage
+    // inside persist()).
+    // Note: `storage` is explicitly omitted from the spread so that if the
+    // caller also set `config.storage`, we don't inadvertently trigger the
+    // "both adapters provided" warning in the constructor.
+    const preloadBridge: StorageAdapter = {
+      // getItem is invoked exactly once — by restore() in the constructor.
+      getItem: () => raw,
+      setItem: () => { /* writes handled async in persist() */ },
+    };
+    const { storage: _omit, ...restConfig } = config;
+    return new IntentManager({ ...restConfig, storage: preloadBridge });
   }
 
   /**
@@ -460,6 +532,14 @@ export class IntentManager {
       this.isDirty = true;
       this.evaluateEntropy(ctx.state);
       this.evaluateTrajectory(ctx.from, ctx.state);
+
+      // Broadcast this transition to other tabs only when the local EntropyGuard
+      // has NOT flagged the session as a bot.  This prevents a local bot script
+      // from amplifying noisy transitions into every other open tab.
+      if (this.broadcastSync && !this.entropyGuard.suspected) {
+        this.broadcastSync.broadcast(ctx.from, ctx.state);
+      }
+
       return;
     }
 
@@ -495,6 +575,51 @@ export class IntentManager {
     return this.graph.toJSON();
   }
 
+  /**
+   * Returns the most likely next states from the current (or previous) state,
+   * filtered by a minimum probability threshold and an optional sanitize predicate.
+   *
+   * Designed for **read-only** UI prefetching hints only.  This method exposes
+   * predictive data from the Markov graph to the host application so it can
+   * preload assets or warm caches for the most probable next routes.
+   *
+   * ⚠ **Security constraint — you MUST provide a `sanitize` function.**
+   * Without a sanitize predicate, the returned list may include state-mutating
+   * or privacy-sensitive routes such as `/logout`, `/checkout/pay`, or routes
+   * that embed PII (e.g. `/users/john.doe/settings`).  The sanitize function
+   * must return `false` for any such route.  Prefetching must **never** trigger
+   * state-mutating side effects — treat the results as navigation hints only.
+   *
+   * ```ts
+   * // ✅ Safe usage with a sanitize guard
+   * const hints = intent.predictNextStates(0.3, (state) => {
+   *   const blocked = ['/logout', '/checkout/pay', '/delete-account'];
+   *   return !blocked.some((b) => state.startsWith(b)) &&
+   *          !/\/users\/[^/]+\/pii/.test(state);
+   * });
+   * hints.forEach(({ state, probability }) => prefetch(state));
+   * ```
+   *
+   * @param threshold  Minimum probability in [0, 1] for a state to be included.
+   *                   Defaults to `0.3`.
+   * @param sanitize   Optional predicate that receives each candidate state label
+   *                   and returns `true` to **include** it or `false` to **exclude**
+   *                   it.  When omitted all states above the threshold are returned,
+   *                   which is **unsafe** for production use — always supply this.
+   * @returns Filtered and sorted `{ state, probability }[]`, descending by
+   *          probability.  Returns an empty array when no previous state is known
+   *          or no transitions meet the threshold.
+   */
+  predictNextStates(
+    threshold = 0.3,
+    sanitize?: (state: string) => boolean,
+  ): { state: string; probability: number }[] {
+    if (this.previousState === null) return [];
+    const candidates = this.graph.getLikelyNextStates(this.previousState, threshold);
+    if (!sanitize) return candidates;
+    return candidates.filter(({ state }) => sanitize(state));
+  }
+
   flushNow(): void {
     if (this.persistTimer !== null) {
       this.timer.clearTimeout(this.persistTimer);
@@ -519,6 +644,7 @@ export class IntentManager {
     if (this.visibilityChangeListener !== null) {
       document.removeEventListener('visibilitychange', this.visibilityChangeListener);
     }
+    this.broadcastSync?.close();
   }
 
   /**
@@ -919,19 +1045,52 @@ export class IntentManager {
       bloomBase64: this.bloom.toBase64(),
       graphBinary,
     };
-    try {
-      this.storage.setItem(this.storageKey, JSON.stringify(payload));
-      // Reset dirty flag after successful save
+
+    if (this.asyncStorage) {
+      // ── Async path ────────────────────────────────────────────────────────
+      // Guard: if a write is already in flight, return early.  isDirty remains
+      // true, so when the in-flight promise settles and the next schedulePersist
+      // fires, the accumulated state will be saved.
+      if (this.isAsyncWriting) return;
+
+      this.isAsyncWriting = true;
+      // Optimistically clear isDirty now that we've captured the current state
+      // into `payload`.  If the write fails we restore the flag.
       this.isDirty = false;
-    } catch (err) {
-      // QuotaExceededError, SecurityError, or Private Browsing restrictions.
-      // Surface through the optional error callback; never crash the main thread.
-      if (err instanceof Error) {
-        if (err.name === 'QuotaExceededError' || err.message.toLowerCase().includes('quota')) {
-          this.engineHealth = 'quota_exceeded';
-        }
-        if (this.onError) {
-          this.onError(err);
+
+      this.asyncStorage.setItem(this.storageKey, JSON.stringify(payload))
+        .then(() => {
+          this.isAsyncWriting = false;
+        })
+        .catch((err: unknown) => {
+          this.isAsyncWriting = false;
+          // Restore dirty flag so the data is retried on the next persist cycle.
+          this.isDirty = true;
+          if (err instanceof Error) {
+            if (err.name === 'QuotaExceededError' || err.message.toLowerCase().includes('quota')) {
+              this.engineHealth = 'quota_exceeded';
+            }
+            if (this.onError) {
+              this.onError(err);
+            }
+          }
+        });
+    } else {
+      // ── Sync path (existing behaviour, unchanged) ─────────────────────────
+      try {
+        this.storage.setItem(this.storageKey, JSON.stringify(payload));
+        // Reset dirty flag after successful save
+        this.isDirty = false;
+      } catch (err) {
+        // QuotaExceededError, SecurityError, or Private Browsing restrictions.
+        // Surface through the optional error callback; never crash the main thread.
+        if (err instanceof Error) {
+          if (err.name === 'QuotaExceededError' || err.message.toLowerCase().includes('quota')) {
+            this.engineHealth = 'quota_exceeded';
+          }
+          if (this.onError) {
+            this.onError(err);
+          }
         }
       }
     }

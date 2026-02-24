@@ -7,7 +7,7 @@
 
 import type { BenchmarkConfig } from '../performance-instrumentation.js';
 import type { SerializedMarkovGraph } from '../core/markov.js';
-import type { StorageAdapter, TimerAdapter } from '../adapters.js';
+import type { AsyncStorageAdapter, StorageAdapter, TimerAdapter } from '../adapters.js';
 
 export type IntentEventName =
   | 'high_entropy'
@@ -168,6 +168,22 @@ export interface IntentManagerConfig {
   benchmark?: BenchmarkConfig;
   /** Override the storage backend (useful for tests or custom persistence layers). */
   storage?: StorageAdapter;
+  /**
+   * Async storage backend for environments where I/O is inherently asynchronous
+   * (React Native AsyncStorage, Capacitor Preferences, IndexedDB wrappers, etc.).
+   *
+   * When provided, use `IntentManager.createAsync(config)` to initialize the
+   * engine — the factory awaits the initial `getItem` before constructing the
+   * instance so that the synchronous `track()` hot-path is never blocked.
+   *
+   * The `persist()` method detects this adapter and handles `setItem` as a
+   * fire-and-forget promise, guarded by an in-flight write flag to prevent
+   * overlapping writes.
+   *
+   * Cannot be combined with `storage` — if both are provided `asyncStorage`
+   * takes precedence for writes; `storage` is ignored.
+   */
+  asyncStorage?: AsyncStorageAdapter;
   /** Override the timer backend (useful for deterministic tests). */
   timer?: TimerAdapter;
   /** Non-fatal error callback — surfaces storage errors and invalid `track('')` calls. */
@@ -232,4 +248,28 @@ export interface IntentManagerConfig {
    * The assigned group is exposed via `getTelemetry().assignmentGroup`.
    */
   holdoutConfig?: { percentage: number };
+  /**
+   * Enable optional cross-tab synchronization via the
+   * [BroadcastChannel API](https://developer.mozilla.org/en-US/docs/Web/API/BroadcastChannel).
+   *
+   * When `true`, every locally-verified state transition is broadcast to all
+   * other tabs that share the same `storageKey`-derived channel name, and
+   * incoming remote transitions update the local Markov graph and Bloom filter
+   * so that prefetch hints stay accurate across a multi-tab session.
+   *
+   * **Security invariants (always enforced):**
+   * - Incoming payloads are strictly validated: `from`/`to` must be non-empty
+   *   strings ≤ 256 characters — malformed or oversized messages are silently
+   *   dropped to prevent heap amplification / model poisoning from a compromised tab.
+   * - Remote transitions are applied **without re-broadcasting**, eliminating
+   *   the infinite-loop amplification that would occur if received messages were
+   *   forwarded back to the channel.
+   * - Transitions are only broadcast after passing the local `EntropyGuard`
+   *   check, so a local bot script cannot flood all open tabs.
+   *
+   * No-op in SSR / non-browser environments where `BroadcastChannel` is absent.
+   *
+   * Default: `false`.
+   */
+  crossTabSync?: boolean;
 }

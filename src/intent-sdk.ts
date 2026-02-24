@@ -28,6 +28,7 @@
 export { BloomFilter } from './core/bloom.js';
 export { MarkovGraph } from './core/markov.js';
 export { IntentManager } from './engine/intent-manager.js';
+export { BroadcastSync, MAX_STATE_LENGTH } from './sync/broadcast-sync.js';
 export { normalizeRouteState } from './utils/route-normalizer.js';
 
 export type {
@@ -55,3 +56,5 @@ export type {
   OperationStats,
   PerformanceReport,
 } from './performance-instrumentation.js';
+
+export type { StorageAdapter, AsyncStorageAdapter } from './adapters.js';

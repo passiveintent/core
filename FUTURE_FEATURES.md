@@ -1,6 +1,6 @@
 # Future Features & Requested Enhancements
 
-> Items discussed during architecture review that are **not yet implemented**.
+> Items discussed during architecture review. Items marked ✅ have since been implemented.
 > Revisit this list when planning the next development cycle.
 
 ---
@@ -9,31 +9,9 @@
 
 **Priority:** Medium
 **Complexity:** High
-**Status:** Deferred — held for post-launch consideration
+**Status:** ✅ Implemented — `BroadcastSync` shipped in v1.0.0
 
-### Problem
-
-Each browser tab maintains its own in-memory Markov graph and Bloom filter. Users who navigate across multiple tabs build fragmented models that never converge into a unified behavioral picture.
-
-### Proposed Solution
-
-Use the `BroadcastChannel` API (or `storage` event fallback for older browsers) to synchronize state mutations across tabs:
-
-- **Leader election:** One tab owns the write lock; others forward `track()` deltas.
-- **Merge protocol:** Graph transitions are additive (count summation). Bloom filters merge via bitwise OR.
-- **Conflict resolution:** Last-writer-wins with vector clock or Lamport timestamp.
-- **Adapter pattern:** Expose a `SyncAdapter` interface so consumers can plug in SharedWorker, ServiceWorker, or server-side sync.
-
-### Risks
-
-- `BroadcastChannel` is not available in all environments (e.g., SSR, some WebViews).
-- Merge storms on high-frequency `track()` calls across many tabs.
-- Increased `localStorage` write contention.
-
-### Alternatives Considered
-
-- Server-side graph merge on session end (simpler, but violates zero-egress promise).
-- `SharedArrayBuffer` for lock-free Bloom filter sharing (requires COOP/COEP headers).
+`BroadcastSync` uses the `BroadcastChannel` API to propagate `track()` deltas and deterministic counter increments across open tabs. Input-length validation (`MAX_STATE_LENGTH = 256`) guards against heap-amplification attacks from compromised tabs. See [`src/sync/broadcast-sync.ts`](src/sync/broadcast-sync.ts) and the architecture document for integration details.
 
 ---
 
@@ -165,7 +143,7 @@ Binary serialization and base64 encoding during `persist()` happens on the main 
 
 | Feature | Impact | Effort | Risk | Suggested Phase |
 |---------|--------|--------|------|-----------------|
-| Cross-Tab Sync | High | High | Medium | v1.2 |
+| ~~Cross-Tab Sync~~ | High | High | Medium | ✅ v1.0 |
 | Click Velocity Channel | Medium | Medium | Low | v1.2 |
 | Inter-Event Interval Entropy | Medium | Medium | Low | v1.3 |
 | Feature Vector Architecture | High | High | High | v2.0 |

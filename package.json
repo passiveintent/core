@@ -34,6 +34,7 @@
     "build:tsc": "tsc --project tsconfig.json --declaration --sourceMap",
     "test": "npm run test:unit",
     "test:unit": "npm run build:tsc && node --test tests/*.test.mjs",
+    "test:coverage": "npm run build:tsc && c8 node --test tests/*.test.mjs",
     "test:perf:run": "npm run build:tsc && node scripts/perf-runner.mjs",
     "test:perf:assert": "node scripts/perf-regression.mjs",
     "test:perf:matrix": "npm run build:tsc && node scripts/scenario-matrix.mjs --check-golden",

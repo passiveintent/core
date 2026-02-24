@@ -1,5 +1,7 @@
 # EdgeSignal: A Privacy-First Intent Engine
 
+[![Coverage: 97%](https://img.shields.io/badge/coverage-97%25-brightgreen)](#run-tests)
+
 A lightweight TypeScript SDK for on-device intent modeling.
 It combines a Bloom filter for fast membership checks and a sparse Markov graph for transition learning, entropy signals, and trajectory anomaly detection.
 
@@ -196,6 +198,12 @@ Run unit tests:
 
 ```bash
 npm test
+```
+
+Run unit tests with coverage:
+
+```bash
+npm run test:coverage
 ```
 
 Run performance suite:

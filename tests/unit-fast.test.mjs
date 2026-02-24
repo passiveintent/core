@@ -1524,3 +1524,177 @@ test('low-level events (trajectory_anomaly, dwell_time_anomaly) still fire indep
   }
 });
 
+// ── Drift Protection / Failsafe Killswitch ──────────────────────────────────
+
+test('getTelemetry() baselineStatus is "active" by default', () => {
+  storage.clear();
+  const manager = new IntentManager({
+    storageKey: 'drift-initial-test',
+    storage,
+    botProtection: false,
+  });
+
+  assert.equal(manager.getTelemetry().baselineStatus, 'active',
+    'baselineStatus must start as "active"');
+});
+
+test('driftProtection: isBaselineDrifted set when trajectory_anomaly ratio exceeds maxAnomalyRate', () => {
+  storage.clear();
+  let mockTime = 1000;
+  const originalNow = globalThis.performance.now;
+  globalThis.performance.now = () => mockTime;
+
+  try {
+    // Build baseline that will diverge heavily from the navigation pattern below.
+    const baselineGraph = new MarkovGraph();
+    for (let i = 0; i < 10; i++) {
+      baselineGraph.incrementTransition('A', 'B');
+      baselineGraph.incrementTransition('B', 'C');
+      baselineGraph.incrementTransition('C', 'A');
+    }
+
+    // Very tight drift window (10 calls) and low threshold so drift is triggered quickly.
+    const manager = new IntentManager({
+      storageKey: 'drift-trigger-test',
+      storage,
+      botProtection: false,
+      baseline: baselineGraph.toJSON(),
+      graph: {
+        divergenceThreshold: 0.1,
+        baselineMeanLL: 0,
+        baselineStdLL: 0.01,
+      },
+      driftProtection: { maxAnomalyRate: 0.1, evaluationWindowMs: 300_000 },
+    });
+
+    const anomalies = [];
+    manager.on('trajectory_anomaly', (p) => anomalies.push(p));
+
+    // Navigate a completely different path to trigger trajectory_anomaly events.
+    // Need ≥16 states to pass MIN_WINDOW_LENGTH before trajectory evaluation starts;
+    // 40 iterations ensure enough anomalies to exceed the 10% maxAnomalyRate.
+    const states = ['X', 'Y', 'Z', 'W'];
+    for (let i = 0; i < 40; i++) {
+      mockTime += 100;
+      manager.track(states[i % states.length]);
+    }
+
+    const t = manager.getTelemetry();
+    // The killswitch must have engaged given the anomaly rate well exceeds 10%
+    assert.equal(t.baselineStatus, 'drifted',
+      `baselineStatus must be "drifted" after anomaly rate exceeded; anomaliesFired=${t.anomaliesFired}`);
+
+    manager.flushNow();
+  } finally {
+    globalThis.performance.now = originalNow;
+  }
+});
+
+test('driftProtection: evaluateTrajectory is silently skipped once isBaselineDrifted is true', () => {
+  storage.clear();
+  let mockTime = 1000;
+  const originalNow = globalThis.performance.now;
+  globalThis.performance.now = () => mockTime;
+
+  try {
+    const baselineGraph = new MarkovGraph();
+    for (let i = 0; i < 10; i++) {
+      baselineGraph.incrementTransition('A', 'B');
+      baselineGraph.incrementTransition('B', 'C');
+      baselineGraph.incrementTransition('C', 'A');
+    }
+
+    const manager = new IntentManager({
+      storageKey: 'drift-silences-test',
+      storage,
+      botProtection: false,
+      baseline: baselineGraph.toJSON(),
+      graph: {
+        divergenceThreshold: 0.1,
+        baselineMeanLL: 0,
+        baselineStdLL: 0.01,
+      },
+      // Very low maxAnomalyRate to trigger drift quickly
+      driftProtection: { maxAnomalyRate: 0.05, evaluationWindowMs: 300_000 },
+    });
+
+    const anomalies = [];
+    manager.on('trajectory_anomaly', (p) => anomalies.push(p));
+
+    // Phase 1: drive the engine to drift
+    const states = ['X', 'Y', 'Z', 'W'];
+    for (let i = 0; i < 60; i++) {
+      mockTime += 100;
+      manager.track(states[i % states.length]);
+    }
+
+    assert.equal(manager.getTelemetry().baselineStatus, 'drifted',
+      'must be drifted after phase 1');
+
+    const anomaliesBeforePhase2 = anomalies.length;
+
+    // Phase 2: more tracks — no new trajectory_anomaly should fire once drifted
+    for (let i = 0; i < 20; i++) {
+      mockTime += 100;
+      manager.track(states[i % states.length]);
+    }
+
+    assert.equal(anomalies.length, anomaliesBeforePhase2,
+      'no new trajectory_anomaly events must fire after killswitch engages');
+
+    manager.flushNow();
+  } finally {
+    globalThis.performance.now = originalNow;
+  }
+});
+
+test('driftProtection: rolling window resets allow anomaly counter to restart', () => {
+  storage.clear();
+  let mockTime = 0;
+  const originalNow = globalThis.performance.now;
+  globalThis.performance.now = () => mockTime;
+
+  try {
+    const baselineGraph = new MarkovGraph();
+    for (let i = 0; i < 10; i++) {
+      baselineGraph.incrementTransition('A', 'B');
+      baselineGraph.incrementTransition('B', 'A');
+    }
+
+    // Short window (500 ms) so we can advance past it in the test
+    const manager = new IntentManager({
+      storageKey: 'drift-window-reset-test',
+      storage,
+      botProtection: false,
+      baseline: baselineGraph.toJSON(),
+      graph: { divergenceThreshold: 0.1, baselineMeanLL: 0, baselineStdLL: 0.01 },
+      // High rate so drift is NOT triggered — we only want to verify window reset
+      driftProtection: { maxAnomalyRate: 1.0, evaluationWindowMs: 500 },
+    });
+
+    // Track a few times in window 1
+    for (let i = 0; i < 5; i++) {
+      mockTime += 50;
+      manager.track(i % 2 === 0 ? 'X' : 'Y');
+    }
+
+    // Advance past the evaluation window
+    mockTime += 600;
+
+    // Track again — the window should reset without crashing
+    for (let i = 0; i < 5; i++) {
+      mockTime += 50;
+      manager.track(i % 2 === 0 ? 'X' : 'Y');
+    }
+
+    // baselineStatus must still be active (maxAnomalyRate=1.0 can never be exceeded)
+    assert.equal(manager.getTelemetry().baselineStatus, 'active',
+      'baselineStatus must remain "active" when maxAnomalyRate=1.0');
+
+    manager.flushNow();
+  } finally {
+    globalThis.performance.now = originalNow;
+  }
+});
+
+

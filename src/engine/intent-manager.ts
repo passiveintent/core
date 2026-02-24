@@ -150,6 +150,23 @@ export class IntentManager {
   private readonly enableBigrams: boolean;
   private readonly bigramFrequencyThreshold: number;
 
+  /* ================================================================== */
+  /*  Failsafe Killswitch — Baseline Drift Protection                   */
+  /* ================================================================== */
+
+  /** When true, evaluateTrajectory is silently disabled. */
+  private isBaselineDrifted = false;
+  /** Upper bound on trajectory_anomaly / track() ratio before drift is declared. */
+  private readonly driftMaxAnomalyRate: number;
+  /** Rolling evaluation window length in ms. */
+  private readonly driftEvaluationWindowMs: number;
+  /** Timestamp (ms) when the current rolling window started. */
+  private driftWindowStart = 0;
+  /** Number of track() calls in the current rolling window. */
+  private driftWindowTrackCount = 0;
+  /** Number of trajectory_anomaly emissions in the current rolling window. */
+  private driftWindowAnomalyCount = 0;
+
   /** Timestamp of the last emission per cooldown-gated event type */
   private lastEmittedAt: Record<'high_entropy' | 'trajectory_anomaly' | 'dwell_time_anomaly', number> = {
     high_entropy: -Infinity,
@@ -215,6 +232,10 @@ export class IntentManager {
     this.enableBigrams = config.enableBigrams ?? false;
     this.bigramFrequencyThreshold = config.bigramFrequencyThreshold ?? 5;
 
+    // Drift protection config (defaults: 40 % anomaly rate over 5 minutes)
+    this.driftMaxAnomalyRate = config.driftProtection?.maxAnomalyRate ?? 0.4;
+    this.driftEvaluationWindowMs = config.driftProtection?.evaluationWindowMs ?? 300_000;
+
     // Telemetry: generate a short-lived, local-only session ID.
     // globalThis.crypto.randomUUID() is available in all modern browsers and
     // Node ≥ 19 (unflagged). Node 14.17–18 exposed randomUUID() only via the
@@ -279,6 +300,15 @@ export class IntentManager {
     // Use timer.now() for bot detection to ensure it works even when benchmark is disabled
     const now = this.timer.now();
     const trackStart = this.benchmark.enabled ? now : 0;
+
+    // Drift protection: advance the rolling window and count this call.
+    // O(1) — only two scalar comparisons and integer increments; no allocations.
+    if (now - this.driftWindowStart >= this.driftEvaluationWindowMs) {
+      this.driftWindowStart = now;
+      this.driftWindowTrackCount = 0;
+      this.driftWindowAnomalyCount = 0;
+    }
+    this.driftWindowTrackCount += 1;
 
     const ctx: TrackContext = {
       state,
@@ -427,6 +457,7 @@ export class IntentManager {
       botStatus: this.entropyGuard.suspected ? 'suspected_bot' : 'human',
       anomaliesFired: this.anomaliesFired,
       engineHealth: this.engineHealth,
+      baselineStatus: this.isBaselineDrifted ? 'drifted' : 'active',
     };
   }
 
@@ -500,6 +531,12 @@ export class IntentManager {
 
   private evaluateTrajectory(from: string, to: string): void {
     const start = this.benchmark.now();
+
+    // Failsafe killswitch: if baseline has drifted, silently skip all evaluation.
+    if (this.isBaselineDrifted) {
+      this.benchmark.record('divergenceComputation', start);
+      return;
+    }
 
     // EntropyGuard: silently skip for suspected bots
     if (this.entropyGuard.suspected) {
@@ -587,6 +624,15 @@ export class IntentManager {
         this.lastTrajectoryAnomalyAt = now;
         this.lastTrajectoryAnomalyZScore = zScore;
         this.maybeEmitHesitation();
+
+        // Drift protection: count this anomaly emission and check the ratio.
+        this.driftWindowAnomalyCount += 1;
+        if (
+          this.driftWindowTrackCount > 0 &&
+          this.driftWindowAnomalyCount / this.driftWindowTrackCount > this.driftMaxAnomalyRate
+        ) {
+          this.isBaselineDrifted = true;
+        }
       }
     }
 

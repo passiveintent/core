@@ -30,6 +30,7 @@ export interface EdgeSignalTelemetry {
   botStatus: 'human' | 'suspected_bot';
   anomaliesFired: number;
   engineHealth: 'healthy' | 'pruning_active' | 'quota_exceeded';
+  baselineStatus: 'active' | 'drifted';
 }
 
 export interface HighEntropyPayload {
@@ -198,4 +199,15 @@ export interface IntentManagerConfig {
    * pollution in the early learning phase.  Default: 5.
    */
   bigramFrequencyThreshold?: number;
+  /**
+   * Failsafe killswitch: protects against baseline drift by monitoring the
+   * ratio of `trajectory_anomaly` emissions to `track()` calls within a
+   * rolling time window.  When the ratio exceeds `maxAnomalyRate` the engine
+   * sets an internal `isBaselineDrifted` flag that silently disables further
+   * trajectory evaluation until the instance is replaced.
+   *
+   * Defaults: `maxAnomalyRate: 0.4` (40 %) and `evaluationWindowMs: 300_000`
+   * (5 minutes).  Set `maxAnomalyRate: 1` to effectively disable the feature.
+   */
+  driftProtection?: { maxAnomalyRate: number; evaluationWindowMs: number };
 }

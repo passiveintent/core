@@ -2,6 +2,19 @@
   "name": "edge-signal",
   "version": "1.0.0",
   "description": "Privacy-first, SSR-safe intent detection engine using local Markov-chain inference and Bloom filters.",
+  "keywords": [
+    "intent",
+    "analytics",
+    "privacy",
+    "markov-chain",
+    "churn-prevention",
+    "zero-egress",
+    "gdpr",
+    "bloom-filter",
+    "edge-computing",
+    "behavioral-analytics"
+  ],
+  "author": "Purushottam <purushpsm147@yahoo.co.in> (https://github.com/purushpsm147)",
   "license": "AGPL-3.0-only",
   "repository": {
     "type": "git",
@@ -26,7 +39,9 @@
   },
   "files": [
     "dist",
-    "README.md"
+    "README.md",
+    "LICENSE",
+    "PRICING.md"
   ],
   "sideEffects": false,
   "scripts": {

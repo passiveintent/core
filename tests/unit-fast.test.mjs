@@ -1983,3 +1983,108 @@ test('incrementCounter: empty key is rejected with onError and returns 0', () =>
   assert.ok(errors[0].includes('empty string'), `Expected 'empty string' in error, got: "${errors[0]}"`);
   manager.flushNow();
 });
+
+// ─── normalizeRouteState ─────────────────────────────────────────────────────
+import { normalizeRouteState } from '../dist/src/utils/route-normalizer.js';
+
+test('normalizeRouteState: plain path is returned unchanged', () => {
+  assert.equal(normalizeRouteState('/checkout'), '/checkout');
+  assert.equal(normalizeRouteState('/products/featured'), '/products/featured');
+  assert.equal(normalizeRouteState('/'), '/');
+});
+
+test('normalizeRouteState: strips query string', () => {
+  assert.equal(normalizeRouteState('/search?q=shoes&page=2'), '/search');
+  assert.equal(normalizeRouteState('/home?'), '/home');
+});
+
+test('normalizeRouteState: strips hash fragment', () => {
+  assert.equal(normalizeRouteState('/about#team'), '/about');
+  assert.equal(normalizeRouteState('/docs#section-3'), '/docs');
+});
+
+test('normalizeRouteState: strips both query string and hash fragment', () => {
+  assert.equal(normalizeRouteState('/profile?tab=bio#social'), '/profile');
+  assert.equal(normalizeRouteState('/page?a=1#top'), '/page');
+});
+
+test('normalizeRouteState: removes trailing slash', () => {
+  assert.equal(normalizeRouteState('/checkout/'), '/checkout');
+  assert.equal(normalizeRouteState('/products/featured/'), '/products/featured');
+});
+
+test('normalizeRouteState: preserves the bare root slash', () => {
+  assert.equal(normalizeRouteState('/'), '/');
+});
+
+test('normalizeRouteState: trailing slash + query/hash stripped then slash removed', () => {
+  assert.equal(normalizeRouteState('/checkout/?step=2'), '/checkout');
+  assert.equal(normalizeRouteState('/checkout/#confirm'), '/checkout');
+});
+
+test('normalizeRouteState: replaces v4 UUID in path segment with :id', () => {
+  assert.equal(
+    normalizeRouteState('/users/550e8400-e29b-41d4-a716-446655440000/profile'),
+    '/users/:id/profile',
+  );
+});
+
+test('normalizeRouteState: replaces uppercase v4 UUID', () => {
+  assert.equal(
+    normalizeRouteState('/users/550E8400-E29B-41D4-A716-446655440000/settings'),
+    '/users/:id/settings',
+  );
+});
+
+test('normalizeRouteState: replaces MongoDB ObjectID (24-char hex) in path', () => {
+  assert.equal(
+    normalizeRouteState('/products/507f1f77bcf86cd799439011/reviews'),
+    '/products/:id/reviews',
+  );
+});
+
+test('normalizeRouteState: replaces multiple IDs in one path', () => {
+  assert.equal(
+    normalizeRouteState('/orgs/507f1f77bcf86cd799439011/users/550e8400-e29b-41d4-a716-446655440000'),
+    '/orgs/:id/users/:id',
+  );
+});
+
+test('normalizeRouteState: replaces both UUID and ObjectID along with query and hash', () => {
+  assert.equal(
+    normalizeRouteState('/users/550e8400-e29b-41d4-a716-446655440000/posts/507f1f77bcf86cd799439011?sort=asc#top'),
+    '/users/:id/posts/:id',
+  );
+});
+
+test('normalizeRouteState: does NOT replace short hex strings (not IDs)', () => {
+  // 7-char git commit SHA must not be treated as an ID
+  assert.equal(normalizeRouteState('/commits/abc1234'), '/commits/abc1234');
+  // 16-char hex is not a MongoDB ObjectID (too short)
+  assert.equal(normalizeRouteState('/tokens/deadbeefdeadbeef'), '/tokens/deadbeefdeadbeef');
+});
+
+test('normalizeRouteState: does NOT replace hex strings longer than 24 chars', () => {
+  // 26-char hex is not a MongoDB ObjectID (too long) — word boundary prevents partial match
+  assert.equal(
+    normalizeRouteState('/data/507f1f77bcf86cd79943901ab'),
+    '/data/507f1f77bcf86cd79943901ab',
+  );
+});
+
+test('normalizeRouteState: does NOT replace hyphenated slugs (non-UUID hyphens)', () => {
+  assert.equal(normalizeRouteState('/blog/my-first-article'), '/blog/my-first-article');
+  assert.equal(normalizeRouteState('/category/red-shoes'), '/category/red-shoes');
+});
+
+test('normalizeRouteState: handles empty string without throwing', () => {
+  assert.equal(normalizeRouteState(''), '');
+});
+
+test('normalizeRouteState: /checkout/ and /checkout resolve to the same state', () => {
+  assert.equal(normalizeRouteState('/checkout/'), normalizeRouteState('/checkout'));
+});
+
+test('normalizeRouteState: /checkout/?step=2 and /checkout resolve to the same state', () => {
+  assert.equal(normalizeRouteState('/checkout/?step=2'), normalizeRouteState('/checkout'));
+});

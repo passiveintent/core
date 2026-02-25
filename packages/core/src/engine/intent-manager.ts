@@ -26,6 +26,7 @@ import type {
   BotDetectedPayload,
   ConversionPayload,
   DwellTimeAnomalyPayload,
+  EdgeSignalError,
   EdgeSignalTelemetry,
   HesitationDetectedPayload,
   HighEntropyPayload,
@@ -141,7 +142,7 @@ export class IntentManager {
    */
   private isAsyncWriting = false;
   private readonly timer: TimerAdapter;
-  private readonly onError?: (err: Error) => void;
+  private readonly onError?: (error: EdgeSignalError) => void;
   private readonly botProtection: boolean;
   private readonly eventCooldownMs: number;
 
@@ -463,7 +464,10 @@ export class IntentManager {
     // MarkovGraph.ensureState() throw and potentially crash the host app.
     if (state === '') {
       if (this.onError) {
-        this.onError(new Error('IntentManager.track(): state label must not be an empty string'));
+        this.onError({
+          code: 'VALIDATION',
+          message: 'IntentManager.track(): state label must not be an empty string',
+        });
       }
       return;
     }
@@ -737,9 +741,10 @@ export class IntentManager {
   incrementCounter(key: string, by = 1): number {
     if (key === '') {
       if (this.onError) {
-        this.onError(
-          new Error('IntentManager.incrementCounter(): key must not be an empty string'),
-        );
+        this.onError({
+          code: 'VALIDATION',
+          message: 'IntentManager.incrementCounter(): key must not be an empty string',
+        });
       }
       return 0;
     }
@@ -1098,13 +1103,18 @@ export class IntentManager {
           this.isAsyncWriting = false;
           // Restore dirty flag so the data is retried on the next persist cycle.
           this.isDirty = true;
-          if (err instanceof Error) {
-            if (err.name === 'QuotaExceededError' || err.message.toLowerCase().includes('quota')) {
-              this.engineHealth = 'quota_exceeded';
-            }
-            if (this.onError) {
-              this.onError(err);
-            }
+          const isQuota =
+            err instanceof Error &&
+            (err.name === 'QuotaExceededError' || err.message.toLowerCase().includes('quota'));
+          if (isQuota) {
+            this.engineHealth = 'quota_exceeded';
+          }
+          if (this.onError) {
+            this.onError({
+              code: isQuota ? 'QUOTA_EXCEEDED' : 'STORAGE_WRITE',
+              message: err instanceof Error ? err.message : String(err),
+              originalError: err,
+            });
           }
         });
     } else {
@@ -1116,13 +1126,18 @@ export class IntentManager {
       } catch (err) {
         // QuotaExceededError, SecurityError, or Private Browsing restrictions.
         // Surface through the optional error callback; never crash the main thread.
-        if (err instanceof Error) {
-          if (err.name === 'QuotaExceededError' || err.message.toLowerCase().includes('quota')) {
-            this.engineHealth = 'quota_exceeded';
-          }
-          if (this.onError) {
-            this.onError(err);
-          }
+        const isQuota =
+          err instanceof Error &&
+          (err.name === 'QuotaExceededError' || err.message.toLowerCase().includes('quota'));
+        if (isQuota) {
+          this.engineHealth = 'quota_exceeded';
+        }
+        if (this.onError) {
+          this.onError({
+            code: isQuota ? 'QUOTA_EXCEEDED' : 'STORAGE_WRITE',
+            message: err instanceof Error ? err.message : String(err),
+            originalError: err,
+          });
         }
       }
     }
@@ -1131,10 +1146,27 @@ export class IntentManager {
   private restore(
     graphConfig: MarkovGraphConfig,
   ): { bloom: BloomFilter; graph: MarkovGraph } | null {
+    // ── Step 1: read raw bytes from storage ─────────────────────────────────
+    let raw: string | null;
     try {
-      const raw = this.storage.getItem(this.storageKey);
-      if (!raw) return null;
+      raw = this.storage.getItem(this.storageKey);
+    } catch (err) {
+      // SecurityError in private-browsing mode, or storage entirely unavailable.
+      // Cold-start the graph — never crash the host app.
+      if (this.onError) {
+        this.onError({
+          code: 'STORAGE_READ',
+          message: err instanceof Error ? err.message : String(err),
+          originalError: err,
+        });
+      }
+      return null;
+    }
 
+    if (!raw) return null;
+
+    // ── Step 2: deserialise — any failure here means corrupt / stale data ───
+    try {
       const parsed = JSON.parse(raw) as PersistedPayload;
       if (!parsed.graphBinary) return null;
 
@@ -1143,7 +1175,17 @@ export class IntentManager {
       const graph = MarkovGraph.fromBinary(bytes, graphConfig);
 
       return { bloom, graph };
-    } catch {
+    } catch (err) {
+      // JSON parse error, base64 decode failure, or binary format mismatch.
+      // Cold-start the graph and report the raw payload so the caller can
+      // investigate what was stored.
+      if (this.onError) {
+        this.onError({
+          code: 'RESTORE_PARSE',
+          message: err instanceof Error ? err.message : String(err),
+          originalError: { cause: err, payload: raw },
+        });
+      }
       return null;
     }
   }

@@ -8,7 +8,12 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 
-import { BloomFilter, IntentManager, MarkovGraph } from '../dist/src/intent-sdk.js';
+import {
+  BloomFilter,
+  IntentManager,
+  MarkovGraph,
+  computeBloomConfig,
+} from '../dist/src/intent-sdk.js';
 import {
   BenchmarkSimulationEngine,
   evaluatePredictionMatrix,
@@ -235,17 +240,22 @@ test("IntentManager.track('') is a no-op and surfaces a non-fatal error via onEr
   const manager = new IntentManager({
     storageKey: 'empty-state-test',
     botProtection: false,
-    onError: (err) => errors.push(err.message),
+    onError: (err) => errors.push(err),
   });
 
   // track('') must not throw — host app must not crash
   assert.doesNotThrow(() => manager.track(''));
 
-  // onError must be called with a descriptive message
+  // onError must be called with the structured EdgeSignalError contract
   assert.equal(errors.length, 1);
+  assert.equal(
+    errors[0].code,
+    'VALIDATION',
+    `Expected code 'VALIDATION', got: '${errors[0].code}'`,
+  );
   assert.ok(
-    errors[0].includes('empty string'),
-    `Expected 'empty string' in error message, got: "${errors[0]}"`,
+    errors[0].message.includes('empty string'),
+    `Expected 'empty string' in error message, got: "${errors[0].message}"`,
   );
 
   // No state_change event must fire for an empty-string call
@@ -541,6 +551,73 @@ test('BloomFilter.toBase64 produces identical output after streaming refactor', 
     assert.equal(restored.check(`state-${i}`), true, `state-${i} must survive round-trip`);
   }
   assert.equal(restored.check('never-added'), false);
+});
+
+test('computeBloomConfig returns correct optimal sizes for standard inputs', () => {
+  const { bitSize, hashCount, estimatedFpRate } = computeBloomConfig(200, 0.01);
+  // Standard formula: m ≈ 1918 bits, k ≈ 7 hashes for n=200, p=0.01
+  assert.ok(bitSize >= 1800 && bitSize <= 2100, `bitSize=${bitSize} out of expected range`);
+  assert.ok(hashCount >= 5 && hashCount <= 9, `hashCount=${hashCount} out of expected range`);
+  // estimatedFpRate should be close to the target (within 2x)
+  assert.ok(
+    estimatedFpRate > 0 && estimatedFpRate < 0.02,
+    `estimatedFpRate=${estimatedFpRate} should be < 2%`,
+  );
+});
+
+test('computeBloomConfig estimatedFpRate is self-consistent with the returned m and k', () => {
+  const ns = [50, 100, 200, 500];
+  for (const n of ns) {
+    const { bitSize, hashCount, estimatedFpRate } = computeBloomConfig(n, 0.01);
+    // Manually recompute FPR: (1 - e^(-k*n/m))^k
+    const bitZeroProbability = Math.exp(-(hashCount * n) / bitSize);
+    const expected = Math.pow(1 - bitZeroProbability, hashCount);
+    assert.ok(
+      Math.abs(estimatedFpRate - expected) < 1e-10,
+      `n=${n}: estimatedFpRate mismatch (got ${estimatedFpRate}, expected ${expected})`,
+    );
+  }
+});
+
+test('computeBloomConfig clamps invalid inputs gracefully', () => {
+  // n <= 0 should not throw and must return a valid filter config
+  const a = computeBloomConfig(0, 0.01);
+  assert.ok(a.bitSize >= 1, 'bitSize must be >= 1 for n=0');
+  assert.ok(a.hashCount >= 1, 'hashCount must be >= 1 for n=0');
+
+  // p <= 0 should clamp to near-zero, not NaN or Infinity
+  const b = computeBloomConfig(100, 0);
+  assert.ok(Number.isFinite(b.bitSize), 'bitSize must be finite for p=0');
+  assert.ok(Number.isFinite(b.hashCount), 'hashCount must be finite for p=0');
+
+  // p >= 1 should clamp to just-below-1
+  const c = computeBloomConfig(100, 2);
+  assert.ok(Number.isFinite(c.bitSize), 'bitSize must be finite for p=2');
+  assert.ok(c.hashCount >= 1, 'hashCount must be >= 1 for p=2');
+});
+
+test('computeBloomConfig matches BloomFilter.computeOptimal bitSize and hashCount', () => {
+  // Both APIs must agree on the optimal m and k for the same inputs
+  const cases = [
+    [100, 0.01],
+    [200, 0.01],
+    [500, 0.05],
+    [1000, 0.001],
+  ];
+  for (const [n, p] of cases) {
+    const util = computeBloomConfig(n, p);
+    const cls = BloomFilter.computeOptimal(n, p);
+    assert.equal(
+      util.bitSize,
+      cls.bitSize,
+      `n=${n},p=${p}: bitSize mismatch (util=${util.bitSize}, class=${cls.bitSize})`,
+    );
+    assert.equal(
+      util.hashCount,
+      cls.hashCount,
+      `n=${n},p=${p}: hashCount mismatch (util=${util.hashCount}, class=${cls.hashCount})`,
+    );
+  }
 });
 
 test('eventCooldownMs: default (0) fires on every qualifying track()', () => {
@@ -2227,15 +2304,20 @@ test('incrementCounter: empty key is rejected with onError and returns 0', () =>
     storageKey: 'counter-empty-key-test',
     storage,
     botProtection: false,
-    onError: (err) => errors.push(err.message),
+    onError: (err) => errors.push(err),
   });
 
   const result = manager.incrementCounter('');
   assert.equal(result, 0, 'must return 0 for empty key');
   assert.equal(errors.length, 1);
+  assert.equal(
+    errors[0].code,
+    'VALIDATION',
+    `Expected code 'VALIDATION', got: '${errors[0].code}'`,
+  );
   assert.ok(
-    errors[0].includes('empty string'),
-    `Expected 'empty string' in error, got: "${errors[0]}"`,
+    errors[0].message.includes('empty string'),
+    `Expected 'empty string' in error, got: "${errors[0].message}"`,
   );
   manager.flushNow();
 });
@@ -3143,7 +3225,203 @@ test('IntentManager async persist: isDirty restored on error, onError is called'
   await new Promise((r) => setTimeout(r, 20));
 
   assert.ok(errors.length > 0, 'onError should be called on async setItem failure');
-  assert.ok(errors[0].message.includes('storage unavailable'));
+  assert.equal(
+    errors[0].code,
+    'STORAGE_WRITE',
+    `Expected code 'STORAGE_WRITE', got: '${errors[0].code}'`,
+  );
+  assert.ok(
+    errors[0].message.includes('storage unavailable'),
+    `Expected message to include 'storage unavailable', got: "${errors[0].message}"`,
+  );
 
   manager.destroy();
+});
+// ─── onError — EdgeSignalError structured contract ───────────────────────────
+
+test('onError: sync persist emits QUOTA_EXCEEDED code on QuotaExceededError', () => {
+  const quotaError = new DOMException('QuotaExceededError mock', 'QuotaExceededError');
+  const throwingStorage = {
+    getItem: () => null,
+    setItem: () => {
+      throw quotaError;
+    },
+  };
+
+  const errors = [];
+  const manager = new IntentManager({
+    storageKey: 'quota-sync-test',
+    storage: throwingStorage,
+    botProtection: false,
+    persistDebounceMs: 0,
+    onError: (err) => errors.push(err),
+  });
+
+  assert.doesNotThrow(() => {
+    manager.track('/home');
+    manager.flushNow();
+  });
+
+  assert.equal(errors.length, 1, 'onError must be called once');
+  assert.equal(
+    errors[0].code,
+    'QUOTA_EXCEEDED',
+    `Expected 'QUOTA_EXCEEDED', got: '${errors[0].code}'`,
+  );
+  assert.equal(manager.getTelemetry().engineHealth, 'quota_exceeded');
+  assert.ok(
+    errors[0].originalError === quotaError,
+    'originalError must be the original DOMException',
+  );
+});
+
+test('onError: sync persist emits STORAGE_WRITE for generic write errors', () => {
+  const writeError = new Error('write failed: disk full');
+  const throwingStorage = {
+    getItem: () => null,
+    setItem: () => {
+      throw writeError;
+    },
+  };
+
+  const errors = [];
+  const manager = new IntentManager({
+    storageKey: 'write-error-sync-test',
+    storage: throwingStorage,
+    botProtection: false,
+    persistDebounceMs: 0,
+    onError: (err) => errors.push(err),
+  });
+
+  assert.doesNotThrow(() => {
+    manager.track('/home');
+    manager.flushNow();
+  });
+
+  assert.equal(errors.length, 1);
+  assert.equal(
+    errors[0].code,
+    'STORAGE_WRITE',
+    `Expected 'STORAGE_WRITE', got: '${errors[0].code}'`,
+  );
+  assert.ok(errors[0].message.includes('disk full'));
+  assert.ok(errors[0].originalError === writeError);
+});
+
+test('onError: async persist emits QUOTA_EXCEEDED on async QuotaExceededError', async () => {
+  const quotaError = new DOMException('QuotaExceededError mock', 'QuotaExceededError');
+  const asyncStorage = {
+    getItem: async () => null,
+    setItem: async () => {
+      throw quotaError;
+    },
+  };
+
+  const errors = [];
+  const manager = await IntentManager.createAsync({
+    storageKey: 'quota-async-test',
+    asyncStorage,
+    botProtection: false,
+    persistDebounceMs: 0,
+    onError: (err) => errors.push(err),
+  });
+
+  manager.track('/home');
+  manager.flushNow();
+  await new Promise((r) => setTimeout(r, 20));
+
+  assert.ok(errors.length > 0, 'onError must fire');
+  assert.equal(
+    errors[0].code,
+    'QUOTA_EXCEEDED',
+    `Expected 'QUOTA_EXCEEDED', got: '${errors[0].code}'`,
+  );
+  assert.equal(manager.getTelemetry().engineHealth, 'quota_exceeded');
+
+  manager.destroy();
+});
+
+test('onError: RESTORE_PARSE fires when stored graph is corrupt JSON', () => {
+  const corruptStorage = {
+    getItem: () => '{"bloomBase64":"AAAA","graphBinary":"!!!corrupt!!!"}',
+    setItem: () => {},
+  };
+
+  const errors = [];
+  assert.doesNotThrow(() => {
+    const manager = new IntentManager({
+      storageKey: 'restore-parse-test',
+      storage: corruptStorage,
+      botProtection: false,
+      onError: (err) => errors.push(err),
+    });
+    // engine must still be usable after cold-start fallback
+    manager.track('/home');
+    manager.flushNow();
+  });
+
+  assert.equal(errors.length, 1, 'onError must fire exactly once for the parse failure');
+  assert.equal(
+    errors[0].code,
+    'RESTORE_PARSE',
+    `Expected 'RESTORE_PARSE', got: '${errors[0].code}'`,
+  );
+  assert.ok(typeof errors[0].message === 'string' && errors[0].message.length > 0);
+  // originalError must carry the raw payload for forensic debugging
+  assert.ok(
+    errors[0].originalError != null && typeof errors[0].originalError === 'object',
+    'originalError must be an object',
+  );
+  assert.ok(
+    typeof errors[0].originalError.payload === 'string',
+    'originalError.payload must be the raw stored string',
+  );
+});
+
+test('onError: STORAGE_READ fires when getItem itself throws', () => {
+  const unreadableStorage = {
+    getItem: () => {
+      throw new DOMException('SecurityError', 'SecurityError');
+    },
+    setItem: () => {},
+  };
+
+  const errors = [];
+  assert.doesNotThrow(() => {
+    const manager = new IntentManager({
+      storageKey: 'storage-read-error-test',
+      storage: unreadableStorage,
+      botProtection: false,
+      onError: (err) => errors.push(err),
+    });
+    manager.track('/home');
+    manager.flushNow();
+  });
+
+  assert.equal(errors.length, 1, 'exactly one STORAGE_READ error during construction');
+  assert.equal(errors[0].code, 'STORAGE_READ', `Expected 'STORAGE_READ', got: '${errors[0].code}'`);
+  assert.ok(errors[0].originalError instanceof DOMException);
+});
+
+test('onError: no callback set — silent failures do not throw', () => {
+  const throwingStorage = {
+    getItem: () => {
+      throw new Error('SecurityError');
+    },
+    setItem: () => {
+      throw new DOMException('QuotaExceededError', 'QuotaExceededError');
+    },
+  };
+
+  // Neither construction nor persist may throw when onError is absent
+  assert.doesNotThrow(() => {
+    const manager = new IntentManager({
+      storageKey: 'no-callback-test',
+      storage: throwingStorage,
+      botProtection: false,
+      persistDebounceMs: 0,
+    });
+    manager.track('/home');
+    manager.flushNow();
+  });
 });

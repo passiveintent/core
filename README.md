@@ -17,8 +17,8 @@ This repository is structured as an **npm workspaces monorepo** containing all E
 
 ## Packages
 
-| Package | Version | Description |
-| ------- | ------- | ----------- |
+| Package                               | Version                                                                                                                                    | Description                                       |
+| ------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------- |
 | [`@edgesignal/core`](./packages/core) | [![npm](https://img.shields.io/badge/npm-coming%20soon-lightgrey)](https://github.com/purushpsm147/EdgeSignal-Privacy-First-Intent-Engine) | Privacy-first, on-device behavioral intent engine |
 
 Full documentation for each package lives inside the package directory:
@@ -59,13 +59,13 @@ Full documentation for each package lives inside the package directory:
 
 ## Root scripts
 
-| Script | Description |
-| ------ | ----------- |
-| `npm run build` | Build all packages |
-| `npm run typecheck` | Type-check all packages |
-| `npm run test` | Test all packages |
-| `npm run format` | Format all files with Prettier |
-| `npm run format:check` | Check formatting (CI) |
+| Script                 | Description                    |
+| ---------------------- | ------------------------------ |
+| `npm run build`        | Build all packages             |
+| `npm run typecheck`    | Type-check all packages        |
+| `npm run test`         | Test all packages              |
+| `npm run format`       | Format all files with Prettier |
+| `npm run format:check` | Check formatting (CI)          |
 
 Run workspaces individually to target a single package:
 

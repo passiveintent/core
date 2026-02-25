@@ -13,13 +13,13 @@ EdgeSignal is **free and open-source** under AGPLv3 for open-source projects, ho
 
 ## Tiers
 
-| Tier       | Annual Fee | Org Size / Signal                  | What Justifies It                                                                                        |
-| ---------- | ---------- | ---------------------------------- | -------------------------------------------------------------------------------------------------------- |
-| Free       | $0         | OSS, hobby, non-commercial         | AGPLv3, full SDK, community forum/GitHub Issues                                                          |
-| Indie      | $149/yr    | Solo dev, <5 employees, <$500K ARR | 1 commercial project, commercial license, best-effort email support                                      |
-| Startup    | $599/yr    | 5–50 employees, $500K–$5M ARR      | 3 commercial projects, priority email (typically 2 business days), future premium features when released |
-| Growth     | $1,999/yr  | 50–200 employees, $5M–$20M ARR     | Unlimited projects (1 org), same-day best effort (IST hours), no-warranty commercial license             |
-| Enterprise | Custom     | 200+ employees, CDPs, AdTech, OEM  | Custom license terms, scoped support hours, direct async communication                                   |
+| Tier       | Annual Fee | Target Audience                          | What You Get (Support & Features)                                                                                                        |
+| ---------- | ---------- | ---------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| Free       | $0         | Open-source projects, students           | AGPLv3 copyleft license. Full SDK. **Support:** Community Forum / GitHub Issues only.                                                    |
+| Indie      | $149/yr    | Solo devs, pre-seed founders             | 1 Commercial Project, AGPL exemption. **Support:** Basic Email Support — best effort, no SLA.                                            |
+| Startup    | $599/yr    | Small teams (5–50 employees)             | Up to 3 Commercial Projects, AGPL exemption. **Support:** Priority Email Support — async, business days only.                            |
+| Growth     | $1,999/yr  | Scaling companies (50–200 employees)     | Unlimited Internal Projects (1 org). **Support:** Direct Founder Access — async email/chat, business days only.                          |
+| Enterprise | Custom     | Conglomerates, CDPs, AdTech, OEM vendors | Custom legal review, architecture consultation. **Support:** Custom scoped hours — no 24/7 or weekend coverage available.                |
 
 ## What "commercial use" means
 
@@ -47,4 +47,32 @@ Indie covers one project. Startup covers three. Growth covers unlimited projects
 A single deployable web application or npm package that ships EdgeSignal. Micro-frontends under the same domain count as one project.
 
 **Is there a trial period?**  
-The Free (AGPLv3) tier has no time limit and no feature restrictions — it is the full SDK. Commercial tiers add support SLAs, indemnification, and (for Growth/Enterprise) premium features as they ship.
+The Free (AGPLv3) tier has no time limit and no feature restrictions — it is the full SDK. Commercial tiers add a support channel, AGPL exemption, and (for Growth/Enterprise) premium features as they ship.
+
+---
+
+## Support Boundaries
+
+EdgeSignal is developed and maintained by a solo founder. The following terms apply to all paid tiers and are incorporated into every Commercial License Agreement.
+
+### Business Hours
+
+All support is provided asynchronously by the core engineering team. Support hours are **Monday through Friday, 10:00 AM to 6:00 PM Indian Standard Time (IST)**, excluding Indian public holidays. We do not currently offer 24/7 coverage, weekend support, or guaranteed on-call SLAs.
+
+### Best-Effort Disclaimer
+
+Licensor will use commercially reasonable efforts to respond to support inquiries during standard business hours. Licensor does not guarantee specific response times, resolution times, or uninterrupted availability of support services.
+
+### Scope of Support
+
+Support is strictly limited to:
+
+- Bug reports for reproducible SDK behavior.
+- Questions about SDK configuration and documented APIs.
+- Clarification of EdgeSignal documentation.
+
+Support does **not** include:
+
+- Writing custom implementation code for the Licensee's application.
+- Debugging the Licensee's host application (e.g., React, Vue, Next.js integration issues unrelated to the SDK).
+- Consulting on third-party integrations (e.g., Google Analytics, Segment, Zendesk configuration).

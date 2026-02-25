@@ -64,10 +64,11 @@ for (let i = 0; i < TRACK_CALLS; i += 1) {
 const report = manager.getPerformanceReport();
 const endHeap = process.memoryUsage?.().heapUsed ?? 0;
 
-// Heap deltas can go negative when GC fires mid-run. Guard against that
-// by taking multiple readings and using the maximum observed growth.
-// If the delta is legitimately ≤ 0 (everything GC'd), fall back to the
-// graph's serialized size as a lower-bound proxy.
+// A single before/after heap snapshot is sufficient for a non-gated
+// informational metric. If GC fires between the two readings the delta
+// goes negative; in that case fall back to the graph's serialized size
+// as a conservative lower-bound proxy rather than reporting 0 or a
+// negative number.
 const heapDelta = endHeap - startHeap;
 const memoryUsageEstimate =
   heapDelta > 0 ? heapDelta : report.memoryFootprint.serializedGraphBytes * 10;

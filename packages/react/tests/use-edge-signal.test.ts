@@ -73,7 +73,9 @@ const BASE_CONFIG = { storageKey: 'test-key' };
 describe('useEdgeSignal', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    MockIM.mockImplementation(() => makeFakeInstance() as unknown as InstanceType<typeof IntentManager>);
+    MockIM.mockImplementation(
+      () => makeFakeInstance() as unknown as InstanceType<typeof IntentManager>,
+    );
   });
 
   // ── 1. Lifecycle ────────────────────────────────────────────────────────────
@@ -203,8 +205,7 @@ describe('useEdgeSignal', () => {
      */
     it('every non-live instance is destroyed; live instance destroyed on unmount', () => {
       const { unmount } = renderHook(() => useEdgeSignal(BASE_CONFIG), {
-        wrapper: ({ children }) =>
-          React.createElement(React.StrictMode, null, children),
+        wrapper: ({ children }) => React.createElement(React.StrictMode, null, children),
       });
 
       const total = MockIM.mock.results.length;
@@ -228,8 +229,7 @@ describe('useEdgeSignal', () => {
 
     it('the live instance correctly handles track() after rendering in StrictMode', () => {
       const { result, unmount } = renderHook(() => useEdgeSignal(BASE_CONFIG), {
-        wrapper: ({ children }) =>
-          React.createElement(React.StrictMode, null, children),
+        wrapper: ({ children }) => React.createElement(React.StrictMode, null, children),
       });
 
       const total = MockIM.mock.results.length;
@@ -315,10 +315,9 @@ describe('useEdgeSignal', () => {
      * (e.g. change its `key` prop).
      */
     it('does not recreate the instance when the config object reference changes', () => {
-      const { rerender, unmount } = renderHook(
-        ({ cfg }) => useEdgeSignal(cfg),
-        { initialProps: { cfg: { storageKey: 'test' } } },
-      );
+      const { rerender, unmount } = renderHook(({ cfg }) => useEdgeSignal(cfg), {
+        initialProps: { cfg: { storageKey: 'test' } },
+      });
 
       expect(MockIM).toHaveBeenCalledTimes(1);
 
@@ -331,10 +330,9 @@ describe('useEdgeSignal', () => {
     });
 
     it('does not recreate the instance when config values change', () => {
-      const { rerender, unmount } = renderHook(
-        ({ cfg }) => useEdgeSignal(cfg),
-        { initialProps: { cfg: { storageKey: 'test' } } },
-      );
+      const { rerender, unmount } = renderHook(({ cfg }) => useEdgeSignal(cfg), {
+        initialProps: { cfg: { storageKey: 'test' } },
+      });
 
       expect(MockIM).toHaveBeenCalledTimes(1);
 
@@ -346,10 +344,9 @@ describe('useEdgeSignal', () => {
     });
 
     it('never calls destroy() between re-renders (no remount occurred)', () => {
-      const { rerender, unmount } = renderHook(
-        ({ cfg }) => useEdgeSignal(cfg),
-        { initialProps: { cfg: { storageKey: 'test' } } },
-      );
+      const { rerender, unmount } = renderHook(({ cfg }) => useEdgeSignal(cfg), {
+        initialProps: { cfg: { storageKey: 'test' } },
+      });
 
       const instance = MockIM.mock.results[0].value as unknown as FakeInstance;
 

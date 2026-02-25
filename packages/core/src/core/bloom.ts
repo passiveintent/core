@@ -171,9 +171,7 @@ export function computeBloomConfig(
   // Standard optimal Bloom filter formulas:
   //   m = ceil( -(n * ln(p)) / ln(2)^2 )
   //   k = round( (m / n) * ln(2) )
-  const m = Math.ceil(
-    -(expectedItems * Math.log(falsePositiveRate)) / (Math.LN2 * Math.LN2),
-  );
+  const m = Math.ceil(-(expectedItems * Math.log(falsePositiveRate)) / (Math.LN2 * Math.LN2));
   const k = Math.max(1, Math.round((m / expectedItems) * Math.log(2)));
 
   // Recalculate the actual FPR achieved with the rounded (integer) m and k.

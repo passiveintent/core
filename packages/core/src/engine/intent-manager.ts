@@ -1070,11 +1070,27 @@ export class IntentManager {
 
     // Binary-encode the graph: avoids JSON.stringify on potentially
     // large objects, keeping the main thread free of heavy work.
-    const graphBytes = this.graph.toBinary();
-
-    // Convert Uint8Array → base64 string for localStorage compatibility.
-    // Uses chunked String.fromCharCode to avoid O(n) string concatenation.
-    const graphBinary = uint8ToBase64(graphBytes);
+    // toBinary() and uint8ToBase64() can throw (e.g., on invalid UTF-16
+    // surrogate pairs or a broken btoa() polyfill). Catch them here so the
+    // error stays off the main-thread call stack and reaches the host via
+    // onError instead.
+    let graphBinary: string;
+    try {
+      const graphBytes = this.graph.toBinary();
+      // Convert Uint8Array → base64 string for localStorage compatibility.
+      // Uses chunked String.fromCharCode to avoid O(n) string concatenation.
+      graphBinary = uint8ToBase64(graphBytes);
+    } catch (err) {
+      if (this.onError) {
+        this.onError({
+          code: 'SERIALIZE',
+          message: err instanceof Error ? err.message : String(err),
+          originalError: err,
+        });
+      }
+      // Leave isDirty = true so the next scheduled persist cycle retries.
+      return;
+    }
 
     // Build the minimal JSON envelope (two short strings, no deep trees).
     const payload: PersistedPayload = {

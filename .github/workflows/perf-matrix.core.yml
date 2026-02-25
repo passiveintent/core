@@ -1,0 +1,26 @@
+name: perf-matrix / core
+
+on:
+  pull_request:
+    paths:
+      - 'packages/core/src/**'
+      - 'packages/core/scripts/**'
+      - 'packages/core/benchmarks/**'
+  workflow_dispatch:
+
+jobs:
+  perf-regression:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        scenario: [baseline, noisy, adversarial, random]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: npm ci
+      - run: npm run test:perf:run -w @edgesignal/core
+      - run: npm run test:perf:assert -w @edgesignal/core
+      - name: Validate scenario matrix
+        run: npm run test:perf:matrix -w @edgesignal/core

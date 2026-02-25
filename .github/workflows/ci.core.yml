@@ -1,0 +1,49 @@
+name: ci / core
+
+on:
+  push:
+    branches: ['**']
+    paths:
+      - 'packages/core/**'
+      - 'tsconfig.base.json'
+      - 'package.json'
+      - 'package-lock.json'
+  pull_request:
+    paths:
+      - 'packages/core/**'
+      - 'tsconfig.base.json'
+      - 'package.json'
+      - 'package-lock.json'
+
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [20, 22]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Type check
+        run: npm run typecheck -w @edgesignal/core
+
+      - name: Build
+        run: npm run build -w @edgesignal/core
+
+      - name: Unit tests
+        run: npm run test:unit -w @edgesignal/core
+
+      - name: Performance regression assertion
+        run: npm run test:perf:assert -w @edgesignal/core
+
+      - name: Package integrity
+        run: npm run verify:package -w @edgesignal/core

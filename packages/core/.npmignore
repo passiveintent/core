@@ -1,0 +1,31 @@
+# Source & build config
+src/
+tsconfig.json
+tsconfig.sandbox.json
+tsup.config.ts
+
+# Tests
+tests/
+cypress/
+cypress.config.ts
+
+# Scripts & benchmarks
+scripts/
+benchmarks/
+sandbox/
+
+# Documentation (architecture, contributing, etc.)
+docs/
+BINARY_CODEC_SPEC.md
+CHANGELOG.md
+CONTRIBUTING.md
+FUTURE_FEATURES.md
+SECURITY.md
+# Internal product roadmap — not for public distribution
+Product Roadmap/
+
+# CI / GitHub
+.github/
+
+# Coverage output
+coverage/

@@ -32,7 +32,7 @@
         "default": "./dist/index.js"
       },
       "require": {
-        "types": "./dist/index.d.cts",
+        "types": "./dist/index.d.ts",
         "default": "./dist/index.cjs"
       }
     }
@@ -61,6 +61,6 @@
     "typecheck": "tsc --project tsconfig.json --noEmit",
     "lint": "npm run typecheck",
     "test:ci": "npm run lint && npm run build && npm run test:unit && npm run test:perf:assert",
-    "verify:package": "npm run build:tsc && node ../../scripts/verify-package.mjs"
+    "verify:package": "npm run build && node ../../scripts/verify-package.mjs"
   }
 }

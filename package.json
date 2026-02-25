@@ -14,7 +14,15 @@
     "lint": "npm run lint -w @edgesignal/core",
     "test:e2e": "npm run test:e2e -w @edgesignal/core",
     "test:e2e:headed": "npm run test:e2e:headed -w @edgesignal/core",
-    "verify:package": "npm run verify:package -w @edgesignal/core"
+    "verify:package": "npm run verify:package -w @edgesignal/core",
+    "test:perf:run": "npm run test:perf:run -w @edgesignal/core",
+    "test:perf:assert": "npm run test:perf:assert -w @edgesignal/core",
+    "test:perf:matrix": "npm run test:perf:matrix -w @edgesignal/core",
+    "test:perf:roc": "npm run test:perf:roc -w @edgesignal/core",
+    "test:perf": "npm run test:perf -w @edgesignal/core",
+    "test:perf:all": "npm run test:perf:all -w @edgesignal/core",
+    "test:perf:update-baseline": "npm run test:perf:update-baseline -w @edgesignal/core",
+    "test:perf:update-matrix-golden": "npm run test:perf:update-matrix-golden -w @edgesignal/core"
   },
   "devDependencies": {
     "c8": "^10.1.3",

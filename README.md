@@ -8,7 +8,7 @@
 # EdgeSignal: A Privacy-First Intent Engine
 
 [![Coverage: 97%](https://img.shields.io/badge/coverage-97%25-brightgreen)](#run-tests)
-[![Bundle Size](https://img.shields.io/bundlephobia/minzip/edge-signal)](https://bundlephobia.com/package/edge-signal)
+[![Bundle Size](https://img.shields.io/bundlephobia/minzip/@edgesignal/core)](https://bundlephobia.com/package/@edgesignal/core)
 [![Open in StackBlitz](https://developer.stackblitz.com/img/open_in_stackblitz_small.svg)](https://stackblitz.com/github/purushpsm147/EdgeSignal-Privacy-First-Intent-Engine)
 
 A lightweight TypeScript SDK for on-device intent modeling.
@@ -33,7 +33,7 @@ Mixpanel and Amplitude are cloud-based analytics platforms: every event they cap
 ## Install
 
 ```bash
-npm install edge-signal
+npm install @edgesignal/core
 ```
 
 ## Quick usage
@@ -44,7 +44,7 @@ import {
   MarkovGraph,
   BrowserStorageAdapter,
   BrowserTimerAdapter,
-} from 'edge-signal';
+} from '@edgesignal/core';
 
 const baseline = new MarkovGraph();
 baseline.incrementTransition('/home', '/search');
@@ -99,7 +99,7 @@ intent.flushNow();
 
 import { useEffect, useRef } from 'react';
 import { usePathname } from 'next/navigation';
-import { IntentManager, BrowserStorageAdapter, BrowserTimerAdapter } from 'edge-signal';
+import { IntentManager, BrowserStorageAdapter, BrowserTimerAdapter } from '@edgesignal/core';
 
 export function IntentProvider({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -149,7 +149,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 <script setup lang="ts">
 import { onMounted, onUnmounted, watch } from 'vue';
 import { useRoute } from 'vue-router';
-import { IntentManager, BrowserStorageAdapter, BrowserTimerAdapter } from 'edge-signal';
+import { IntentManager, BrowserStorageAdapter, BrowserTimerAdapter } from '@edgesignal/core';
 
 let intent: IntentManager | null = null;
 const route = useRoute();
@@ -184,7 +184,7 @@ onUnmounted(() => {
 import { Injectable, OnDestroy } from '@angular/core';
 import { Router, NavigationEnd } from '@angular/router';
 import { filter, Subscription } from 'rxjs';
-import { IntentManager, BrowserStorageAdapter, BrowserTimerAdapter } from 'edge-signal';
+import { IntentManager, BrowserStorageAdapter, BrowserTimerAdapter } from '@edgesignal/core';
 
 @Injectable({ providedIn: 'root' })
 export class IntentService implements OnDestroy {

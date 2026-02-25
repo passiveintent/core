@@ -11,8 +11,6 @@ npm install @edgesignal/react
 # react / react-dom are peer dependencies — install once at app level
 ```
 
-> **Workspace note:** the `package.json` dependency on `@edgesignal/core` is set to `"*"` for local npm workspace resolution during development. Change this to the current release tag (e.g. `"^1.0.0"`) before publishing to the npm registry.
-
 ---
 
 ## Quick Start
@@ -26,7 +24,7 @@ import { useEffect } from 'react';
 export function TrackingProvider({ children }: { children: React.ReactNode }) {
   const { track, on, getTelemetry } = useEdgeSignal({
     botProtection: true,
-    debug: process.env.NODE_ENV === 'development',
+    eventCooldownMs: 60_000,
   });
 
   const pathname = usePathname();
@@ -54,16 +52,16 @@ export function TrackingProvider({ children }: { children: React.ReactNode }) {
 All returned methods are stable across re-renders (`useCallback(…, [])`). Methods are no-ops
 before the first mount (SSR, Suspense, concurrent transitions) and after unmount.
 
-| Method              | Signature                             | Notes                                                |
-| ------------------- | ------------------------------------- | ---------------------------------------------------- |
-| `track`             | `(event: string) => void`             | Records a page-view or custom event                  |
-| `on`                | `(event, handler) => () => void`      | Subscribe; call the returned function to unsubscribe |
-| `getTelemetry`      | `() => EdgeSignalTelemetry`           | Full engine snapshot                                 |
-| `predictNextStates` | `(threshold?, sanitize?) => string[]` | Top-N Markov predictions                             |
-| `hasSeen`           | `(route: string) => boolean`          | Bloom filter membership test                         |
-| `incrementCounter`  | `(key: string, by?: number) => void`  | Persistent session counter                           |
-| `getCounter`        | `(key: string) => number`             | Read a session counter                               |
-| `resetCounter`      | `(key: string) => void`               | Reset a session counter                              |
+| Method              | Signature                                                             | Notes                                                |
+| ------------------- | --------------------------------------------------------------------- | ---------------------------------------------------- |
+| `track`             | `(event: string) => void`                                             | Records a page-view or custom event                  |
+| `on`                | `(event, handler) => () => void`                                      | Subscribe; call the returned function to unsubscribe |
+| `getTelemetry`      | `() => EdgeSignalTelemetry`                                           | Full engine snapshot                                 |
+| `predictNextStates` | `(threshold?, sanitize?) => { state: string; probability: number }[]` | Top-N Markov predictions                             |
+| `hasSeen`           | `(route: string) => boolean`                                          | Bloom filter membership test                         |
+| `incrementCounter`  | `(key: string, by?: number) => void`                                  | Exact session-scoped counter                         |
+| `getCounter`        | `(key: string) => number`                                             | Read a session-scoped counter                        |
+| `resetCounter`      | `(key: string) => void`                                               | Reset a session-scoped counter                       |
 
 ---
 
@@ -88,7 +86,7 @@ packages/<name>/
   README.md          → this file pattern
 ```
 
-- `@edgesignal/core` dependency: use `"*"` for workspace dev, `"^x.y.z"` for npm publish.
+- `@edgesignal/core` dependency: pin to the corresponding release range (e.g. `"^1.0.0"`).
 - Build: `tsup src/index.ts --format esm,cjs --dts --sourcemap`
 - Types: dual `d.ts` via `tsup --dts`
 

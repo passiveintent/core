@@ -6,7 +6,7 @@
  */
 
 import { BenchmarkRecorder } from '../performance-instrumentation.js';
-import type { BenchmarkConfig, PerformanceReport } from '../performance-instrumentation.js';
+import type { PerformanceReport } from '../performance-instrumentation.js';
 import { BrowserStorageAdapter, BrowserTimerAdapter } from '../adapters.js';
 import type {
   AsyncStorageAdapter,
@@ -23,71 +23,20 @@ import { normalizeRouteState } from '../utils/route-normalizer.js';
 import { BroadcastSync } from '../sync/broadcast-sync.js';
 import type { SerializedMarkovGraph } from '../core/markov.js';
 import type {
-  BotDetectedPayload,
   ConversionPayload,
-  DwellTimeAnomalyPayload,
   EdgeSignalError,
   EdgeSignalTelemetry,
-  HesitationDetectedPayload,
-  HighEntropyPayload,
   IntentEventMap,
-  IntentEventName,
   IntentManagerConfig,
   MarkovGraphConfig,
-  StateChangePayload,
-  TrajectoryAnomalyPayload,
 } from '../types/events.js';
-
-const SMOOTHING_EPSILON = 0.01;
-
-/**
- * Minimum sliding window length before evaluating trajectory.
- * This "warm-up" allows the average log-likelihood to stabilize.
- */
-const MIN_WINDOW_LENGTH = 16;
-
-/**
- * Maximum sliding window length (recentTrajectory cap).
- * Used as reference for variance scaling.
- */
-const MAX_WINDOW_LENGTH = 32;
-
-/**
- * Minimum number of outgoing transitions a state must have before entropy
- * evaluation is considered statistically meaningful.
- * Higher values prevent spurious entropy triggers on small samples.
- */
-const MIN_SAMPLE_TRANSITIONS = 10;
-
-type Listener<T> = (payload: T) => void;
-
-/**
- * Tiny event emitter.
- */
-class EventEmitter<Events extends object> {
-  private listeners = new Map<keyof Events, Set<Listener<any>>>();
-
-  on<K extends keyof Events>(event: K, listener: Listener<Events[K]>): () => void {
-    const set = this.listeners.get(event) ?? new Set<Listener<Events[K]>>();
-    set.add(listener);
-    this.listeners.set(event, set as Set<Listener<any>>);
-
-    return () => {
-      set.delete(listener);
-      if (set.size === 0) this.listeners.delete(event);
-    };
-  }
-
-  emit<K extends keyof Events>(event: K, payload: Events[K]): void {
-    const set = this.listeners.get(event);
-    if (!set) return;
-    set.forEach((listener) => listener(payload));
-  }
-
-  removeAll(): void {
-    this.listeners.clear();
-  }
-}
+import {
+  SMOOTHING_EPSILON,
+  MIN_WINDOW_LENGTH,
+  MAX_WINDOW_LENGTH,
+  MIN_SAMPLE_TRANSITIONS,
+} from './constants.js';
+import { EventEmitter } from './event-emitter.js';
 
 /**
  * Persisted payload format.
@@ -141,6 +90,11 @@ export class IntentManager {
    * ensure the accumulated state is saved once the in-flight write completes.
    */
   private isAsyncWriting = false;
+  /**
+   * Set when persist() is invoked while an async write is in flight.
+   * Guarantees one follow-up persist pass after the in-flight write settles.
+   */
+  private hasPendingAsyncPersist = false;
   private readonly timer: TimerAdapter;
   private readonly onError?: (error: EdgeSignalError) => void;
   private readonly botProtection: boolean;
@@ -263,6 +217,8 @@ export class IntentManager {
   /** The state where the user dwelled anomalously — anchors hesitation_detected.state. */
   private lastDwellAnomalyState = '';
   private readonly hesitationCorrelationWindowMs: number;
+  /** Effective smoothing epsilon used for runtime trajectory scoring. */
+  private readonly trajectorySmoothingEpsilon: number;
   private readonly trackStages: Array<(ctx: TrackContext) => void>;
   /** A/B holdout group for this session. */
   private readonly assignmentGroup: 'treatment' | 'control';
@@ -321,6 +277,13 @@ export class IntentManager {
       baselineMeanLL: config.baselineMeanLL ?? config.graph?.baselineMeanLL,
       baselineStdLL: config.baselineStdLL ?? config.graph?.baselineStdLL,
     };
+    const configuredSmoothing = graphConfig.smoothingEpsilon;
+    this.trajectorySmoothingEpsilon =
+      typeof configuredSmoothing === 'number' &&
+      Number.isFinite(configuredSmoothing) &&
+      configuredSmoothing > 0
+        ? configuredSmoothing
+        : SMOOTHING_EPSILON;
 
     const restored = this.restore(graphConfig);
 
@@ -474,7 +437,7 @@ export class IntentManager {
 
     // Use timer.now() for bot detection to ensure it works even when benchmark is disabled
     const now = this.timer.now();
-    const trackStart = this.benchmark.enabled ? now : 0;
+    const trackStart = this.benchmark.now();
 
     // Drift protection: advance the rolling window and count this call.
     // O(1) — only two scalar comparisons and integer increments; no allocations.
@@ -748,6 +711,15 @@ export class IntentManager {
       }
       return 0;
     }
+    if (!Number.isFinite(by)) {
+      if (this.onError) {
+        this.onError({
+          code: 'VALIDATION',
+          message: `IntentManager.incrementCounter(): 'by' must be a finite number, got ${by}`,
+        });
+      }
+      return this.counters.get(key) ?? 0;
+    }
     const next = (this.counters.get(key) ?? 0) + by;
     this.counters.set(key, next);
     // Broadcast the increment to other tabs when cross-tab sync is enabled,
@@ -866,19 +838,20 @@ export class IntentManager {
       return;
     }
 
-    // Use explicit SMOOTHING_EPSILON for parity with calibration phase.
+    // Use the configured smoothing epsilon (with defensive fallback to default)
+    // for parity with calibration/runtime assumptions.
     // "real"     = how likely this sequence is under the *live* (learned) graph.
     // "expected" = how likely it would be under the *baseline* reference graph.
     // These two values are the meaningful comparison exposed in the event payload.
     const real = MarkovGraph.logLikelihoodTrajectory(
       this.graph,
       this.recentTrajectory,
-      SMOOTHING_EPSILON,
+      this.trajectorySmoothingEpsilon,
     );
     const expected = MarkovGraph.logLikelihoodTrajectory(
       this.baseline,
       this.recentTrajectory,
-      SMOOTHING_EPSILON,
+      this.trajectorySmoothingEpsilon,
     );
 
     const N = Math.max(1, this.recentTrajectory.length - 1);
@@ -1100,12 +1073,14 @@ export class IntentManager {
 
     if (this.asyncStorage) {
       // ── Async path ────────────────────────────────────────────────────────
-      // Guard: if a write is already in flight, return early.  isDirty remains
-      // true, so when the in-flight promise settles and the next schedulePersist
-      // fires, the accumulated state will be saved.
-      if (this.isAsyncWriting) return;
+      // Guard: if a write is already in flight, queue one follow-up persist pass.
+      if (this.isAsyncWriting) {
+        this.hasPendingAsyncPersist = true;
+        return;
+      }
 
       this.isAsyncWriting = true;
+      this.hasPendingAsyncPersist = false;
       // Optimistically clear isDirty now that we've captured the current state
       // into `payload`.  If the write fails we restore the flag.
       this.isDirty = false;
@@ -1114,6 +1089,10 @@ export class IntentManager {
         .setItem(this.storageKey, JSON.stringify(payload))
         .then(() => {
           this.isAsyncWriting = false;
+          if (this.hasPendingAsyncPersist || this.isDirty) {
+            this.hasPendingAsyncPersist = false;
+            this.persist();
+          }
         })
         .catch((err: unknown) => {
           this.isAsyncWriting = false;
@@ -1131,6 +1110,12 @@ export class IntentManager {
               message: err instanceof Error ? err.message : String(err),
               originalError: err,
             });
+          }
+          // If a persist attempt was queued while this write was in flight,
+          // schedule one retry pass after the failure surface has been reported.
+          if (this.hasPendingAsyncPersist) {
+            this.hasPendingAsyncPersist = false;
+            this.schedulePersist();
           }
         });
     } else {

@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { IntentManager, BloomFilter, MarkovGraph, BroadcastSync, normalizeRouteState, SerializedMarkovGraph } from '@edgesignal/core';
+import { IntentManager, BloomFilter, MarkovGraph, BroadcastSync, normalizeRouteState, SerializedMarkovGraph } from '../src/intent-sdk.js';
 
 const baseline: SerializedMarkovGraph = {
   states: ['/home', '/search', '/product', '/cart', '/checkout'],

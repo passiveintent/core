@@ -1,0 +1,7 @@
+# Global owners – every PR requires review from a maintainer
+* @purushpsm147
+
+# Package-specific ownership
+packages/core/ @purushpsm147
+packages/adaptive-ui/ @purushpsm147
+packages/security/ @purushpsm147

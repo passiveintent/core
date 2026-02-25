@@ -15,7 +15,7 @@
  * - Hesitation patterns (trajectory anomalies)
  */
 
-import { IntentManager, SerializedMarkovGraph } from '@edgesignal/core';
+import { IntentManager, SerializedMarkovGraph } from '../../src/intent-sdk.js';
 
 // ============================================
 // BASELINE GRAPH

@@ -41,9 +41,11 @@ if (!b.check('home') || g.getProbability('home', 'search') <= 0) {
 console.log('package smoke test passed');
 `;
 
-  execSync('node --input-type=module', {
+  // Write smoke test to file instead of using stdin (Node 24+ doesn't support --input-type with stdin)
+  const smokeFilePath = join(consumerDir, 'smoke-test.mjs');
+  writeFileSync(smokeFilePath, smoke);
+  execSync(`node ${smokeFilePath}`, {
     cwd: consumerDir,
-    input: smoke,
     stdio: 'inherit',
   });
 

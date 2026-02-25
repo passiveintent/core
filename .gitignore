@@ -1,9 +1,13 @@
 node_modules/
 dist/
 .env
-cypress/screenshots/
-cypress/downloads/
+**/cypress/screenshots/
+**/cypress/downloads/
 coverage/
 
 # Internal product roadmap — not for public distribution
 Product Roadmap/
+
+# Packages under private development — remove these lines when ready to release
+packages/adaptive-ui/
+packages/security/

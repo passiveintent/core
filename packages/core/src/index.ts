@@ -18,6 +18,7 @@ export {
   BloomFilter,
   MarkovGraph,
   IntentManager,
+  BroadcastSync,
   normalizeRouteState,
 } from './intent-sdk.js';
 

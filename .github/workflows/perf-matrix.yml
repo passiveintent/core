@@ -15,8 +15,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 20
-      - run: npm install
-      - run: npm run test:perf:run
-      - run: npm run test:perf:assert
+      - run: npm ci
+      - run: npm run test:perf:run -w @edgesignal/core
+      - run: npm run test:perf:assert -w @edgesignal/core
       - name: Validate scenario matrix
-        run: npm run test:perf:matrix
+        run: npm run test:perf:matrix -w @edgesignal/core

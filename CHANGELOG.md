@@ -8,6 +8,47 @@
 # Changelog
 
 All notable changes to this project will be documented in this file.
+Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
+
+---
+
+## [Unreleased] – Post-1.0 Engineering & Infrastructure
+
+*Branch: `codex/convert-to-npm-workspaces-monorepo` — included in v1.0.0 initial release to enable future ecosystem extensions without breaking changes*
+
+### Repository Structure
+
+- **npm workspaces monorepo** — repository restructured from a single-package layout to a proper npm workspaces monorepo. `@edgesignal/core` is the first published package; `@edgesignal/adaptive-ui` and `@edgesignal/security` are registered as private workspace placeholders reserved for future releases.
+- **Self-contained package** — all files specific to `@edgesignal/core` (Cypress E2E suite, sandbox apps, benchmark scripts, `tsconfig.json`, `cypress.config.ts`) were moved inside `packages/core/`. The repository root is now pure monorepo orchestration.
+- **Root scripts via `--workspaces --if-present`** — replaced 18 hardcoded per-package passthrough scripts in the root `package.json` with workspace-forwarded equivalents, following the React / Angular monorepo convention.
+- **Per-package `LICENSE` and `README.md`** — `packages/core/` now ships its own `LICENSE` (AGPL-3.0) and package-level `README.md` so npm consumers see the correct metadata without landing on the monorepo root.
+- **Private packages hidden from public repo** — `packages/adaptive-ui/` and `packages/security/` are listed in `.gitignore` and untracked from git until they are ready for public release.
+
+### Developer Experience
+
+- **`.editorconfig`** — added root-level editor config (LF line endings, 2-space indent, UTF-8, trim trailing whitespace) so any editor auto-conforms without Prettier running.
+- **Prettier** — added `prettier` as a root dev dependency with a `.prettierrc` (single quotes, trailing commas, `printWidth: 100`, LF) and `.prettierignore`. `format` / `format:check` scripts added to root `package.json`.
+- **`engines` field** — `node: ">=20"` declared in both root and `packages/core/package.json` to surface a clear error on unsupported runtimes.
+- **`.github/CODEOWNERS`** — auto-assigns `@purushpsm147` as reviewer on every PR across all packages.
+- **`.github/PULL_REQUEST_TEMPLATE.md`** — standardised PR checklist (type of change, lint/typecheck, tests, docs).
+
+### CI / CD
+
+- All GitHub Actions steps now target `@edgesignal/core` explicitly via `-w @edgesignal/core` to avoid running against placeholder packages.
+- Added `format:check` step to `ci.yml` so unformatted code fails the pipeline.
+- Switched perf-matrix workflow to `npm ci` for reproducible installs.
+
+### Performance Tooling
+
+- **JIT warm-up in `perf-runner.mjs`** — added a 5 000-call throwaway warm-up pass before measurement starts, so V8 JIT-compiles the hot paths before samples are collected. Previously early cold iterations inflated p99 by 2–3×.
+- **Fixed memory measurement fallback** — removed the silent `|| serializedGraphBytes` fallback that made `memoryUsageEstimate` report `1 409 bytes` (the graph size) whenever GC fired mid-run. Now uses a clearly labelled proxy (`serializedGraphBytes × 10`) when the heap delta is negative.
+- **Clean process exit** — added `manager.destroy()` + `process.exit(0)` at end of `perf-runner.mjs` to drain pending debounce timers; previously Node exited with code `1` due to hanging handles.
+- **Regression thresholds overhauled in `perf-regression.mjs`**:
+  - Replaced loose absolute p95/p99 ceilings (`0.15 ms` / `0.30 ms` — 21× headroom) with a **3× baseline multiplier hard ceiling**, providing a proportional guard that tightens automatically as the baseline improves.
+  - Percentage regression tolerance raised to 25 % to absorb OS scheduling jitter at sub-microsecond scales, while the 3× ceiling still catches genuine algorithmic regressions.
+  - Memory is now checked as a `%` regression vs baseline only (absolute heap bytes are too environment-dependent for a hard limit).
+  - Added a "suspiciously fast" warning when a metric is >50 % below baseline — prompts a baseline update rather than silently drifting downward.
+  - Fixed `pctChange()` returning `0` instead of skipping when the baseline value is `0`.
 
 ---
 

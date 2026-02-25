@@ -7,8 +7,8 @@
 
 import fs from 'node:fs';
 import path from 'node:path';
-import { BenchmarkSimulationEngine } from '../packages/core/dist/src/intent-sdk-performance.js';
-import { printAccuracySummary } from '../packages/core/dist/src/reporting-utils.js';
+import { BenchmarkSimulationEngine } from '../dist/src/intent-sdk-performance.js';
+import { printAccuracySummary } from '../dist/src/reporting-utils.js';
 
 class MemoryStorage {
   constructor() { this.map = new Map(); }

@@ -417,10 +417,11 @@ describe('Predictive Prefetch Hints', () => {
         mgr.track('/home');
         mgr.track('/search');
       }
-
+      // After the loop the last tracked state is /search, so previousState = /search.
+      // /search → /home is the only outgoing edge, so predictions should include /home.
       const hints = mgr.predictNextStates(0.1);
       const states = hints.map((h: { state: string; probability: number }) => h.state);
-      expect(states).to.include('/search');
+      expect(states).to.include('/home');
     });
   });
 

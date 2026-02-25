@@ -27,7 +27,7 @@ try {
   execSync(`npm install --silent "${tarballPath}"`, { cwd: consumerDir, stdio: 'inherit' });
 
   const smoke = `
-import { IntentManager, MarkovGraph, BloomFilter } from 'edge-signal';
+import { IntentManager, MarkovGraph, BloomFilter } from '@edgesignal/core';
 const g = new MarkovGraph();
 g.incrementTransition('home', 'search');
 const b = new BloomFilter();

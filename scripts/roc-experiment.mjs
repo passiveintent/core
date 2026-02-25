@@ -20,7 +20,7 @@
 
 import fs from 'node:fs';
 import path from 'node:path';
-import { IntentManager, MarkovGraph } from '../dist/src/intent-sdk.js';
+import { IntentManager, MarkovGraph } from '../packages/core/dist/src/intent-sdk.js';
 
 // ── polyfills ──────────────────────────────────────────────
 class MemoryStorage {

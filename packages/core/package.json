@@ -18,7 +18,8 @@
   "license": "AGPL-3.0-only",
   "repository": {
     "type": "git",
-    "url": "https://github.com/purushpsm147/EdgeSignal-Privacy-First-Intent-Engine.git"
+    "url": "https://github.com/purushpsm147/EdgeSignal-Privacy-First-Intent-Engine.git",
+    "directory": "packages/core"
   },
   "homepage": "https://github.com/purushpsm147/EdgeSignal-Privacy-First-Intent-Engine#readme",
   "engines": {

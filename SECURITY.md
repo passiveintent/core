@@ -61,7 +61,7 @@ We do not currently operate a paid bug bounty program. We do, however, credit al
 
 The following are **in scope** for security reports:
 
-- The `passive-intent` npm package (`src/`)
+- The `@passiveintent/core` and `@passiveintent/react` npm packages (`src/`)
 - The public SDK API surface (`IntentManager`, adapters, configuration)
 - Data leakage or privacy violations stemming from SDK behaviour
 

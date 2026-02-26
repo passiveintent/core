@@ -911,7 +911,7 @@ interface IntentManagerConfig {
   baselineStdLL?: number;
 
   // Non-fatal structured error callback.
-  // Receives an PassiveIntentError object — never an Error instance.
+  // Receives a PassiveIntentError object — never an Error instance.
   // The engine never throws; all failures are forwarded here and then recovered gracefully.
   onError?: (error: {
     code:

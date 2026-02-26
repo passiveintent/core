@@ -890,7 +890,7 @@ interface IntentManagerConfig {
     baselineMeanLL?: number; // calibrated mean avg log-likelihood
     baselineStdLL?: number; // calibrated std dev of avg log-likelihood
     smoothingEpsilon?: number; // Laplace epsilon, default: 0.01
-    smoothingAlpha?: number; // Dirichlet pseudo-count, default: 0 (off)
+    smoothingAlpha?: number; // Dirichlet pseudo-count, default: 0.1 (on)
     maxStates?: number; // LFU prune cap, default: 500
   };
 
@@ -1225,7 +1225,7 @@ function RouterTracker() {
 
 | Package                      | Status    | Notes                                                      |
 | ---------------------------- | --------- | ---------------------------------------------------------- |
-| `@passiveintent/react`       | ✅ v1.1.0 | `usePassiveIntent` hook — React 18+, Next.js, React Router |
+| `@passiveintent/react`       | ✅ v1.0.0 | `usePassiveIntent` hook — React 18+, Next.js, React Router |
 | `@passiveintent/vue`         | 🗓 v1.2   | `usePassiveIntent` composable — Vue 3 + Vue Router         |
 | `@passiveintent/security`    | 🗓 v1.2   | Hardened consent layer, GDPR helpers, CSP integration      |
 | `@passiveintent/adaptive-ui` | 🗓 v1.3   | Headless UI primitives driven by predicted intent state    |

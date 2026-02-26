@@ -95,7 +95,9 @@ export class MarkovGraph {
     this.baselineMeanLL = config.baselineMeanLL;
     this.baselineStdLL = config.baselineStdLL;
     this.maxStates = config.maxStates ?? 500;
-    this.smoothingAlpha = config.smoothingAlpha ?? 0.1;
+    const rawSmoothingAlpha = config.smoothingAlpha ?? 0.1;
+    this.smoothingAlpha =
+      Number.isFinite(rawSmoothingAlpha) && rawSmoothingAlpha >= 0 ? rawSmoothingAlpha : 0;
   }
 
   /**

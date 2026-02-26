@@ -1152,16 +1152,16 @@ import { usePassiveIntent } from '@passiveintent/react';
 import type { IntentManagerConfig, UsePassiveIntentReturn } from '@passiveintent/react';
 ```
 
-| Returned method     | Signature                                                             | Notes                              |
-| ------------------- | --------------------------------------------------------------------- | ---------------------------------- |
-| `track`             | `(event: string) => void`                                             | no-op before mount / after unmount |
-| `on`                | `(event, handler) => () => void`                                      | returns a NOOP unsubscribe on SSR  |
-| `getTelemetry`      | `() => PassiveIntentTelemetry`                                        | empty object cast before mount     |
-| `predictNextStates` | `(threshold?, sanitize?) => { state: string; probability: number }[]` | `[]` before first mount            |
-| `hasSeen`           | `(route: string) => boolean`                                          | `false` before first mount         |
-| `incrementCounter`  | `(key: string, by?: number) => number`                                | returns new value; `0` before mount / SSR          |
-| `getCounter`        | `(key: string) => number`                                             | `0` before first mount             |
-| `resetCounter`      | `(key: string) => void`                                               | —                                  |
+| Returned method     | Signature                                                             | Notes                                     |
+| ------------------- | --------------------------------------------------------------------- | ----------------------------------------- |
+| `track`             | `(event: string) => void`                                             | no-op before mount / after unmount        |
+| `on`                | `(event, handler) => () => void`                                      | returns a NOOP unsubscribe on SSR         |
+| `getTelemetry`      | `() => PassiveIntentTelemetry`                                        | empty object cast before mount            |
+| `predictNextStates` | `(threshold?, sanitize?) => { state: string; probability: number }[]` | `[]` before first mount                   |
+| `hasSeen`           | `(route: string) => boolean`                                          | `false` before first mount                |
+| `incrementCounter`  | `(key: string, by?: number) => number`                                | returns new value; `0` before mount / SSR |
+| `getCounter`        | `(key: string) => number`                                             | `0` before first mount                    |
+| `resetCounter`      | `(key: string) => void`                                               | —                                         |
 
 #### Next.js App Router Example
 

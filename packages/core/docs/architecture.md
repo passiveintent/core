@@ -604,12 +604,12 @@ function onCheckoutComplete(orderTotal: number): void {
 
 **What GA4 receives — and what it does NOT receive:**
 
-| Data sent to GA4                                          | Contains PII?                 | Contains behavioral data?                                           |
-| --------------------------------------------------------- | ----------------------------- | ------------------------------------------------------------------- |
+| Data sent to GA4                                             | Contains PII?                 | Contains behavioral data?                                           |
+| ------------------------------------------------------------ | ----------------------------- | ------------------------------------------------------------------- |
 | `passiveintent_bot_mitigated` event name + category          | No                            | No — a count signal only                                            |
 | `passiveintent_intervention_triggered` + `intervention_type` | No                            | No — an enum label, not a path sequence                             |
 | `passiveintent_assisted_conversion` + `value`                | No                            | No — a purchase value you already send to GA4 for revenue reporting |
-| `session_correlation_id` (random UUID)                    | No — not linkable to identity | No                                                                  |
+| `session_correlation_id` (random UUID)                       | No — not linkable to identity | No                                                                  |
 
 The Markov graph, Bloom filter, transition sequences, dwell-time measurements, entropy scores, and raw event payloads **never leave the device**. GA4 only sees dimensionless count signals that tell you whether PassiveIntent worked — not _how_ it worked or _who_ it worked on.
 
@@ -1153,7 +1153,7 @@ import type { IntentManagerConfig, UsePassiveIntentReturn } from '@passiveintent
 | ------------------- | --------------------------------------------------------------------- | ---------------------------------- |
 | `track`             | `(event: string) => void`                                             | no-op before mount / after unmount |
 | `on`                | `(event, handler) => () => void`                                      | returns a NOOP unsubscribe on SSR  |
-| `getTelemetry`      | `() => PassiveIntentTelemetry`                                           | empty object cast before mount     |
+| `getTelemetry`      | `() => PassiveIntentTelemetry`                                        | empty object cast before mount     |
 | `predictNextStates` | `(threshold?, sanitize?) => { state: string; probability: number }[]` | `[]` before first mount            |
 | `hasSeen`           | `(route: string) => boolean`                                          | `false` before first mount         |
 | `incrementCounter`  | `(key: string, by?: number) => void`                                  | —                                  |
@@ -1220,12 +1220,12 @@ function RouterTracker() {
 
 ### Sister Packages (planned)
 
-| Package                   | Status    | Notes                                                   |
-| ------------------------- | --------- | ------------------------------------------------------- |
+| Package                      | Status    | Notes                                                      |
+| ---------------------------- | --------- | ---------------------------------------------------------- |
 | `@passiveintent/react`       | ✅ v1.1.0 | `usePassiveIntent` hook — React 18+, Next.js, React Router |
 | `@passiveintent/vue`         | 🗓 v1.2   | `usePassiveIntent` composable — Vue 3 + Vue Router         |
-| `@passiveintent/security`    | 🗓 v1.2   | Hardened consent layer, GDPR helpers, CSP integration   |
-| `@passiveintent/adaptive-ui` | 🗓 v1.3   | Headless UI primitives driven by predicted intent state |
+| `@passiveintent/security`    | 🗓 v1.2   | Hardened consent layer, GDPR helpers, CSP integration      |
+| `@passiveintent/adaptive-ui` | 🗓 v1.3   | Headless UI primitives driven by predicted intent state    |
 
 ---
 
@@ -1663,27 +1663,27 @@ const intent = new IntentManager({
 
 `IntentManager` is the single orchestration class consumers interact with.
 
-| Concern                | Implementation                                                                                                                                                                                   |
-| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------- |
-| State machine          | `previousState: string \| null` field; `recentTrajectory: string[]` sliding window                                                                                                               |
-| Bloom                  | `BloomFilter` instance, hydrated from `localStorage` on construction                                                                                                                             |
-| Graph                  | `MarkovGraph` instance, hydrated from binary `localStorage` blob on construction                                                                                                                 |
-| Baseline               | Second `MarkovGraph` deserialized from `config.baseline` JSON at construction                                                                                                                    |
-| Events                 | Internal `EventEmitter<IntentEventMap>` — 20 lines, zero external deps                                                                                                                           |
-| Persistence            | Debounced write (2 s default), dirty-flag guards every write                                                                                                                                     |
-| Bot detection          | `EntropyGuard` circular buffer, synchronized to `timer.now()`                                                                                                                                    |
-| Dwell-time             | Welford’s online accumulator per state; z-score anomaly detection                                                                                                                                |
-| Tab-visibility         | `visibilitychange` listener offsets `previousStateEnteredAt` by hidden duration; SSR-safe                                                                                                        |
-| Drift killswitch       | Rolling-window `trajectory_anomaly`/`track()` ratio; sets `isBaselineDrifted` flag when threshold exceeded                                                                                       |
-| Route normalization    | `normalizeRouteState()` called at the top of every `track()` call                                                                                                                                |
-| Bigrams                | Selective second-order Markov transitions, frequency-gated                                                                                                                                       |
-| Event cooldown         | Per-channel cooldown gating via `eventCooldownMs`                                                                                                                                                |
-| Deterministic counters | `incrementCounter` / `getCounter` / `resetCounter` — exact integer map, session-scoped                                                                                                           |
-| A/B holdout            | `assignmentGroup: 'treatment'                                                                                                                                                                    | 'control'` set at construction; control group skips event emissions |
-| Benchmarking           | `BenchmarkRecorder` with per-operation ring-buffer sample accumulators                                                                                                                           |
+| Concern                | Implementation                                                                                                                                                                                      |
+| ---------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------- |
+| State machine          | `previousState: string \| null` field; `recentTrajectory: string[]` sliding window                                                                                                                  |
+| Bloom                  | `BloomFilter` instance, hydrated from `localStorage` on construction                                                                                                                                |
+| Graph                  | `MarkovGraph` instance, hydrated from binary `localStorage` blob on construction                                                                                                                    |
+| Baseline               | Second `MarkovGraph` deserialized from `config.baseline` JSON at construction                                                                                                                       |
+| Events                 | Internal `EventEmitter<IntentEventMap>` — 20 lines, zero external deps                                                                                                                              |
+| Persistence            | Debounced write (2 s default), dirty-flag guards every write                                                                                                                                        |
+| Bot detection          | `EntropyGuard` circular buffer, synchronized to `timer.now()`                                                                                                                                       |
+| Dwell-time             | Welford’s online accumulator per state; z-score anomaly detection                                                                                                                                   |
+| Tab-visibility         | `visibilitychange` listener offsets `previousStateEnteredAt` by hidden duration; SSR-safe                                                                                                           |
+| Drift killswitch       | Rolling-window `trajectory_anomaly`/`track()` ratio; sets `isBaselineDrifted` flag when threshold exceeded                                                                                          |
+| Route normalization    | `normalizeRouteState()` called at the top of every `track()` call                                                                                                                                   |
+| Bigrams                | Selective second-order Markov transitions, frequency-gated                                                                                                                                          |
+| Event cooldown         | Per-channel cooldown gating via `eventCooldownMs`                                                                                                                                                   |
+| Deterministic counters | `incrementCounter` / `getCounter` / `resetCounter` — exact integer map, session-scoped                                                                                                              |
+| A/B holdout            | `assignmentGroup: 'treatment'                                                                                                                                                                       | 'control'` set at construction; control group skips event emissions |
+| Benchmarking           | `BenchmarkRecorder` with per-operation ring-buffer sample accumulators                                                                                                                              |
 | Error handling         | All `try/catch` blocks route to `onError?: (error: PassiveIntentError) => void`; never throws. Codes: `STORAGE_READ`, `STORAGE_WRITE`, `QUOTA_EXCEEDED`, `RESTORE_PARSE`, `SERIALIZE`, `VALIDATION` |
 | Telemetry              | `getTelemetry()` returns `PassiveIntentTelemetry` — aggregate counters only, no raw states or PII                                                                                                   |
-| Conversion tracking    | `trackConversion(payload)` emits a `conversion` event through the local event bus; nothing leaves the device                                                                                     |
+| Conversion tracking    | `trackConversion(payload)` emits a `conversion` event through the local event bus; nothing leaves the device                                                                                        |
 
 **Session reset:**
 
@@ -2268,9 +2268,9 @@ The privacy properties of this library are not marketing copy. Here is how each 
 | **No network calls**                | `grep -r "fetch\|XMLHttpRequest\|sendBeacon\|WebSocket" src/` returns zero results. The `package.json` has no runtime dependencies. The minified bundle can be audited in `dist/index.js`.                 |
 | **No fingerprinting**               | No access to `navigator`, `screen`, `canvas`, `AudioContext`, or any known fingerprinting surface. EntropyGuard uses only `performance.now()` deltas from your own explicit `track()` calls.               |
 | **No PII**                          | `track()` accepts a `string` label chosen entirely by the application. The library never reads cookies, URL query parameters, form fields, local storage keys other than `storageKey`, or any DOM content. |
-| **Local storage only**              | Persistence routes exclusively through the `StorageAdapter` interface, which defaults to `window.localStorage`. Inspect the stored state at any time: `localStorage.getItem('passive-intent')`.               |
+| **Local storage only**              | Persistence routes exclusively through the `StorageAdapter` interface, which defaults to `window.localStorage`. Inspect the stored state at any time: `localStorage.getItem('passive-intent')`.            |
 | **Transparent & auditable**         | `src/` is the exact code that ships. `tsup` minifies but does not inject code. Source maps in `dist/` make the minified output human-readable.                                                             |
-| **User can clear state**            | `localStorage.removeItem('passive-intent')` wipes all learned state. No server-side copy exists.                                                                                                              |
+| **User can clear state**            | `localStorage.removeItem('passive-intent')` wipes all learned state. No server-side copy exists.                                                                                                           |
 | **Temporal data is non-persistent** | Dwell-time accumulators (`dwellStats`) are held in memory only and never written to `localStorage`. Per-state timing distributions cannot be reconstructed across sessions.                                |
 | **Zero runtime dependencies**       | The dependency graph is empty — no transitive code paths can introduce egress, telemetry, or tracking.                                                                                                     |
 
@@ -2280,20 +2280,20 @@ The privacy properties of this library are not marketing copy. Here is how each 
 
 Because PassiveIntent processes no personal data as defined under GDPR Article 4(1), the majority of GDPR obligations simply do not attach. The table below maps each relevant GDPR article to PassiveIntent's behavior:
 
-| GDPR Article                                          | Requirement                                                   | PassiveIntent status                                                                                                                                                                              |
+| GDPR Article                                          | Requirement                                                   | PassiveIntent status                                                                                                                                                                           |
 | ----------------------------------------------------- | ------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **Art. 4(1)** — Personal data definition              | Data relating to an identified or identifiable natural person | **Not applicable.** State labels are application-defined strings (e.g. `/checkout`). No user identifier, IP address, device ID, or biometric is ever processed.                                |
 | **Art. 5(1)(a)** — Lawfulness, fairness, transparency | Processing must have a lawful basis                           | **Not triggered.** No personal data is processed, so no lawful basis is required.                                                                                                              |
 | **Art. 5(1)(b)** — Purpose limitation                 | Data collected for specified purposes only                    | **Not triggered.** No personal data is collected.                                                                                                                                              |
 | **Art. 5(1)(c)** — Data minimisation                  | Only data adequate and necessary for the purpose              | **Satisfied by design.** The library stores transition counts and anonymous timing statistics. No user-identifying field exists in the data model.                                             |
 | **Art. 5(1)(e)** — Storage limitation                 | Data retained no longer than necessary                        | **Satisfied.** Dwell-time statistics are session-scoped and never persisted. The Markov graph stores only aggregate counts, not timestamped event logs.                                        |
-| **Art. 6** — Lawful basis for processing              | Consent, contract, legitimate interest, etc.                  | **Not required.** GDPR Article 6 applies only to personal data processing. PassiveIntent does not process personal data.                                                                          |
+| **Art. 6** — Lawful basis for processing              | Consent, contract, legitimate interest, etc.                  | **Not required.** GDPR Article 6 applies only to personal data processing. PassiveIntent does not process personal data.                                                                       |
 | **Art. 7** — Conditions for consent                   | Freely given, specific, informed, unambiguous                 | **No consent banner required.** No personal data is collected, so ePrivacy / PECR consent for analytics cookies does not apply to this SDK.                                                    |
-| **Art. 13/14** — Information obligations              | Privacy notice must disclose processing                       | **No disclosure required** for PassiveIntent itself. Your existing privacy notice need not reference this SDK unless you pass personal data as state labels (which you should not do).            |
-| **Art. 17** — Right to erasure                        | Users can request deletion of their data                      | **Trivially satisfied.** `localStorage.removeItem('passive-intent')` is the complete deletion path. No server-side data exists to delete.                                                         |
+| **Art. 13/14** — Information obligations              | Privacy notice must disclose processing                       | **No disclosure required** for PassiveIntent itself. Your existing privacy notice need not reference this SDK unless you pass personal data as state labels (which you should not do).         |
+| **Art. 17** — Right to erasure                        | Users can request deletion of their data                      | **Trivially satisfied.** `localStorage.removeItem('passive-intent')` is the complete deletion path. No server-side data exists to delete.                                                      |
 | **Art. 20** — Right to data portability               | Users can receive their data in machine-readable form         | **Not triggered.** No personal data is processed.                                                                                                                                              |
 | **Art. 25** — Privacy by design and by default        | Privacy protections built into the system architecture        | **Satisfied by architecture.** Zero-egress design, session-scoped temporal data, and absence of fingerprinting APIs are hardcoded behaviors, not configuration choices.                        |
-| **Art. 28** — Data processor agreement                | Written contract required with processors                     | **No DPA required.** PassiveIntent is a client-side library, not a data processor. No personal data is transferred to any third party.                                                            |
+| **Art. 28** — Data processor agreement                | Written contract required with processors                     | **No DPA required.** PassiveIntent is a client-side library, not a data processor. No personal data is transferred to any third party.                                                         |
 | **Art. 33/34** — Breach notification                  | Controller must notify supervisory authority within 72h       | **Not triggered.** There is no server-side data store to breach. A user's `localStorage` being compromised is outside the scope of GDPR breach notification obligations for your organization. |
 
 > **Important caveat:** If your application passes personal data as state labels — for example `intent.track(user.email)` or `intent.track('/user/'+userId)` — GDPR obligations re-attach immediately. PassiveIntent's privacy guarantee depends entirely on the state labels remaining anonymous. Route paths and UI milestone names (`'/checkout'`, `'video-played'`) are inherently anonymous. User identifiers are not.
@@ -2318,12 +2318,12 @@ The net result: **no cookie banner, no consent prompt, and no opt-out mechanism 
 
 ### CCPA / ePrivacy
 
-| Regulation                              | Status                                                                                                                                                                                                                                                                                                                        |
-| --------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Regulation                              | Status                                                                                                                                                                                                                                                                                                                           |
+| --------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **CCPA / CPRA** (California)            | PassiveIntent does not "sell" or "share" personal information as defined under CCPA. No data leaves the device. No opt-out mechanism is required for this SDK.                                                                                                                                                                   |
 | **ePrivacy Directive / PECR** (EU / UK) | Analytics cookies require consent when used to track user behavior. PassiveIntent's `localStorage` write does not track the user across sessions in a cross-site or cross-service manner and contains no personal data — placing it in the same category as strictly-necessary functional storage rather than analytics cookies. |
-| **LGPD** (Brazil)                       | No personal data is processed; no legal basis or data subject rights obligations are triggered.                                                                                                                                                                                                                               |
-| **PIPEDA** (Canada)                     | No personal information is collected or disclosed.                                                                                                                                                                                                                                                                            |
+| **LGPD** (Brazil)                       | No personal data is processed; no legal basis or data subject rights obligations are triggered.                                                                                                                                                                                                                                  |
+| **PIPEDA** (Canada)                     | No personal information is collected or disclosed.                                                                                                                                                                                                                                                                               |
 
 ---
 
@@ -2332,16 +2332,16 @@ The net result: **no cookie banner, no consent prompt, and no opt-out mechanism 
 The table below compares PassiveIntent against a typical behavioral analytics platform (heatmaps, session replay, A/B testing) from a compliance perspective:
 
 | Dimension                                   | Traditional analytics SDK                            | PassiveIntent                                         |
-| ------------------------------------------- | ---------------------------------------------------- | -------------------------------------------------- |
-| Data leaves the device                      | Yes — streamed to third-party servers                | **No** — all computation is local                  |
-| Personal data processed                     | Yes — IP address, user ID, device fingerprint        | **No** — anonymous state labels only               |
-| GDPR lawful basis required                  | Yes — typically legitimate interest or consent       | **No**                                             |
-| Consent banner required                     | Yes — under ePrivacy / PECR                          | **No**                                             |
-| Data Processing Agreement required          | Yes — with the analytics vendor                      | **No**                                             |
-| Data breach notification risk               | Yes — server-side data store is in scope             | **No** — nothing to breach                         |
-| DSAR (data subject access request) exposure | Yes — must retrieve and potentially delete user data | **No** — no server-side user data exists           |
-| Cross-border data transfer (SCCs, adequacy) | Yes — if vendor servers are outside EEA              | **No** — data never crosses a border               |
-| Third-party script risk                     | Yes — vendor JS loaded from CDN                      | **No** — bundled locally, auditable                |
+| ------------------------------------------- | ---------------------------------------------------- | ----------------------------------------------------- |
+| Data leaves the device                      | Yes — streamed to third-party servers                | **No** — all computation is local                     |
+| Personal data processed                     | Yes — IP address, user ID, device fingerprint        | **No** — anonymous state labels only                  |
+| GDPR lawful basis required                  | Yes — typically legitimate interest or consent       | **No**                                                |
+| Consent banner required                     | Yes — under ePrivacy / PECR                          | **No**                                                |
+| Data Processing Agreement required          | Yes — with the analytics vendor                      | **No**                                                |
+| Data breach notification risk               | Yes — server-side data store is in scope             | **No** — nothing to breach                            |
+| DSAR (data subject access request) exposure | Yes — must retrieve and potentially delete user data | **No** — no server-side user data exists              |
+| Cross-border data transfer (SCCs, adequacy) | Yes — if vendor servers are outside EEA              | **No** — data never crosses a border                  |
+| Third-party script risk                     | Yes — vendor JS loaded from CDN                      | **No** — bundled locally, auditable                   |
 | User can delete their data                  | Only via vendor portal / API                         | **Yes** — `localStorage.removeItem('passive-intent')` |
 
 ---

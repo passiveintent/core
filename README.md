@@ -17,10 +17,10 @@ This repository is structured as an **npm workspaces monorepo** containing all P
 
 ## Packages
 
-| Package                                 | Version                                                                                                                                    | Description                                       |
-| --------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------- |
+| Package                                    | Version                                                                                                                                       | Description                                       |
+| ------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------- |
 | [`@passiveintent/core`](./packages/core)   | [![npm](https://img.shields.io/badge/npm-coming%20soon-lightgrey)](https://github.com/purushpsm147/PassiveIntent-Privacy-First-Intent-Engine) | Privacy-first, on-device behavioral intent engine |
-| [`@passiveintent/react`](./packages/react) | [![npm](https://img.shields.io/badge/npm-coming%20soon-lightgrey)](https://github.com/purushpsm147/PassiveIntent-Privacy-First-Intent-Engine) | React 18+ hook wrapper for `@passiveintent/core`     |
+| [`@passiveintent/react`](./packages/react) | [![npm](https://img.shields.io/badge/npm-coming%20soon-lightgrey)](https://github.com/purushpsm147/PassiveIntent-Privacy-First-Intent-Engine) | React 18+ hook wrapper for `@passiveintent/core`  |
 
 Full documentation for each package lives inside the package directory:
 

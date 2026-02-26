@@ -352,7 +352,9 @@ details p {
 .reveal {
   opacity: 0;
   transform: translateY(18px);
-  transition: opacity 450ms ease, transform 450ms ease;
+  transition:
+    opacity 450ms ease,
+    transform 450ms ease;
 }
 
 .reveal.visible {

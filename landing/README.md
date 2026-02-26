@@ -19,7 +19,7 @@ Then open `http://localhost:3000`.
 3. Select this repository.
 4. Build settings:
    - Framework preset: `None`
-   - Build command: *(leave empty)*
+   - Build command: _(leave empty)_
    - Build output directory: `landing`
 5. Deploy.
 6. Add custom domain:
@@ -33,7 +33,7 @@ Because your nameservers are already on Cloudflare, no Hostinger DNS changes sho
 
 1. Import GitHub repo in Vercel.
 2. Framework preset: `Other`.
-3. Build command: *(empty)*.
+3. Build command: _(empty)_.
 4. Output directory: `landing`.
 5. Add custom domain `passiveintent.dev` in project settings.
 

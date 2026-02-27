@@ -23,9 +23,9 @@ notifications:
       - purushpsm147@yahoo.co.in
 
 # Optional: customize as needed for your workflow
-language: "en-US"
+language: 'en-US'
 reviews:
-  profile: "chill" # Reduces nitpicky styling comments
+  profile: 'chill' # Reduces nitpicky styling comments
   request_changes_workflow: false # Never let the bot block a PR
   high_level_summary: true
   system_instructions: |

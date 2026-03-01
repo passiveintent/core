@@ -50,7 +50,7 @@ The internal engine has been substantially refactored for separation of concerns
 
 #### `LifecycleCoordinator` and `PersistenceCoordinator`
 
-- **`LifecycleCoordinator`** extracts all page-visibility logic from `IntentManager`: tab-hide/show timestamp tracking, `previousStateEnteredAt` adjustment, `session_stale` emission, and unconditional adapter ownership/teardown semantics.
+- **`LifecycleCoordinator`** extracts all page-visibility logic from `IntentManager`: tab-hide/show timestamp tracking, `previousStateEnteredAt` adjustment, `session_stale` emission, and adapter lifecycle management for internally-created adapters only (injected adapters are left untouched).
 - **`PersistenceCoordinator`** extracts all storage logic: `restore()` on startup, throttle gate, dirty-flag short-circuit, sync vs. async strategy selection (`SyncPersistStrategy` / `AsyncPersistStrategy`), and write-failure retry.
 
 ---

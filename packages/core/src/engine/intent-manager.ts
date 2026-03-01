@@ -191,6 +191,7 @@ export class IntentManager {
         this.previousStateEnteredAt = this.timer.now();
       },
       hasPreviousState: () => this.previousState !== null,
+      getPreviousState: () => this.previousState,
     });
 
     // ── Pipeline stages ───────────────────────────────────────────────────────

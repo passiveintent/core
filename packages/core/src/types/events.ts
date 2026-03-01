@@ -22,7 +22,10 @@ export type IntentEventName =
   | 'conversion'
   | 'bot_detected'
   | 'hesitation_detected'
-  | 'session_stale';
+  | 'session_stale'
+  | 'attention_return'
+  | 'user_idle'
+  | 'user_resumed';
 
 export interface ConversionPayload {
   type: string;
@@ -109,6 +112,27 @@ export interface SessionStalePayload {
   thresholdMs: number;
 }
 
+export interface AttentionReturnPayload {
+  /** The state the user was viewing before they tabbed away. */
+  state: string;
+  /** How long the tab was hidden, in milliseconds. */
+  hiddenDuration: number;
+}
+
+export interface UserIdlePayload {
+  /** The state the user was viewing when they became idle. */
+  state: string;
+  /** Duration of inactivity in milliseconds at the time the event fired. */
+  idleMs: number;
+}
+
+export interface UserResumedPayload {
+  /** The state the user was viewing when they resumed interaction. */
+  state: string;
+  /** Total idle duration in milliseconds before the user resumed. */
+  idleMs: number;
+}
+
 export interface IntentEventMap {
   high_entropy: HighEntropyPayload;
   trajectory_anomaly: TrajectoryAnomalyPayload;
@@ -118,6 +142,9 @@ export interface IntentEventMap {
   bot_detected: BotDetectedPayload;
   hesitation_detected: HesitationDetectedPayload;
   session_stale: SessionStalePayload;
+  attention_return: AttentionReturnPayload;
+  user_idle: UserIdlePayload;
+  user_resumed: UserResumedPayload;
 }
 
 export interface DwellTimeConfig {

@@ -533,9 +533,9 @@ test('driftEvaluationWindowMs: negative falls back to default 300000', () => {
   assert.equal(opts.driftEvaluationWindowMs, 300_000);
 });
 
-test('driftEvaluationWindowMs: 0 is accepted as 0', () => {
+test('driftEvaluationWindowMs: 0 falls back to default 300000 (would reset window every track call)', () => {
   const opts = buildIntentManagerOptions({ driftProtection: { evaluationWindowMs: 0 } });
-  assert.equal(opts.driftEvaluationWindowMs, 0);
+  assert.equal(opts.driftEvaluationWindowMs, 300_000);
 });
 test('hesitationCorrelationWindowMs: NaN falls back to default 30000', () => {
   const opts = buildIntentManagerOptions({ hesitationCorrelationWindowMs: NaN });

@@ -31,6 +31,18 @@ export { IntentManager } from './engine/intent-manager.js';
 export { BroadcastSync, MAX_STATE_LENGTH } from './sync/broadcast-sync.js';
 export { normalizeRouteState } from './utils/route-normalizer.js';
 export { MAX_PLAUSIBLE_DWELL_MS, SMOOTHING_EPSILON } from './engine/constants.js';
+export { AnomalyDispatcher } from './engine/anomaly-dispatcher.js';
+export { SignalEngine } from './engine/signal-engine.js';
+export { EventEmitter } from './engine/event-emitter.js';
+
+export type { AnomalyDispatcherConfig } from './engine/anomaly-dispatcher.js';
+export type {
+  AnomalyDecision,
+  EntropyDecision,
+  TrajectoryDecision,
+  DwellDecision,
+} from './engine/anomaly-decisions.js';
+export type { SignalEngineConfig } from './engine/signal-engine.js';
 export { BrowserLifecycleAdapter } from './adapters.js';
 
 export type {

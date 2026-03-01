@@ -5,32 +5,24 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import type {
-  AsyncStorageAdapter,
-  StorageAdapter,
-  TimerAdapter,
-  TimerHandle,
-} from '../adapters.js';
-import type { MarkovGraph, SerializedMarkovGraph } from '../core/markov.js';
+import type { AsyncStorageAdapter, StorageAdapter, TimerAdapter } from '../adapters.js';
+import type { MarkovGraph } from '../core/markov.js';
 import type { BloomFilter } from '../core/bloom.js';
 import { BloomFilter as BloomFilterClass } from '../core/bloom.js';
 import { MarkovGraph as MarkovGraphClass } from '../core/markov.js';
-import { base64ToUint8, uint8ToBase64 } from '../persistence/codec.js';
+import { base64ToUint8 } from '../persistence/codec.js';
 import type {
   MarkovGraphConfig,
   PassiveIntentError,
   PassiveIntentTelemetry,
 } from '../types/events.js';
 
-/**
- * Persisted envelope format.
- * `graphBinary` is a base64-encoded Uint8Array produced by MarkovGraph.toBinary().
- */
-interface PersistedPayload {
-  bloomBase64: string;
-  graphBinary?: string;
-  graph?: SerializedMarkovGraph;
-}
+import { SyncPersistStrategy, AsyncPersistStrategy } from './persistence-strategies.js';
+import type {
+  PersistStrategy,
+  PersistStrategyContext,
+  PersistedPayload,
+} from './persistence-strategies.js';
 
 /**
  * Configuration for PersistenceCoordinator.
@@ -62,37 +54,30 @@ export interface PersistenceCoordinatorConfig {
  * Call `attach(graph, bloom)` once after restoring/constructing the Markov graph
  * and Bloom filter so the coordinator can serialise them on each `persist()`.
  */
-export class PersistenceCoordinator {
+export class PersistenceCoordinator implements PersistStrategyContext {
   private readonly storageKey: string;
   private readonly persistDebounceMs: number;
   private readonly persistThrottleMs: number;
   private readonly storage: StorageAdapter;
   private readonly asyncStorage: AsyncStorageAdapter | null;
   private readonly timer: TimerAdapter;
-  private readonly onError?: (err: PassiveIntentError) => void;
+  private readonly strategy: PersistStrategy;
+  private readonly onErrorCb?: (err: PassiveIntentError) => void;
 
   /* Late-bound after attach() */
-  private graph: MarkovGraph | null = null;
-  private bloom: BloomFilter | null = null;
-
-  /* Write-orchestration state */
-  private isAsyncWriting = false;
-  private hasPendingAsyncPersist = false;
-  private asyncWriteFailCount = 0;
-  private lastPersistedAt: number = -Infinity;
-  private throttleTimer: TimerHandle | null = null;
-  private retryTimer: TimerHandle | null = null;
+  private graphInstance: MarkovGraph | null = null;
+  private bloomInstance: BloomFilter | null = null;
 
   /* Lifecycle */
-  private isClosed = false;
+  private isClosedFlag = false;
 
   /* Mutable coordination flags — internal only */
-  private isDirty = false;
+  private isDirtyFlag = false;
   private engineHealthInternal: PassiveIntentTelemetry['engineHealth'] = 'healthy';
 
   /** Signal that new state has been written and needs to be persisted. */
   markDirty(): void {
-    this.isDirty = true;
+    this.isDirtyFlag = true;
   }
 
   constructor(config: PersistenceCoordinatorConfig) {
@@ -102,7 +87,55 @@ export class PersistenceCoordinator {
     this.storage = config.storage;
     this.asyncStorage = config.asyncStorage;
     this.timer = config.timer;
-    this.onError = config.onError;
+    this.onErrorCb = config.onError;
+
+    if (this.asyncStorage) {
+      this.strategy = new AsyncPersistStrategy(this);
+    } else {
+      this.strategy = new SyncPersistStrategy(this);
+    }
+  }
+
+  // --- PersistStrategyContext implementation ---
+
+  getStorageKey() {
+    return this.storageKey;
+  }
+  getStorage() {
+    return this.storage;
+  }
+  getAsyncStorage() {
+    return this.asyncStorage;
+  }
+  getTimer() {
+    return this.timer;
+  }
+  getThrottleMs() {
+    return this.persistThrottleMs;
+  }
+  getDebounceMs() {
+    return this.persistDebounceMs;
+  }
+  getGraphAndBloom() {
+    if (!this.graphInstance || !this.bloomInstance) return null;
+    return { graph: this.graphInstance, bloom: this.bloomInstance };
+  }
+  isClosed() {
+    return this.isClosedFlag;
+  }
+  isDirty() {
+    return this.isDirtyFlag;
+  }
+  clearDirty() {
+    this.isDirtyFlag = false;
+  }
+  setEngineHealth(health: PassiveIntentTelemetry['engineHealth']) {
+    this.engineHealthInternal = health;
+  }
+  reportError(code: PassiveIntentError['code'], message: string, err: unknown) {
+    if (this.onErrorCb) {
+      this.onErrorCb({ code, message, originalError: err });
+    }
   }
 
   get engineHealth(): PassiveIntentTelemetry['engineHealth'] {
@@ -114,8 +147,8 @@ export class PersistenceCoordinator {
    * Must be called before the first `persist()`.
    */
   attach(graph: MarkovGraph, bloom: BloomFilter): void {
-    this.graph = graph;
-    this.bloom = bloom;
+    this.graphInstance = graph;
+    this.bloomInstance = bloom;
   }
 
   /* ================================================================== */
@@ -132,8 +165,8 @@ export class PersistenceCoordinator {
     try {
       raw = this.storage.getItem(this.storageKey);
     } catch (err) {
-      if (this.onError) {
-        this.onError({
+      if (this.onErrorCb) {
+        this.onErrorCb({
           code: 'STORAGE_READ',
           message: err instanceof Error ? err.message : String(err),
           originalError: err,
@@ -164,12 +197,12 @@ export class PersistenceCoordinator {
 
       return { bloom, graph };
     } catch (err) {
-      if (this.onError) {
+      if (this.onErrorCb) {
         const payloadByteLength =
           typeof TextEncoder !== 'undefined'
             ? new TextEncoder().encode(raw as string).length
             : (raw as string).length;
-        this.onError({
+        this.onErrorCb({
           code: 'RESTORE_PARSE',
           message: err instanceof Error ? err.message : String(err),
           originalError: { cause: err, payloadLength: payloadByteLength },
@@ -179,211 +212,14 @@ export class PersistenceCoordinator {
     }
   }
 
-  /* ================================================================== */
-  /*  Persist                                                             */
-  /* ================================================================== */
-
-  /**
-   * Write the current Bloom filter + Markov graph to storage.
-   *
-   * Behaviour is identical to the original `IntentManager.persist()`:
-   *   - No-op when `isDirty` is false.
-   *   - No-op when an async write is already in-flight (sets `hasPendingAsyncPersist`).
-   *   - Throttle gate: skip within `persistThrottleMs` window; schedule trailing flush.
-   *   - Sync path: writes synchronously; surfaces errors via `onError`.
-   *   - Async path: fire-and-forget with in-flight guard and one-shot retry.
-   */
   persist(): void {
-    if (!this.isDirty) return;
-    if (!this.graph || !this.bloom) return;
-
-    if (this.asyncStorage && this.isAsyncWriting) {
-      this.hasPendingAsyncPersist = true;
-      return;
-    }
-
-    if (this.persistThrottleMs > 0 && !this.isClosed) {
-      const now = this.timer.now();
-      const elapsed = now - this.lastPersistedAt;
-      if (elapsed < this.persistThrottleMs) {
-        if (this.throttleTimer === null) {
-          const remainingMs = this.persistThrottleMs - elapsed;
-          this.throttleTimer = this.timer.setTimeout(() => {
-            this.throttleTimer = null;
-            this.persist();
-          }, remainingMs);
-        }
-        return;
-      }
-    }
-
-    this.engineHealthInternal = 'pruning_active';
-    try {
-      this.graph.prune();
-    } finally {
-      this.engineHealthInternal = 'healthy';
-    }
-
-    let graphBinary: string;
-    try {
-      const graphBytes = this.graph.toBinary();
-      graphBinary = uint8ToBase64(graphBytes);
-    } catch (err) {
-      if (this.onError) {
-        this.onError({
-          code: 'SERIALIZE',
-          message: err instanceof Error ? err.message : String(err),
-          originalError: err,
-        });
-      }
-      return;
-    }
-
-    const payload: PersistedPayload = {
-      bloomBase64: this.bloom.toBase64(),
-      graphBinary,
-    };
-
-    if (this.asyncStorage) {
-      this.isAsyncWriting = true;
-      this.hasPendingAsyncPersist = false;
-      this.isDirty = false;
-
-      let setItemPromise: Promise<void>;
-      try {
-        setItemPromise = this.asyncStorage.setItem(this.storageKey, JSON.stringify(payload));
-      } catch (err: unknown) {
-        // Synchronous throw from setItem — treat identically to a promise rejection.
-        this.handleAsyncWriteError(err);
-        return;
-      }
-
-      setItemPromise
-        .then(() => {
-          this.isAsyncWriting = false;
-          this.asyncWriteFailCount = 0;
-          this.lastPersistedAt = this.timer.now();
-          this.engineHealthInternal = 'healthy';
-          if (this.hasPendingAsyncPersist || this.isDirty) {
-            this.hasPendingAsyncPersist = false;
-            this.persist();
-          }
-        })
-        .catch((err: unknown) => {
-          this.handleAsyncWriteError(err);
-        });
-    } else {
-      try {
-        this.storage.setItem(this.storageKey, JSON.stringify(payload));
-        this.isDirty = false;
-        this.lastPersistedAt = this.timer.now();
-        this.engineHealthInternal = 'healthy';
-      } catch (err) {
-        const isQuota =
-          err instanceof Error &&
-          (err.name === 'QuotaExceededError' || err.message.toLowerCase().includes('quota'));
-        if (isQuota) {
-          this.engineHealthInternal = 'quota_exceeded';
-        }
-        if (this.onError) {
-          this.onError({
-            code: isQuota ? 'QUOTA_EXCEEDED' : 'STORAGE_WRITE',
-            message: err instanceof Error ? err.message : String(err),
-            originalError: err,
-          });
-        }
-      }
-    }
+    this.strategy.persist();
   }
-
-  /* ================================================================== */
-  /*  Flush / Cancel                                                      */
-  /* ================================================================== */
-
-  /**
-   * Cancel pending throttle/retry timers and force an immediate persist,
-   * bypassing the throttle gate.
-   * Used by `IntentManager.flushNow()` and `destroy()`.
-   */
   flushNow(): void {
-    if (this.throttleTimer !== null) {
-      this.timer.clearTimeout(this.throttleTimer);
-      this.throttleTimer = null;
-    }
-    if (this.retryTimer !== null) {
-      this.timer.clearTimeout(this.retryTimer);
-      this.retryTimer = null;
-    }
-    this.lastPersistedAt = -Infinity;
-    this.persist();
+    this.strategy.flushNow();
   }
-
-  /**
-   * Mark this coordinator as permanently closed.
-   *
-   * After this call:
-   *   - No new throttle or retry timers will be scheduled.
-   *   - Any in-flight async `setItem` that rejects cannot re-arm a retry timer.
-   *   - Pending throttle/retry timers are cancelled immediately.
-   *   - `persist()` itself remains callable — an in-flight async write's `.then()`
-   *     may still invoke it to flush dirty state queued during the write.  What is
-   *     prevented is any *timer-driven* follow-up after teardown.
-   *
-   * Call this from `IntentManager.destroy()` *after* `flushNow()` so the
-   * best-effort final write is still attempted, but its failure cannot
-   * schedule further work on the torn-down instance.
-   */
   close(): void {
-    this.isClosed = true;
-    if (this.throttleTimer !== null) {
-      this.timer.clearTimeout(this.throttleTimer);
-      this.throttleTimer = null;
-    }
-    if (this.retryTimer !== null) {
-      this.timer.clearTimeout(this.retryTimer);
-      this.retryTimer = null;
-    }
-  }
-
-  /* ================================================================== */
-  /*  Retry                                                               */
-  /* ================================================================== */
-
-  private schedulePersist(): void {
-    if (this.isClosed) return;
-    if (this.retryTimer !== null) {
-      this.timer.clearTimeout(this.retryTimer);
-    }
-    this.retryTimer = this.timer.setTimeout(() => {
-      this.retryTimer = null;
-      this.persist();
-    }, this.persistDebounceMs);
-  }
-
-  /**
-   * Shared error handler for both synchronous throws from `asyncStorage.setItem`
-   * and promise rejections.  Keeps the two paths in sync without duplication.
-   */
-  private handleAsyncWriteError(err: unknown): void {
-    this.isAsyncWriting = false;
-    this.isDirty = true;
-    this.asyncWriteFailCount += 1;
-    const isQuota =
-      err instanceof Error &&
-      (err.name === 'QuotaExceededError' || err.message.toLowerCase().includes('quota'));
-    if (isQuota) {
-      this.engineHealthInternal = 'quota_exceeded';
-    }
-    if (this.onError) {
-      this.onError({
-        code: isQuota ? 'QUOTA_EXCEEDED' : 'STORAGE_WRITE',
-        message: err instanceof Error ? err.message : String(err),
-        originalError: err,
-      });
-    }
-    this.hasPendingAsyncPersist = false;
-    if (!this.isClosed && this.asyncWriteFailCount === 1) {
-      this.schedulePersist();
-    }
+    this.isClosedFlag = true;
+    this.strategy.close();
   }
 }

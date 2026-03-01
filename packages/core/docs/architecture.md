@@ -1938,7 +1938,7 @@ Laptop sleep, OS hibernation, iOS swipe-up, and Chrome tab discard all share a c
 
 When the `onResume` callback fires after `onPause`, the engine computes:
 
-```
+```text
 hiddenDuration = timer.now() - tabHiddenAt
 ```
 
@@ -1952,7 +1952,7 @@ If `hiddenDuration > MAX_PLAUSIBLE_DWELL_MS` (30 minutes):
 
 If the `LifecycleAdapter` was not active (no-op adapter, SSR environment, or an OS suspend that bypassed the Visibility API), the guard activates at `track()` time inside `runTransitionContextStage`:
 
-```
+```text
 dwellMs = ctx.now - previousStateEnteredAt
 ```
 

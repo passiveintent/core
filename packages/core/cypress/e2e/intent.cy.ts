@@ -885,11 +885,13 @@ describe('Cross-Tab Sync (BroadcastSync)', () => {
 
     cy.window().then((win) => {
       const writeLog: string[] = (win as any).__testWriteLogAK;
-      // The second and third tracks each write (first track has no prev-state persist
-      // but the state itself is persisted). At minimum, 3 writes must have occurred
-      // without waiting for any debounce.
+      // All three track() calls must produce a synchronous write:
+      //   - track('/home')     → new Bloom entry → isDirty → write
+      //   - track('/products') → new transition  → isDirty → write
+      //   - track('/checkout') → new transition  → isDirty → write
+      // Exactly 3 writes must have occurred without waiting for any debounce.
       expect(writeLog.length).to.be.at.least(
-        2,
+        3,
         'storage must be written synchronously on every track() — no debounce',
       );
       expect(writeLog.every((k) => k === 'e2e-crash-persist-test')).to.be.true;

@@ -56,13 +56,13 @@ export class CrossTabSyncPolicy implements EnginePolicy {
    * Broadcast a transition after all signal evaluation has completed.
    * Skipped when the session is suspected as a bot.
    */
-  onAfterEvaluation(from: string, _to: string): void {
+  onAfterEvaluation(from: string, to: string): void {
     // The `from` parameter name in the hook maps to the transition's source
-    // state; `_to` would be the arriving state.  We broadcast the original
+    // state; `to` is the arriving state. We broadcast the original
     // (from, to) pair.
     // Note: this guard mirrors the original IntentManager conditional exactly.
     if (!this.isSuspected()) {
-      this.broadcastSync.broadcast(from, _to);
+      this.broadcastSync.broadcast(from, to);
     }
   }
 

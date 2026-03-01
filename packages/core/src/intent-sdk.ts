@@ -30,7 +30,7 @@ export { MarkovGraph } from './core/markov.js';
 export { IntentManager } from './engine/intent-manager.js';
 export { BroadcastSync, MAX_STATE_LENGTH } from './sync/broadcast-sync.js';
 export { normalizeRouteState } from './utils/route-normalizer.js';
-export { MAX_PLAUSIBLE_DWELL_MS } from './engine/constants.js';
+export { MAX_PLAUSIBLE_DWELL_MS, SMOOTHING_EPSILON } from './engine/constants.js';
 export { BrowserLifecycleAdapter } from './adapters.js';
 
 export type {

@@ -11,7 +11,7 @@ import type {
   TimerAdapter,
   TimerHandle,
 } from '../adapters.js';
-import type { MarkovGraph } from '../core/markov.js';
+import type { MarkovGraph, SerializedMarkovGraph } from '../core/markov.js';
 import type { BloomFilter } from '../core/bloom.js';
 import { uint8ToBase64 } from '../persistence/codec.js';
 import type { PassiveIntentError, PassiveIntentTelemetry } from '../types/events.js';
@@ -19,7 +19,7 @@ import type { PassiveIntentError, PassiveIntentTelemetry } from '../types/events
 export interface PersistedPayload {
   bloomBase64: string;
   graphBinary?: string;
-  graph?: any;
+  graph?: SerializedMarkovGraph;
 }
 
 export interface PersistStrategyContext {

@@ -47,19 +47,41 @@ export interface SignalEngineConfig {
 }
 
 /**
- * SignalEngine — isolated computation kernel for all anomaly signals.
+ * SignalEngine — pure computation kernel for all anomaly signals.
+ *
+ * ## Responsibilities
+ * Each public `evaluate*` method is a **pure evaluator**: it reads engine state
+ * and returns a typed decision object (or `null`), but never emits events,
+ * mutates cooldown timestamps, or touches telemetry counters.
  *
  * Owns:
- *   - EntropyGuard (bot detection state)
- *   - Per-state Welford accumulators for dwell-time anomaly detection
- *   - Cooldown timestamps for all three gated event types
- *   - Hesitation correlation timestamps
- *   - Drift-protection rolling window counters
- *   - Session-scoped telemetry counters (transitionsEvaluated, anomaliesFired)
+ *   - `EntropyGuard` — bot-detection sliding window
+ *   - Per-state Welford accumulators for dwell-time statistics
+ *   - Session-scoped `transitionsEvaluated` counter
+ *
+ * ## What it does NOT own
+ * All side-effects have been moved to `AnomalyDispatcher`, which is composed
+ * internally and exposed through `dispatch()`:
+ *   - Cooldown gating per event type
+ *   - Holdout (control-group) suppression
+ *   - `anomaliesFired` telemetry increment
+ *   - Drift-protection `recordAnomaly()` calls
+ *   - Emitter calls for `high_entropy`, `trajectory_anomaly`, `dwell_time_anomaly`
+ *   - Hesitation correlation and `hesitation_detected` emission
+ *
+ * ## Usage pattern
+ * ```ts
+ * signalEngine.dispatch(signalEngine.evaluateEntropy(state));
+ * signalEngine.dispatch(signalEngine.evaluateTrajectory(from, to, trajectory));
+ * signalEngine.dispatch(signalEngine.evaluateDwellTime(state, dwellMs));
+ * ```
+ *
+ * **Do not add side-effects to evaluator methods.**  If a new signal type
+ * requires emission or shared-state mutation, add a new `evaluate*` that
+ * returns a decision type and handle it inside `AnomalyDispatcher.dispatch()`.
  *
  * IntentManager passes already-resolved config values and read-only trajectory
- * slices into each evaluation method; no I/O, no side-effects beyond emitting
- * events through the shared EventEmitter.
+ * slices into each evaluation method; no I/O occurs here.
  */
 export class SignalEngine {
   private readonly graph: MarkovGraph;

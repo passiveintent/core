@@ -3559,6 +3559,168 @@ test('consecutive async setItem failures do not schedule infinite retries', asyn
   manager.destroy();
 });
 
+// ─── persistThrottleMs — sync persist throttle ──────────────────────────────────
+
+test('persistThrottleMs: second write within window is skipped and trailing timer scheduled', () => {
+  let now = 0;
+  const writes = [];
+  const fakeTimers = [];
+  let timerSeq = 0;
+  const fakeTimer = {
+    now: () => now,
+    setTimeout: (cb, ms) => {
+      const id = { id: ++timerSeq };
+      fakeTimers.push({ cb, id, ms, cancelled: false });
+      return id;
+    },
+    clearTimeout: (handle) => {
+      const t = fakeTimers.find((e) => e.id === handle);
+      if (t) t.cancelled = true;
+    },
+  };
+  const storage = {
+    getItem: () => null,
+    setItem: (_key, value) => writes.push(value),
+  };
+
+  const manager = new IntentManager({
+    storageKey: 'throttle-skip-test',
+    storage,
+    botProtection: false,
+    persistThrottleMs: 100,
+    timer: fakeTimer,
+  });
+
+  // First track: lastPersistedAt = -Infinity, elapsed = Infinity >= 100 -> immediate write
+  now = 0;
+  manager.track('/home');
+  assert.equal(writes.length, 1, 'first write must execute immediately (leading edge)');
+  assert.equal(
+    fakeTimers.filter((t) => !t.cancelled).length,
+    0,
+    'no trailing timer after first write',
+  );
+
+  // Second track: elapsed = 50 < 100 -> skip write, schedule trailing timer
+  now = 50;
+  manager.track('/products');
+  assert.equal(writes.length, 1, 'second write within window must be skipped');
+  assert.equal(
+    fakeTimers.filter((t) => !t.cancelled).length,
+    1,
+    'trailing timer must be scheduled after skipped write',
+  );
+
+  // Third track within same window: timer already pending -> no duplicate timer
+  now = 70;
+  manager.track('/checkout');
+  assert.equal(writes.length, 1, 'third write within window must also be skipped');
+  assert.equal(
+    fakeTimers.filter((t) => !t.cancelled).length,
+    1,
+    'no duplicate trailing timer must be scheduled',
+  );
+
+  manager.destroy();
+});
+
+test('persistThrottleMs: trailing timer fires and produces a write', () => {
+  let now = 0;
+  const writes = [];
+  const fakeTimers = [];
+  let timerSeq = 0;
+  const fakeTimer = {
+    now: () => now,
+    setTimeout: (cb, _ms) => {
+      const id = { id: ++timerSeq };
+      fakeTimers.push({ cb, id, cancelled: false });
+      return id;
+    },
+    clearTimeout: (handle) => {
+      const t = fakeTimers.find((e) => e.id === handle);
+      if (t) t.cancelled = true;
+    },
+  };
+  const storage = {
+    getItem: () => null,
+    setItem: (_key, value) => writes.push(value),
+  };
+
+  const manager = new IntentManager({
+    storageKey: 'throttle-trailing-test',
+    storage,
+    botProtection: false,
+    persistThrottleMs: 100,
+    timer: fakeTimer,
+  });
+
+  // Leading-edge write
+  now = 0;
+  manager.track('/home');
+  assert.equal(writes.length, 1, 'leading-edge write must fire immediately');
+
+  // Skipped write — schedules trailing timer
+  now = 50;
+  manager.track('/products');
+  assert.equal(writes.length, 1, 'write must be throttled within window');
+  const pending = fakeTimers.filter((t) => !t.cancelled);
+  assert.equal(pending.length, 1, 'trailing timer must be scheduled');
+
+  // Advance time past throttle window and fire the trailing timer
+  now = 150;
+  pending[0].cb();
+  assert.equal(writes.length, 2, 'trailing timer must produce a second write');
+
+  manager.destroy();
+});
+
+test('persistThrottleMs: flushNow() bypasses throttle and writes immediately', () => {
+  let now = 0;
+  const writes = [];
+  const fakeTimers = [];
+  let timerSeq = 0;
+  const fakeTimer = {
+    now: () => now,
+    setTimeout: (cb, _ms) => {
+      const id = { id: ++timerSeq };
+      fakeTimers.push({ cb, id, cancelled: false });
+      return id;
+    },
+    clearTimeout: (handle) => {
+      const t = fakeTimers.find((e) => e.id === handle);
+      if (t) t.cancelled = true;
+    },
+  };
+  const storage = {
+    getItem: () => null,
+    setItem: (_key, value) => writes.push(value),
+  };
+
+  const manager = new IntentManager({
+    storageKey: 'throttle-flushnow-test',
+    storage,
+    botProtection: false,
+    persistThrottleMs: 100,
+    timer: fakeTimer,
+  });
+
+  // Leading-edge write
+  now = 0;
+  manager.track('/home');
+  assert.equal(writes.length, 1, 'leading-edge write must fire immediately');
+
+  // Second track within window — would normally be throttled
+  now = 50;
+  manager.track('/products');
+  assert.equal(writes.length, 1, 'write should be throttled within window');
+
+  // flushNow() must bypass throttle and write the pending dirty state
+  manager.flushNow();
+  assert.equal(writes.length, 2, 'flushNow() must write even within the throttle window');
+
+  manager.destroy();
+});
+
 // ─── onError — PassiveIntentError structured contract ───────────────────────────
 
 test('onError: sync persist emits QUOTA_EXCEEDED code on QuotaExceededError', () => {
@@ -4196,70 +4358,60 @@ test('injected lifecycleAdapter is NOT destroyed when IntentManager.destroy() is
 test('internally-created lifecycleAdapter IS destroyed when IntentManager.destroy() is called', () => {
   // Counterpart to the injection test: when no adapter is supplied, the engine
   // creates BrowserLifecycleAdapter internally and owns it.  destroy() must
-  // call adapter.destroy() in that case.
-  let destroyCalls = 0;
-  // Patch BrowserLifecycleAdapter on the IntentManager internal via a fake
-  // window-presence env.  The simplest approach is to supply a fake adapter
-  // explicitly and verify it is *not* called, then contrast by checking the
-  // internally owned path through a spy.
+  // call lifecycleAdapter.destroy() — we verify this through the only
+  // observable DOM side-effect of BrowserLifecycleAdapter.destroy():
+  // document.removeEventListener being called to detach the visibilitychange
+  // listener.
   //
-  // Since we cannot intercept the internal `new BrowserLifecycleAdapter()`
-  // from outside (BrowserLifecycleAdapter is a class with DOM access), we
-  // instead verify the inverse: confirming that an injected adapter is NOT
-  // destroyed is the ownership contract test.  The internal-creation path is
-  // validated implicitly because it is the only other code branch — if the
-  // injected path skips destroy() and the non-injected path calls it,
-  // the field assignment logic must be correct.
-  //
-  // For a hermetic assertion we wire a fake that tracks calls and inject it
-  // via a wrapper that registers ownership correctly.  We confirm the internal
-  // (null-config) branch registers ownsLifecycleAdapter=true by checking that
-  // lifecycle callbacks are unregistered after destroy().
-  let resumeCallback = null;
-  const spyAdapter = {
-    onPause(_cb) {},
-    onResume(cb) {
-      resumeCallback = cb;
-    },
-    destroy() {
-      destroyCalls += 1;
-      // Simulate teardown: clear stored callback
-      resumeCallback = null;
+  // Strategy: temporarily set globalThis.window (so the constructor takes the
+  // internal-create branch instead of setting lifecycleAdapter = null) and
+  // globalThis.document (so BrowserLifecycleAdapter can attach/detach its
+  // listener).  Track removeEventListener calls to confirm teardown happens.
+  let removeEventListenerCalls = 0;
+  const hadWindow = 'window' in globalThis;
+  const originalWindow = globalThis.window;
+  const originalDocument = globalThis.document;
+
+  globalThis.window = {};
+  globalThis.document = {
+    hidden: false,
+    addEventListener(_type, _fn) {},
+    removeEventListener(_type, _fn) {
+      removeEventListenerCalls += 1;
     },
   };
 
-  // Temporarily expose a fake window so the engine takes the internal-create
-  // branch by supplying the adapter *as if* it were self-created (there is no
-  // API to observe the internal branch directly, so we verify the invariant
-  // via a controlled adapter that mimics the internal-creation path).
-  // The real guard is the integration assertion below: after destroy(), the
-  // resumeCallback should be gone (destroyed).
-  const storage = new MemoryStorage();
-  const manager = new IntentManager({
-    storageKey: 'lifecycle-ownership-internal',
-    storage,
-    botProtection: false,
-    // DO NOT pass lifecycleAdapter — we want to test the injected=false branch.
-    // But since BrowserLifecycleAdapter requires a real DOM, swap to the spy
-    // adapter post-construction by testing the ownership flag effect directly
-    // through the injected path but with ownsLifecycleAdapter forced.
-    //
-    // The practical way: pass null explicitly via config, which is not possible
-    // (null would set adapter=null).  Instead verify the injected=false
-    // destroyCalls===0 invariant is meaningfully different from the
-    // internal-create path by confirming through the TypeScript coverage that
-    // the branch sets ownsLifecycleAdapter=true.  The unit test above (injected
-    // branch always destroyCalls===0) plus the TypeScript-enforced field
-    // assignment cover the two branches exhaustively.
-  });
+  try {
+    const manager = new IntentManager({
+      storageKey: 'lifecycle-ownership-internal',
+      storage: new MemoryStorage(),
+      botProtection: false,
+      // No lifecycleAdapter — engine must create BrowserLifecycleAdapter internally
+      // and set ownsLifecycleAdapter = true.
+    });
 
-  // Calling destroy() should NOT throw even if the internally created adapter
-  // is BrowserLifecycleAdapter in a non-browser env (it guards with typeof
-  // document checks).
-  assert.doesNotThrow(
-    () => manager.destroy(),
-    'destroy() must not throw when internal adapter is a no-op',
-  );
+    assert.equal(
+      removeEventListenerCalls,
+      0,
+      'removeEventListener must not be called before destroy()',
+    );
+
+    manager.destroy();
+
+    assert.equal(
+      removeEventListenerCalls,
+      1,
+      'IntentManager.destroy() must call lifecycleAdapter.destroy() when it owns the adapter, ' +
+        'removing the visibilitychange listener from document',
+    );
+  } finally {
+    if (hadWindow) {
+      globalThis.window = originalWindow;
+    } else {
+      delete globalThis.window;
+    }
+    globalThis.document = originalDocument;
+  }
 });
 
 test('session_stale fires with hidden_duration_exceeded when hidden gap > MAX_PLAUSIBLE_DWELL_MS', () => {

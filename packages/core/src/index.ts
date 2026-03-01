@@ -21,6 +21,7 @@ export {
   IntentManager,
   BroadcastSync,
   MAX_STATE_LENGTH,
+  MAX_PLAUSIBLE_DWELL_MS,
   normalizeRouteState,
 } from './intent-sdk.js';
 

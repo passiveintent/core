@@ -114,6 +114,13 @@ export class IntentManager {
    * retry loop when storage is persistently broken.
    */
   private asyncWriteFailCount = 0;
+  /**
+   * Maximum interval (ms) between prune+serialize+write cycles.  0 = disabled
+   * (every dirty `track()` writes synchronously — full crash-safety).
+   */
+  private readonly persistThrottleMs: number;
+  /** Timestamp (from `timer.now()`) of the last successful persist write. */
+  private lastPersistedAt: number = -Infinity;
   private readonly timer: TimerAdapter;
   private readonly onError?: (error: PassiveIntentError) => void;
   private readonly botProtection: boolean;
@@ -251,6 +258,7 @@ export class IntentManager {
     // track() -> persist() is now synchronous (crash-safe).  This value is
     // only consulted by schedulePersist() on the async-error retry path.
     this.persistDebounceMs = config.persistDebounceMs ?? 2000;
+    this.persistThrottleMs = config.persistThrottleMs ?? 0;
     this.benchmark = new BenchmarkRecorder(config.benchmark);
     this.storage = config.storage ?? new BrowserStorageAdapter();
     this.asyncStorage = config.asyncStorage ?? null;
@@ -617,6 +625,10 @@ export class IntentManager {
     //
     // The dirty-flag short-circuit in persist() means this is a no-op when
     // nothing has changed, keeping the overhead negligible for redundant calls.
+    //
+    // If `persistThrottleMs` is configured, the prune+serialize+write pipeline
+    // is throttled to at most once per window; a trailing timer flushes any
+    // skipped dirty state within `persistThrottleMs` ms.
     this.persist();
   };
 
@@ -692,6 +704,9 @@ export class IntentManager {
       this.timer.clearTimeout(this.persistTimer);
       this.persistTimer = null;
     }
+    // Bypass persistThrottleMs — flushNow() and destroy() must always flush
+    // dirty state immediately, regardless of the throttle window.
+    this.lastPersistedAt = -Infinity;
     this.persist();
   }
 
@@ -1126,6 +1141,25 @@ export class IntentManager {
       return;
     }
 
+    // Throttle gate: skip the expensive prune+serialize+write pipeline if the
+    // last successful write was within `persistThrottleMs` ms.  A trailing timer
+    // fires within one window to flush remaining dirty state so crash data loss
+    // is bounded by at most `persistThrottleMs` ms.  Disabled when 0 (default).
+    if (this.persistThrottleMs > 0) {
+      const now = this.timer.now();
+      const elapsed = now - this.lastPersistedAt;
+      if (elapsed < this.persistThrottleMs) {
+        if (this.persistTimer === null) {
+          const remainingMs = this.persistThrottleMs - elapsed;
+          this.persistTimer = this.timer.setTimeout(() => {
+            this.persistTimer = null;
+            this.persist();
+          }, remainingMs);
+        }
+        return;
+      }
+    }
+
     // LFU prune before serializing — keeps storage bounded.
     // Wrap in try-finally so engineHealth is always restored even if prune() throws.
     this.engineHealth = 'pruning_active';
@@ -1182,6 +1216,7 @@ export class IntentManager {
           // Successful write: reset the consecutive-failure counter so the
           // next failure (if any) gets its own single automatic retry.
           this.asyncWriteFailCount = 0;
+          this.lastPersistedAt = this.timer.now();
           if (this.hasPendingAsyncPersist || this.isDirty) {
             this.hasPendingAsyncPersist = false;
             this.persist();
@@ -1228,6 +1263,7 @@ export class IntentManager {
         this.storage.setItem(this.storageKey, JSON.stringify(payload));
         // Reset dirty flag after successful save
         this.isDirty = false;
+        this.lastPersistedAt = this.timer.now();
       } catch (err) {
         // QuotaExceededError, SecurityError, or Private Browsing restrictions.
         // Surface through the optional error callback; never crash the main thread.

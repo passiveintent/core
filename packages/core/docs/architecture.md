@@ -1962,7 +1962,13 @@ If `dwellMs > MAX_PLAUSIBLE_DWELL_MS`:
 - A `session_stale` event is emitted with `reason: 'dwell_exceeded'`.
 - `previousStateEnteredAt` resets to `ctx.now` via the normal end-of-stage assignment.
 
-**`MAX_PLAUSIBLE_DWELL_MS`** is `1_800_000` (30 minutes) and is exported as a named constant from `constants.ts`. It represents the upper bound on any dwell that could plausibly come from genuine in-app interaction rather than the host machine being asleep.
+**`MAX_PLAUSIBLE_DWELL_MS`** is `1_800_000` (30 minutes) and is exported as a named constant from the package's public entrypoint:
+
+```ts
+import { MAX_PLAUSIBLE_DWELL_MS } from '@passiveintent/core';
+```
+
+It represents the upper bound on any dwell that could plausibly come from genuine in-app interaction rather than the host machine being asleep.
 
 **`SessionStalePayload`**:
 

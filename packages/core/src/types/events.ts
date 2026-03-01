@@ -285,6 +285,31 @@ export interface IntentManagerConfig {
    */
   persistDebounceMs?: number;
   /**
+   * Maximum frequency at which the expensive prune+serialize+write pipeline
+   * runs during normal `track()` flow, in milliseconds.
+   * Default: `0` (disabled — every dirty `track()` writes synchronously,
+   * full crash-safety).
+   *
+   * When `> 0`, the pipeline runs at most once per `persistThrottleMs` window:
+   * - The **first** dirty write after a quiescent period executes immediately
+   *   (leading-edge), preserving crash-safety for the initial navigation event.
+   * - Subsequent dirty writes within the same window are **skipped**, but a
+   *   trailing timer fires within `persistThrottleMs` ms to flush any
+   *   accumulated dirty state.
+   * - At most `persistThrottleMs` ms of recent navigation data can be lost in a
+   *   hard crash (OS kill, power loss, Chrome tab discard).
+   *
+   * `flushNow()` and `destroy()` always bypass the throttle and write
+   * immediately regardless of this setting.
+   *
+   * Recommended values:
+   * - `0`       — full crash-safety (default); best for checkout / payment flows.
+   * - `200–500` — good balance for typical graphs (50–200 states).
+   * - `1000`    — aggressive throttle for large graphs (300+ states) where
+   *               prune+serialize takes >1 ms per call.
+   */
+  persistThrottleMs?: number;
+  /**
    * Pre-trained baseline graph (from `MarkovGraph.toJSON()`) representing
    * the expected normal navigation pattern.  Required for `trajectory_anomaly`
    * detection.  If absent, trajectory evaluation is skipped.

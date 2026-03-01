@@ -158,7 +158,7 @@ export function buildIntentManagerOptions(
 
   const rawDriftWindowMs = config.driftProtection?.evaluationWindowMs;
   const driftEvaluationWindowMs =
-    Number.isFinite(rawDriftWindowMs) && (rawDriftWindowMs as number) >= 0
+    Number.isFinite(rawDriftWindowMs) && (rawDriftWindowMs as number) > 0
       ? Math.floor(rawDriftWindowMs as number)
       : 300_000;
 

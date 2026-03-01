@@ -29,8 +29,7 @@ export interface PolicyTrackContext {
  *   3. `onTransition(from, to, trajectory)` — after the transition is recorded
  *   4. `onAfterEvaluation(from, to)` — after all signal evaluation completes
  *   5. `onCounterIncrement(key, by)` — inside `incrementCounter()`
- *   6. `onResume(hiddenDurationMs)` — on tab-show (lifecycle resume)
- *   7. `destroy()` — inside `IntentManager.destroy()`
+ *   6. `destroy()` — inside `IntentManager.destroy()`
  *
  * All hooks are optional; a policy that only cares about transitions
  * implements `onTransition` alone.
@@ -71,12 +70,6 @@ export interface EnginePolicy {
    * `IntentManager.incrementCounter()`.
    */
   onCounterIncrement?(key: string, by: number): void;
-
-  /**
-   * Called when the page resumes from a hidden state (tab becomes visible).
-   * Receives the measured hidden duration in milliseconds.
-   */
-  onResume?(hiddenDurationMs: number): void;
 
   /**
    * Called during `IntentManager.destroy()` to release resources (channels,

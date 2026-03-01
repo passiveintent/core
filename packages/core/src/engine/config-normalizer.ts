@@ -89,7 +89,7 @@ export function buildIntentManagerOptions(
   const rawHoldoutPct = config.holdoutConfig?.percentage;
   const holdoutPercent = Number.isFinite(rawHoldoutPct)
     ? Math.min(100, Math.max(0, rawHoldoutPct as number))
-    : 0;
+    : (rawHoldoutPct ?? 0);
 
   // ── Merge top-level convenience aliases into the nested graph config ────
   // Top-level fields take precedence when both are supplied.
@@ -111,18 +111,62 @@ export function buildIntentManagerOptions(
 
   // ── Persistence ─────────────────────────────────────────────────────────
   const storageKey = config.storageKey ?? 'passive-intent';
-  const persistDebounceMs = config.persistDebounceMs ?? 2000;
-  const persistThrottleMs = config.persistThrottleMs ?? 0;
+
+  const rawPersistDebounce = config.persistDebounceMs;
+  const persistDebounceMs =
+    Number.isFinite(rawPersistDebounce) && (rawPersistDebounce as number) >= 0
+      ? Math.floor(rawPersistDebounce as number)
+      : 2000;
+
+  const rawPersistThrottle = config.persistThrottleMs;
+  const persistThrottleMs =
+    Number.isFinite(rawPersistThrottle) && (rawPersistThrottle as number) >= 0
+      ? Math.floor(rawPersistThrottle as number)
+      : 0;
 
   // ── Signal engine ───────────────────────────────────────────────────────
-  const eventCooldownMs = config.eventCooldownMs ?? 0;
-  const dwellTimeMinSamples = config.dwellTime?.minSamples ?? 10;
-  const dwellTimeZScoreThreshold = config.dwellTime?.zScoreThreshold ?? 2.5;
+  const rawEventCooldown = config.eventCooldownMs;
+  const eventCooldownMs =
+    Number.isFinite(rawEventCooldown) && (rawEventCooldown as number) >= 0
+      ? Math.floor(rawEventCooldown as number)
+      : 0;
+
+  const rawDwellMinSamples = config.dwellTime?.minSamples;
+  const dwellTimeMinSamples =
+    Number.isFinite(rawDwellMinSamples) && (rawDwellMinSamples as number) >= 1
+      ? Math.floor(rawDwellMinSamples as number)
+      : 10;
+
+  const rawDwellZScore = config.dwellTime?.zScoreThreshold;
+  const dwellTimeZScoreThreshold =
+    Number.isFinite(rawDwellZScore) && (rawDwellZScore as number) > 0
+      ? (rawDwellZScore as number)
+      : 2.5;
+
   const enableBigrams = config.enableBigrams ?? false;
-  const bigramFrequencyThreshold = config.bigramFrequencyThreshold ?? 5;
-  const driftMaxAnomalyRate = config.driftProtection?.maxAnomalyRate ?? 0.4;
-  const driftEvaluationWindowMs = config.driftProtection?.evaluationWindowMs ?? 300_000;
-  const hesitationCorrelationWindowMs = config.hesitationCorrelationWindowMs ?? 30_000;
+
+  const rawBigramThreshold = config.bigramFrequencyThreshold;
+  const bigramFrequencyThreshold =
+    Number.isFinite(rawBigramThreshold) && (rawBigramThreshold as number) >= 1
+      ? Math.floor(rawBigramThreshold as number)
+      : 5;
+
+  const rawDriftMaxRate = config.driftProtection?.maxAnomalyRate;
+  const driftMaxAnomalyRate = Number.isFinite(rawDriftMaxRate)
+    ? Math.min(1, Math.max(0, rawDriftMaxRate as number))
+    : 0.4;
+
+  const rawDriftWindowMs = config.driftProtection?.evaluationWindowMs;
+  const driftEvaluationWindowMs =
+    Number.isFinite(rawDriftWindowMs) && (rawDriftWindowMs as number) >= 0
+      ? Math.floor(rawDriftWindowMs as number)
+      : 300_000;
+
+  const rawHesitationMs = config.hesitationCorrelationWindowMs;
+  const hesitationCorrelationWindowMs =
+    Number.isFinite(rawHesitationMs) && (rawHesitationMs as number) >= 0
+      ? Math.floor(rawHesitationMs as number)
+      : 30_000;
 
   return {
     botProtection,

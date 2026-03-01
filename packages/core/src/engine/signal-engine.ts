@@ -149,12 +149,11 @@ export class SignalEngine {
   /* ================================================================== */
 
   /**
-   * Increment the session-scoped transition counter and optionally record
-   * a bigram edge in the graph.
+   * Increment the session-scoped transition counter.
    *
-   * @param from           Departing state.
-   * @param to             Arriving state.
-   * @param trajectory     Snapshot of `recentTrajectory` at time of call.
+   * Bigram accounting was moved to `BigramPolicy.onTransition()` as part of
+   * the policy refactor; this method's sole responsibility is updating the
+   * `transitionsEvaluated` telemetry counter.
    */
   recordTransition(_from: string, _to: string, _trajectory: readonly string[]): void {
     this.transitionsEvaluatedInternal += 1;

@@ -181,10 +181,11 @@ test('holdoutPercent boundary: 100 passes through', () => {
   assert.equal(opts.holdoutPercent, 100);
 });
 
-test('holdoutPercent defaults to 0 for NaN input', () => {
+test('holdoutPercent passes through NaN unchanged', () => {
   const opts = buildIntentManagerOptions({ holdoutConfig: { percentage: NaN } });
-  // Number.isFinite(NaN) is false, so the guard falls through to the default of 0.
-  assert.equal(opts.holdoutPercent, 0);
+  // Number.isFinite(NaN) is false, so the else branch runs: rawHoldoutPct ?? 0.
+  // NaN ?? 0 is NaN (nullish coalescing does not coerce NaN), so NaN passes through.
+  assert.ok(Number.isNaN(opts.holdoutPercent));
 });
 
 // ─── debounce / throttle defaults ────────────────────────────────────────────
@@ -423,4 +424,121 @@ test('buildIntentManagerOptions does not mutate the input config', () => {
   const snapshot = JSON.parse(JSON.stringify(input));
   buildIntentManagerOptions(input);
   assert.deepStrictEqual(input, snapshot);
+});
+
+// ─── Numeric field validation (NaN / Infinity / negative guard) ───────────────
+
+test('persistDebounceMs: NaN falls back to default 2000', () => {
+  const opts = buildIntentManagerOptions({ persistDebounceMs: NaN });
+  assert.equal(opts.persistDebounceMs, 2000);
+});
+
+test('persistDebounceMs: negative falls back to default 2000', () => {
+  const opts = buildIntentManagerOptions({ persistDebounceMs: -500 });
+  assert.equal(opts.persistDebounceMs, 2000);
+});
+
+test('persistDebounceMs: Infinity falls back to default 2000', () => {
+  const opts = buildIntentManagerOptions({ persistDebounceMs: Infinity });
+  assert.equal(opts.persistDebounceMs, 2000);
+});
+
+test('persistDebounceMs: float is floored', () => {
+  const opts = buildIntentManagerOptions({ persistDebounceMs: 1500.9 });
+  assert.equal(opts.persistDebounceMs, 1500);
+});
+
+test('persistThrottleMs: NaN falls back to default 0', () => {
+  const opts = buildIntentManagerOptions({ persistThrottleMs: NaN });
+  assert.equal(opts.persistThrottleMs, 0);
+});
+
+test('persistThrottleMs: negative falls back to default 0', () => {
+  const opts = buildIntentManagerOptions({ persistThrottleMs: -1 });
+  assert.equal(opts.persistThrottleMs, 0);
+});
+
+test('eventCooldownMs: NaN falls back to default 0', () => {
+  const opts = buildIntentManagerOptions({ eventCooldownMs: NaN });
+  assert.equal(opts.eventCooldownMs, 0);
+});
+
+test('eventCooldownMs: negative falls back to default 0', () => {
+  const opts = buildIntentManagerOptions({ eventCooldownMs: -100 });
+  assert.equal(opts.eventCooldownMs, 0);
+});
+
+test('dwellTimeMinSamples: NaN falls back to default 10', () => {
+  const opts = buildIntentManagerOptions({ dwellTime: { minSamples: NaN } });
+  assert.equal(opts.dwellTimeMinSamples, 10);
+});
+
+test('dwellTimeMinSamples: zero falls back to default 10 (must be >= 1)', () => {
+  const opts = buildIntentManagerOptions({ dwellTime: { minSamples: 0 } });
+  assert.equal(opts.dwellTimeMinSamples, 10);
+});
+
+test('dwellTimeMinSamples: float is floored', () => {
+  const opts = buildIntentManagerOptions({ dwellTime: { minSamples: 7.8 } });
+  assert.equal(opts.dwellTimeMinSamples, 7);
+});
+
+test('dwellTimeZScoreThreshold: NaN falls back to default 2.5', () => {
+  const opts = buildIntentManagerOptions({ dwellTime: { zScoreThreshold: NaN } });
+  assert.equal(opts.dwellTimeZScoreThreshold, 2.5);
+});
+
+test('dwellTimeZScoreThreshold: zero falls back to default 2.5 (must be > 0)', () => {
+  const opts = buildIntentManagerOptions({ dwellTime: { zScoreThreshold: 0 } });
+  assert.equal(opts.dwellTimeZScoreThreshold, 2.5);
+});
+
+test('bigramFrequencyThreshold: NaN falls back to default 5', () => {
+  const opts = buildIntentManagerOptions({ bigramFrequencyThreshold: NaN });
+  assert.equal(opts.bigramFrequencyThreshold, 5);
+});
+
+test('bigramFrequencyThreshold: zero falls back to default 5 (must be >= 1)', () => {
+  const opts = buildIntentManagerOptions({ bigramFrequencyThreshold: 0 });
+  assert.equal(opts.bigramFrequencyThreshold, 5);
+});
+
+test('bigramFrequencyThreshold: float is floored', () => {
+  const opts = buildIntentManagerOptions({ bigramFrequencyThreshold: 3.9 });
+  assert.equal(opts.bigramFrequencyThreshold, 3);
+});
+
+test('driftMaxAnomalyRate: NaN falls back to default 0.4', () => {
+  const opts = buildIntentManagerOptions({ driftProtection: { maxAnomalyRate: NaN } });
+  assert.equal(opts.driftMaxAnomalyRate, 0.4);
+});
+
+test('driftMaxAnomalyRate: negative is clamped to 0', () => {
+  const opts = buildIntentManagerOptions({ driftProtection: { maxAnomalyRate: -0.5 } });
+  assert.equal(opts.driftMaxAnomalyRate, 0);
+});
+
+test('driftMaxAnomalyRate: value above 1 is clamped to 1', () => {
+  const opts = buildIntentManagerOptions({ driftProtection: { maxAnomalyRate: 2.0 } });
+  assert.equal(opts.driftMaxAnomalyRate, 1);
+});
+
+test('driftEvaluationWindowMs: NaN falls back to default 300000', () => {
+  const opts = buildIntentManagerOptions({ driftProtection: { evaluationWindowMs: NaN } });
+  assert.equal(opts.driftEvaluationWindowMs, 300_000);
+});
+
+test('driftEvaluationWindowMs: negative falls back to default 300000', () => {
+  const opts = buildIntentManagerOptions({ driftProtection: { evaluationWindowMs: -1 } });
+  assert.equal(opts.driftEvaluationWindowMs, 300_000);
+});
+
+test('hesitationCorrelationWindowMs: NaN falls back to default 30000', () => {
+  const opts = buildIntentManagerOptions({ hesitationCorrelationWindowMs: NaN });
+  assert.equal(opts.hesitationCorrelationWindowMs, 30_000);
+});
+
+test('hesitationCorrelationWindowMs: negative falls back to default 30000', () => {
+  const opts = buildIntentManagerOptions({ hesitationCorrelationWindowMs: -1 });
+  assert.equal(opts.hesitationCorrelationWindowMs, 30_000);
 });

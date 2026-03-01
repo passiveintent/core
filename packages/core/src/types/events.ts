@@ -122,14 +122,20 @@ export interface AttentionReturnPayload {
 export interface UserIdlePayload {
   /** The state the user was viewing when they became idle. */
   state: string;
-  /** Duration of inactivity in milliseconds at the time the event fired. */
+  /**
+   * Time spent in the idle state in milliseconds at the time the event fired,
+   * i.e. time since crossing the idle-threshold after the last interaction.
+   */
   idleMs: number;
 }
 
 export interface UserResumedPayload {
   /** The state the user was viewing when they resumed interaction. */
   state: string;
-  /** Total idle duration in milliseconds before the user resumed. */
+  /**
+   * Total time spent in the idle state in milliseconds before the user resumed,
+   * i.e. time since crossing the idle-threshold after the last interaction.
+   */
   idleMs: number;
 }
 

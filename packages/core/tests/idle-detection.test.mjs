@@ -275,6 +275,31 @@ test('cleanup on destroy — no timer leaks', () => {
   assert.equal(active.length, 0, 'All timers must be cleared after destroy()');
 });
 
+test('destroy during user_idle handler leaves no idle-check timers', () => {
+  const kit = createFakeAdapterWithInteraction();
+  const { manager, advanceTo, pendingTimers } = createIdleTestHarness(kit);
+
+  manager.track('/home');
+
+  // Call destroy() re-entrantly from within the user_idle handler, i.e.
+  // while the idle-check timer callback is running.
+  manager.on('user_idle', () => {
+    manager.destroy();
+  });
+
+  // Advance time far enough to trigger the idle check and fire user_idle.
+  // Other tests use 1000 + 130_000 as a "definitely idle" threshold.
+  advanceTo(1000 + 130_000);
+
+  // After destroy() has been invoked from within the handler, there must be
+  // no further idle-check timers left scheduled.
+  const active = pendingTimers.filter((t) => !t.cleared);
+  assert.equal(
+    active.length,
+    0,
+    'No idle-check timers may remain after destroy() is called from user_idle handler',
+  );
+});
 test('adapter without onInteraction does not crash (backward compat)', () => {
   const kit = createFakeAdapterWithoutInteraction();
   let mockTime = 1000;

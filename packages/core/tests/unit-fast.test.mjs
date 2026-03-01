@@ -3857,8 +3857,12 @@ test('onError: RESTORE_PARSE fires when stored graph is corrupt JSON', () => {
     'originalError must be an object',
   );
   assert.ok(
-    typeof errors[0].originalError.payload === 'string',
-    'originalError.payload must be the raw stored string',
+    typeof errors[0].originalError.payloadLength === 'number',
+    'originalError.payloadLength must be the byte length of the stored string (payload is redacted)',
+  );
+  assert.ok(
+    !('payload' in errors[0].originalError),
+    'originalError must not expose the raw stored string',
   );
 });
 
@@ -4415,10 +4419,7 @@ test('internally-created lifecycleAdapter IS destroyed when IntentManager.destro
 
   // Wire the spy in place of whatever adapter the constructor created
   // (null in a non-browser env, or BrowserLifecycleAdapter in a browser env).
-  // TypeScript `private` is compile-time only — reach through the coordinator
-  // directly rather than polluting IntentManager's public API surface.
-  manager.lifecycleCoordinator.lifecycleAdapter = spyAdapter;
-  manager.lifecycleCoordinator.ownsLifecycleAdapter = true;
+  manager.lifecycleCoordinator.setAdapterForTest(spyAdapter, true);
 
   // Prime resumeCallback so we can later verify it was cleared by destroy().
   spyAdapter.onResume(() => {});

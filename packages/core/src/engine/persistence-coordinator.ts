@@ -86,9 +86,14 @@ export class PersistenceCoordinator {
   /* Lifecycle */
   private isClosed = false;
 
-  /* Mutable coordination flags exposed to IntentManager */
-  isDirty = false;
-  engineHealthInternal: PassiveIntentTelemetry['engineHealth'] = 'healthy';
+  /* Mutable coordination flags — internal only */
+  private isDirty = false;
+  private engineHealthInternal: PassiveIntentTelemetry['engineHealth'] = 'healthy';
+
+  /** Signal that new state has been written and needs to be persisted. */
+  markDirty(): void {
+    this.isDirty = true;
+  }
 
   constructor(config: PersistenceCoordinatorConfig) {
     this.storageKey = config.storageKey;
@@ -153,7 +158,7 @@ export class PersistenceCoordinator {
         this.onError({
           code: 'RESTORE_PARSE',
           message: err instanceof Error ? err.message : String(err),
-          originalError: { cause: err, payload: raw },
+          originalError: { cause: err, payloadLength: raw.length },
         });
       }
       return null;
@@ -183,11 +188,11 @@ export class PersistenceCoordinator {
       return;
     }
 
-    if (this.persistThrottleMs > 0) {
+    if (this.persistThrottleMs > 0 && !this.isClosed) {
       const now = this.timer.now();
       const elapsed = now - this.lastPersistedAt;
       if (elapsed < this.persistThrottleMs) {
-        if (!this.isClosed && this.throttleTimer === null) {
+        if (this.throttleTimer === null) {
           const remainingMs = this.persistThrottleMs - elapsed;
           this.throttleTimer = this.timer.setTimeout(() => {
             this.throttleTimer = null;

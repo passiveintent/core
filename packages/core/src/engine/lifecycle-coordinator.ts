@@ -70,10 +70,8 @@ export class LifecycleCoordinator {
   private readonly onResetBaseline: () => void;
   private readonly hasPreviousState: () => boolean;
 
-  /** Mutable so tests can swap in a spy adapter after construction. */
-  lifecycleAdapter: LifecycleAdapter | null;
-  /** Mutable so tests can override ownership after construction. */
-  ownsLifecycleAdapter: boolean;
+  private lifecycleAdapter: LifecycleAdapter | null;
+  private ownsLifecycleAdapter: boolean;
   private pauseUnsub: (() => void) | null = null;
   private resumeUnsub: (() => void) | null = null;
 
@@ -134,6 +132,24 @@ export class LifecycleCoordinator {
         }
       });
     }
+  }
+
+  /**
+   * @internal — test-only hook. Replaces the active lifecycle adapter after
+   * construction. Unsubscribes the coordinator's existing pause/resume
+   * callbacks from the previous adapter before installing the new one.
+   *
+   * Do NOT call this in production code; injecting the adapter via
+   * `LifecycleCoordinatorConfig.lifecycleAdapter` is the correct approach.
+   */
+  /* @internal */
+  setAdapterForTest(adapter: LifecycleAdapter | null, owns: boolean): void {
+    this.pauseUnsub?.();
+    this.pauseUnsub = null;
+    this.resumeUnsub?.();
+    this.resumeUnsub = null;
+    this.lifecycleAdapter = adapter;
+    this.ownsLifecycleAdapter = owns;
   }
 
   /**

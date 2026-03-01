@@ -350,7 +350,7 @@ export class IntentManager {
       // Delegate bigram accounting and transitionsEvaluated increment to SignalEngine
       this.signalEngine.recordTransition(ctx.from, ctx.state, this.recentTrajectory);
 
-      this.persistenceCoordinator.isDirty = true;
+      this.persistenceCoordinator.markDirty();
       this.signalEngine.evaluateEntropy(ctx.state);
       this.signalEngine.evaluateTrajectory(ctx.from, ctx.state, this.recentTrajectory);
 
@@ -363,7 +363,7 @@ export class IntentManager {
     }
 
     if (ctx.isNewToBloom) {
-      this.persistenceCoordinator.isDirty = true;
+      this.persistenceCoordinator.markDirty();
     }
   };
 

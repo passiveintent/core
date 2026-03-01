@@ -37,6 +37,11 @@ import type { TimerAdapter } from '../adapters.js';
 import type { DriftProtectionPolicy } from './policies/drift-protection-policy.js';
 import type { AnomalyDecision } from './anomaly-decisions.js';
 
+/** Compile-time exhaustiveness check. */
+function assertNever(x: never): never {
+  throw new Error(`Unhandled AnomalyDecision kind: ${(x as { kind: string }).kind}`);
+}
+
 /**
  * Structural view of the event emitter used by the dispatcher.
  *
@@ -154,12 +159,18 @@ export class AnomalyDispatcher {
 
     // ── Holdout suppression + emission ───────────────────────────────────────
     if (this.assignmentGroup !== 'control') {
-      if (decision.kind === 'high_entropy') {
-        this.emitter.emit('high_entropy', decision.payload);
-      } else if (decision.kind === 'trajectory_anomaly') {
-        this.emitter.emit('trajectory_anomaly', decision.payload);
-      } else {
-        this.emitter.emit('dwell_time_anomaly', decision.payload);
+      switch (decision.kind) {
+        case 'high_entropy':
+          this.emitter.emit('high_entropy', decision.payload);
+          break;
+        case 'trajectory_anomaly':
+          this.emitter.emit('trajectory_anomaly', decision.payload);
+          break;
+        case 'dwell_time_anomaly':
+          this.emitter.emit('dwell_time_anomaly', decision.payload);
+          break;
+        default:
+          assertNever(decision);
       }
     }
 

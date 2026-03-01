@@ -13,7 +13,6 @@ import { dwellStd, updateDwellStats } from './dwell.js';
 import type { DwellStats } from './dwell.js';
 import { EventEmitter } from './event-emitter.js';
 import type { AnomalyEventEmitter, DriftProtectionPolicyLike } from './anomaly-dispatcher.js';
-import type { IntentEventMap } from '../types/events.js';
 import { MIN_SAMPLE_TRANSITIONS, MIN_WINDOW_LENGTH, MAX_WINDOW_LENGTH } from './constants.js';
 import type { PassiveIntentTelemetry } from '../types/events.js';
 import { AnomalyDispatcher } from './anomaly-dispatcher.js';
@@ -85,14 +84,9 @@ export interface SignalEngineConfig {
 export class SignalEngine {
   private readonly graph: MarkovGraph;
   private readonly baseline: MarkovGraph | null;
-  private readonly timer: TimerAdapter;
   private readonly benchmark: BenchmarkRecorder;
-  private readonly emitter: AnomalyEventEmitter;
-  private readonly assignmentGroup: 'treatment' | 'control';
-  private readonly eventCooldownMs: number;
   private readonly dwellTimeMinSamples: number;
   private readonly dwellTimeZScoreThreshold: number;
-  private readonly hesitationCorrelationWindowMs: number;
   private readonly trajectorySmoothingEpsilon: number;
   private readonly driftPolicy: DriftProtectionPolicyLike;
 
@@ -111,14 +105,9 @@ export class SignalEngine {
   constructor(config: SignalEngineConfig) {
     this.graph = config.graph;
     this.baseline = config.baseline;
-    this.timer = config.timer;
     this.benchmark = config.benchmark;
-    this.emitter = config.emitter;
-    this.assignmentGroup = config.assignmentGroup;
-    this.eventCooldownMs = config.eventCooldownMs;
     this.dwellTimeMinSamples = config.dwellTimeMinSamples;
     this.dwellTimeZScoreThreshold = config.dwellTimeZScoreThreshold;
-    this.hesitationCorrelationWindowMs = config.hesitationCorrelationWindowMs;
     this.trajectorySmoothingEpsilon = config.trajectorySmoothingEpsilon;
     this.driftPolicy = config.driftPolicy;
 

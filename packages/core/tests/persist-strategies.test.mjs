@@ -346,9 +346,13 @@ test('AsyncPersistStrategy: second persist() while in-flight sets pending flag, 
   // Only one write should be in-progress
   assert.equal(writes.length, 1, 'only one setItem call while in-flight');
 
-  // Let the first write complete
+  // Let the first write complete, then drain all queued microtasks.
+  // setImmediate fires after all pending microtasks in the current event-loop
+  // turn, so the AsyncPersistStrategy completion handler (which starts the
+  // pending second write) is guaranteed to have run by the time we resume —
+  // no arbitrary sleep needed.
   resolveWrite();
-  await new Promise((r) => setTimeout(r, 10));
+  await new Promise((r) => setImmediate(r));
 
   // After the first write completes, the pending flag should have triggered a second write
   assert.equal(writes.length, 2, 'pending write must be flushed after first completes');

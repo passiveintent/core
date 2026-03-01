@@ -183,15 +183,11 @@ test('holdoutPercent boundary: 100 passes through', () => {
   assert.equal(opts.holdoutPercent, 100);
 });
 
-test('holdoutPercent handles NaN by clamping to 0', () => {
+test('holdoutPercent passes through NaN unchanged', () => {
   const opts = buildIntentManagerOptions({ holdoutConfig: { percentage: NaN } });
-  // Math.min(100, Math.max(0, NaN)) === NaN, but NaN ?? 0 === NaN
-  // Original code: Math.min(100, Math.max(0, NaN)) => NaN
-  // With ?? 0 on the percentage: Math.min(100, Math.max(0, NaN)) => NaN
-  // Actually config.holdoutConfig?.percentage ?? 0 doesn't coalesce NaN,
-  // so NaN is passed through. Math.max(0, NaN) => NaN, Math.min(100, NaN) => NaN.
-  // The function preserves the original behavior.
-  assert.ok(Number.isNaN(opts.holdoutPercent) || opts.holdoutPercent === 0);
+  // config.holdoutConfig?.percentage ?? 0 does not coalesce NaN,
+  // so NaN is passed through to holdoutPercent.
+  assert.ok(Number.isNaN(opts.holdoutPercent));
 });
 
 // ─── debounce / throttle defaults ────────────────────────────────────────────

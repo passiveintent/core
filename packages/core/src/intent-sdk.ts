@@ -34,8 +34,14 @@ export { MAX_PLAUSIBLE_DWELL_MS, SMOOTHING_EPSILON } from './engine/constants.js
 export { AnomalyDispatcher } from './engine/anomaly-dispatcher.js';
 export { SignalEngine } from './engine/signal-engine.js';
 export { EventEmitter } from './engine/event-emitter.js';
+export { DriftProtectionPolicy } from './engine/policies/drift-protection-policy.js';
+export { BenchmarkRecorder } from './performance-instrumentation.js';
 
-export type { AnomalyDispatcherConfig } from './engine/anomaly-dispatcher.js';
+export type {
+  AnomalyDispatcherConfig,
+  AnomalyEventEmitter,
+  DriftProtectionPolicyLike,
+} from './engine/anomaly-dispatcher.js';
 export type {
   AnomalyDecision,
   EntropyDecision,

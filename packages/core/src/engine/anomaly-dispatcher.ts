@@ -167,12 +167,12 @@ export class AnomalyDispatcher {
     if (decision.kind === 'trajectory_anomaly') {
       this.lastTrajectoryAnomalyAt = now;
       this.lastTrajectoryAnomalyZScore = decision.payload.zScore;
-      this.maybeEmitHesitation();
+      this.maybeEmitHesitation(now);
     } else if (decision.kind === 'dwell_time_anomaly' && decision.isPositiveZScore) {
       this.lastDwellAnomalyAt = now;
       this.lastDwellAnomalyZScore = decision.payload.zScore;
       this.lastDwellAnomalyState = decision.payload.state;
-      this.maybeEmitHesitation();
+      this.maybeEmitHesitation(now);
     }
   }
 
@@ -180,8 +180,7 @@ export class AnomalyDispatcher {
   /*  Hesitation Correlation (private)                                  */
   /* ================================================================== */
 
-  private maybeEmitHesitation(): void {
-    const now = this.timer.now();
+  private maybeEmitHesitation(now: number): void {
     const correlated =
       now - this.lastTrajectoryAnomalyAt < this.hesitationCorrelationWindowMs &&
       now - this.lastDwellAnomalyAt < this.hesitationCorrelationWindowMs;

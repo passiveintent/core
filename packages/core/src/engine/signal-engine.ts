@@ -12,6 +12,7 @@ import { EntropyGuard } from './entropy-guard.js';
 import { dwellStd, updateDwellStats } from './dwell.js';
 import type { DwellStats } from './dwell.js';
 import { EventEmitter } from './event-emitter.js';
+import type { AnomalyEventEmitter, DriftProtectionPolicyLike } from './anomaly-dispatcher.js';
 import type { IntentEventMap } from '../types/events.js';
 import { MIN_SAMPLE_TRANSITIONS, MIN_WINDOW_LENGTH, MAX_WINDOW_LENGTH } from './constants.js';
 import type { PassiveIntentTelemetry } from '../types/events.js';
@@ -25,7 +26,6 @@ import type {
 } from './anomaly-decisions.js';
 
 export { EventEmitter };
-export type { DriftProtectionPolicy };
 /**
  * Configuration surface for SignalEngine.
  * All values are resolved and defaulted by IntentManager before being passed in.
@@ -35,7 +35,7 @@ export interface SignalEngineConfig {
   baseline: MarkovGraph | null;
   timer: TimerAdapter;
   benchmark: BenchmarkRecorder;
-  emitter: EventEmitter<IntentEventMap>;
+  emitter: AnomalyEventEmitter;
   assignmentGroup: 'treatment' | 'control';
   eventCooldownMs: number;
   dwellTimeMinSamples: number;
@@ -43,7 +43,7 @@ export interface SignalEngineConfig {
   hesitationCorrelationWindowMs: number;
   trajectorySmoothingEpsilon: number;
   /** Drift protection policy — owns the rolling evaluation window and drifted flag. */
-  driftPolicy: DriftProtectionPolicy;
+  driftPolicy: DriftProtectionPolicyLike;
 }
 
 /**
@@ -88,14 +88,14 @@ export class SignalEngine {
   private readonly baseline: MarkovGraph | null;
   private readonly timer: TimerAdapter;
   private readonly benchmark: BenchmarkRecorder;
-  private readonly emitter: EventEmitter<IntentEventMap>;
+  private readonly emitter: AnomalyEventEmitter;
   private readonly assignmentGroup: 'treatment' | 'control';
   private readonly eventCooldownMs: number;
   private readonly dwellTimeMinSamples: number;
   private readonly dwellTimeZScoreThreshold: number;
   private readonly hesitationCorrelationWindowMs: number;
   private readonly trajectorySmoothingEpsilon: number;
-  private readonly driftPolicy: DriftProtectionPolicy;
+  private readonly driftPolicy: DriftProtectionPolicyLike;
 
   /* Bot detection */
   private readonly entropyGuard = new EntropyGuard();

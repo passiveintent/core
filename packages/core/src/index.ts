@@ -25,6 +25,9 @@ export {
   normalizeRouteState,
   AnomalyDispatcher,
   SignalEngine,
+  EventEmitter,
+  DriftProtectionPolicy,
+  BenchmarkRecorder,
 } from './intent-sdk.js';
 
 export type {
@@ -49,6 +52,10 @@ export type {
   EntropyDecision,
   TrajectoryDecision,
   DwellDecision,
+  AnomalyDispatcherConfig,
+  AnomalyEventEmitter,
+  DriftProtectionPolicyLike,
+  SignalEngineConfig,
 } from './intent-sdk.js';
 
 /* ---- Adapters ---- */

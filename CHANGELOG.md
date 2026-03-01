@@ -16,6 +16,16 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 _Branch: `codex/convert-to-npm-workspaces-monorepo` — included in v1.0.0 initial release to enable future ecosystem extensions without breaking changes_
 
+### Smart Exit-Intent Detection — `exit_intent` Event
+
+- **`exit_intent` event** — emitted by `IntentManager` when the user's pointer exits the viewport from above (toward the browser chrome / address bar) **and** the Markov graph has at least one continuation candidate with probability ≥ 0.4. The event is suppressed entirely when no candidates meet the threshold, making data-free overlays structurally impossible.
+- **`ExitIntentPayload`** — includes `state` (the route the user was viewing) and `likelyNext` (the highest-probability next state according to the graph). Exported as a public type.
+- **`LifecycleAdapter.onExitIntent()`** — new optional method on the adapter interface. `BrowserLifecycleAdapter` implements it with a lazy `mouseleave` listener on `document.documentElement`, fireing the callback only when `event.clientY <= 0`. Returns an unsubscribe function; the listener is torn down on unsubscription or `destroy()`.
+- **Markov-gated architecture** — the probability check lives in `IntentManager` (not `LifecycleCoordinator`) to keep the coordinator decoupled from graph math. `LifecycleCoordinator` receives an opaque `onExitIntent?: () => void` callback and calls it when the adapter signals. The `IntentManager` callback performs `getLikelyNextStates(previousState, 0.4)` and either emits or silently returns.
+- **Backward-compatible** — adapters that do not implement `onExitIntent` are silently skipped. Existing custom `LifecycleAdapter` implementations continue to work unchanged. Passing `null` or `undefined` as `lifecycleAdapter` still disables all lifecycle tracking as before.
+- **`LifecycleCoordinator.destroy()`** — `exitIntentUnsub` is unconditionally nulled and called on teardown, preventing listener leaks after `IntentManager.destroy()`.
+- **8 unit tests** in `packages/core/tests/exit-intent.test.mjs` covering: no emit when no previous state, no emit when graph has no candidates, correct emission with top-probability candidate, likelyNext accuracy on multi-transition graphs, multi-trigger (no self-suppression), backward-compat (adapter without `onExitIntent`), unsubscribe called on `destroy()`, no emission after `destroy()`, and state-label normalization via `normalizeRouteState`.
+
 ### Comparison Shopper — `attention_return` Event
 
 - **`attention_return` event** — new event emitted by `LifecycleCoordinator` when the user returns to the tab after being hidden for ≥ 15 seconds. Designed for "Welcome Back" experiences — show a discount modal, refresh content, or surface a comparison offer the moment a user returns from price-shopping on a competitor tab.

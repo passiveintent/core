@@ -25,7 +25,8 @@ export type IntentEventName =
   | 'session_stale'
   | 'attention_return'
   | 'user_idle'
-  | 'user_resumed';
+  | 'user_resumed'
+  | 'exit_intent';
 
 export interface ConversionPayload {
   type: string;
@@ -139,6 +140,31 @@ export interface UserResumedPayload {
   idleMs: number;
 }
 
+/**
+ * Emitted when the user signals exit intent (e.g. mouse leaving the viewport
+ * toward the browser chrome) **and** the Markov graph contains at least one
+ * likely continuation path from the current state.
+ *
+ * The event is only emitted when the graph indicates the user has a plausible
+ * next destination — not blindly on every mouseleave — so hosts can use it to
+ * surface targeted retention interventions rather than spammy overlays.
+ *
+ * `likelyNext` is the highest-probability candidate state (probability ≥ 0.4).
+ * It is `null` only when no candidates meet the threshold, in which case the
+ * event is suppressed entirely and this payload is never delivered.
+ */
+export interface ExitIntentPayload {
+  /** The state the user was viewing when exit intent was detected. */
+  state: string;
+  /**
+   * The most probable next state according to the Markov graph, or `null` when
+   * no candidate exceeds the probability threshold.  In practice this field is
+   * always a non-null string when the event fires, because a null result
+   * suppresses the emission entirely.
+   */
+  likelyNext: string | null;
+}
+
 export interface IntentEventMap {
   high_entropy: HighEntropyPayload;
   trajectory_anomaly: TrajectoryAnomalyPayload;
@@ -151,6 +177,7 @@ export interface IntentEventMap {
   attention_return: AttentionReturnPayload;
   user_idle: UserIdlePayload;
   user_resumed: UserResumedPayload;
+  exit_intent: ExitIntentPayload;
 }
 
 export interface DwellTimeConfig {

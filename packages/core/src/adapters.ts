@@ -175,6 +175,20 @@ export interface LifecycleAdapter {
    * silently skipped and idle detection is disabled.
    */
   onInteraction?(callback: () => void): (() => void) | null;
+  /**
+   * Optional: register a callback to be invoked when the user signals exit
+   * intent by moving the pointer above the viewport top edge (toward the
+   * browser chrome / address bar).
+   *
+   * Implementations should only fire the callback when `MouseEvent.clientY <= 0`
+   * so that normal in-page mouse movement is ignored.
+   *
+   * Returns an unsubscribe function that removes only this callback.
+   *
+   * Backward-compatible — adapters that do not implement this method are
+   * silently skipped and exit-intent detection is disabled.
+   */
+  onExitIntent?(callback: () => void): () => void;
   /** Remove all event listeners and release resources held by this adapter. */
   destroy(): void;
 }
@@ -204,6 +218,7 @@ export class BrowserLifecycleAdapter implements LifecycleAdapter {
   private readonly pauseCallbacks: Array<() => void> = [];
   private readonly resumeCallbacks: Array<() => void> = [];
   private readonly interactionCallbacks: Array<() => void> = [];
+  private readonly exitIntentCallbacks: Array<() => void> = [];
   private readonly handler: () => void;
 
   /** Tracks the DOM listeners registered for interaction throttling. */
@@ -216,6 +231,9 @@ export class BrowserLifecycleAdapter implements LifecycleAdapter {
     'touchstart',
     'keydown',
   ];
+
+  /** Handler for exit-intent mouseleave detection on document.documentElement. */
+  private exitIntentHandler: ((e: MouseEvent) => void) | null = null;
 
   constructor() {
     this.handler = () => {
@@ -308,13 +326,70 @@ export class BrowserLifecycleAdapter implements LifecycleAdapter {
     this.interactionHandler = null;
   }
 
+  /**
+   * Register a callback to be invoked when the user moves the pointer above
+   * the top edge of the viewport (clientY <= 0), which typically indicates
+   * they are heading toward the browser chrome / address bar — a reliable
+   * proxy for exit intent on desktop.
+   *
+   * The listener is attached lazily on the first subscription so that the
+   * adapter stays tree-shakeable in SSR / Node.js environments.
+   */
+  onExitIntent(callback: () => void): () => void {
+    this.exitIntentCallbacks.push(callback);
+
+    // Lazily attach the DOM listener on the first subscription.
+    if (
+      this.exitIntentHandler === null &&
+      typeof document !== 'undefined' &&
+      typeof document.documentElement !== 'undefined'
+    ) {
+      this.exitIntentHandler = (e: MouseEvent) => {
+        if (e.clientY <= 0) {
+          for (const cb of this.exitIntentCallbacks) cb();
+        }
+      };
+      document.documentElement.addEventListener(
+        'mouseleave',
+        this.exitIntentHandler as EventListener,
+      );
+    }
+
+    return () => {
+      const idx = this.exitIntentCallbacks.indexOf(callback);
+      if (idx !== -1) this.exitIntentCallbacks.splice(idx, 1);
+
+      // Remove the DOM listener when the last subscriber unsubscribes.
+      if (this.exitIntentCallbacks.length === 0) {
+        this.teardownExitIntentListener();
+      }
+    };
+  }
+
+  /** Remove the exit-intent DOM listener if currently attached. */
+  private teardownExitIntentListener(): void {
+    if (
+      this.exitIntentHandler !== null &&
+      typeof document !== 'undefined' &&
+      typeof document.documentElement !== 'undefined'
+    ) {
+      document.documentElement.removeEventListener(
+        'mouseleave',
+        this.exitIntentHandler as EventListener,
+      );
+    }
+    this.exitIntentHandler = null;
+  }
+
   destroy(): void {
     if (typeof document !== 'undefined') {
       document.removeEventListener('visibilitychange', this.handler);
     }
     this.teardownInteractionListeners();
+    this.teardownExitIntentListener();
     this.pauseCallbacks.length = 0;
     this.resumeCallbacks.length = 0;
     this.interactionCallbacks.length = 0;
+    this.exitIntentCallbacks.length = 0;
   }
 }

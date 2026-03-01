@@ -192,6 +192,20 @@ export class IntentManager {
       },
       hasPreviousState: () => this.previousState !== null,
       getPreviousState: () => this.previousState,
+      // ── Smart Exit-Intent ──────────────────────────────────────────────────
+      // Only fires when the Markov graph indicates a likely continuation path
+      // from the current state.  The check is performed here (in IntentManager)
+      // rather than in LifecycleCoordinator so that the coordinator stays
+      // decoupled from graph math.
+      onExitIntent: () => {
+        if (this.previousState === null) return;
+        const candidates = this.graph.getLikelyNextStates(this.previousState, 0.4);
+        if (candidates.length === 0) return;
+        this.emitter.emit('exit_intent', {
+          state: this.previousState,
+          likelyNext: candidates[0].state,
+        });
+      },
     });
 
     // ── Pipeline stages ───────────────────────────────────────────────────────

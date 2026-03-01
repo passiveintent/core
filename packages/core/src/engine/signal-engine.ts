@@ -24,6 +24,8 @@ import type {
   DwellDecision,
 } from './anomaly-decisions.js';
 
+export { EventEmitter };
+export type { DriftProtectionPolicy };
 /**
  * Configuration surface for SignalEngine.
  * All values are resolved and defaulted by IntentManager before being passed in.

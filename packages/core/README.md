@@ -27,6 +27,7 @@ _(Under the hood, it uses a highly-optimized sparse Markov graph and Bloom filte
 - **SPA-Ready Lifecycle:** SSR-safe adapters and a clean `destroy()` API make it drop-in compatible with Next.js, Vue, Angular, and React Router.
 - **Comparison Shopper Awareness:** Automatically detects users who leave and return after ≥ 15 seconds, firing an `attention_return` event so you can greet them with a personalized welcome-back offer.
 - **Idle-State Detection:** Tracks interaction silence with a lightweight polling loop and fires `user_idle` / `user_resumed` events, letting you dim overlays or pause expensive animations without any extra timers.
+- **Smart Exit-Intent:** Detects when the user is about to leave the page (pointer moves above the viewport) and fires `exit_intent` — **only** when the Markov graph confirms a likely continuation path. No spammy overlays; only data-backed interventions.
 
 ## What can you build?
 
@@ -96,6 +97,24 @@ intent.on('user_resumed', ({ state, idleMs }) => {
   UI.hideIdleOverlay();
   if (idleMs > 300_000) {
     refreshPageData(); // content may be stale after 5+ min
+  }
+});
+```
+
+**6. The Smart Exit-Intent Interceptor**
+
+Fire a last-chance offer or save-progress prompt only when the Markov graph suggests the user has a meaningful next destination — not on every accidental cursor drift to the toolbar.
+
+```ts
+intent.on('exit_intent', ({ state, likelyNext }) => {
+  if (state === '/checkout/payment') {
+    // The graph says they're likely to navigate to /checkout/review next —
+    // show a quick win to keep them in the funnel.
+    UI.showModal({
+      title: 'Wait — your cart is saved!',
+      message: `You were heading to ${likelyNext}. Need help completing your order?`,
+      cta: 'Continue checkout',
+    });
   }
 });
 ```
@@ -344,6 +363,7 @@ Inject `IntentService` in your root `AppComponent` (or import it in the root mod
 | `attention_return`    | `AttentionReturnPayload`    | User returns to the tab after being hidden for ≥ `ATTENTION_RETURN_THRESHOLD_MS` (15 s). Fires independently of `dwellTime.enabled`. Use for "Welcome Back" discount modals after comparison shopping.                                                                                                     |
 | `user_idle`           | `UserIdlePayload`           | No user interaction (mouse, keyboard, scroll, touch) for `USER_IDLE_THRESHOLD_MS` (2 min). Fires at most once per idle period. Requires the `LifecycleAdapter` to implement `onInteraction()`.                                                                                                             |
 | `user_resumed`        | `UserResumedPayload`        | First interaction after an idle period. Includes total `idleMs`. The dwell-time baseline is adjusted to exclude the idle gap automatically.                                                                                                                                                                |
+| `exit_intent`         | `ExitIntentPayload`         | User moved the pointer above the viewport top edge **and** the Markov graph has at least one continuation candidate with probability ≥ 0.4. `likelyNext` is the highest-probability next state. Suppressed entirely when no candidates meet the threshold. Requires `LifecycleAdapter.onExitIntent()`.     |
 | `conversion`          | `ConversionPayload`         | `trackConversion()` was called.                                                                                                                                                                                                                                                                            |
 
 **`onError` callback** (in `IntentManagerConfig`)

@@ -55,6 +55,15 @@ export interface LifecycleCoordinatorConfig {
    * has been entered yet.  Used by the comparison-shopper detection path.
    */
   getPreviousState: () => string | null;
+  /**
+   * Called when exit intent is detected and Markov math confirms a
+   * likely continuation path.  Supplied by `IntentManager` which performs
+   * the probability check and emits the `exit_intent` event.
+   *
+   * Optional — when absent, exit-intent detection is disabled even if the
+   * underlying `LifecycleAdapter` supports `onExitIntent`.
+   */
+  onExitIntent?: () => void;
 }
 
 /**
@@ -90,6 +99,7 @@ export class LifecycleCoordinator {
   private ownsLifecycleAdapter: boolean;
   private pauseUnsub: (() => void) | null = null;
   private resumeUnsub: (() => void) | null = null;
+  private exitIntentUnsub: (() => void) | null = null;
 
   /** Timestamp when the tab last became hidden; `null` while visible. */
   private tabHiddenAt: number | null = null;
@@ -101,6 +111,8 @@ export class LifecycleCoordinator {
   private idleCheckTimer: TimerHandle | null = null;
   private interactionUnsub: (() => void) | null = null;
 
+  private readonly onExitIntentCallback: (() => void) | undefined;
+
   constructor(config: LifecycleCoordinatorConfig) {
     this.timer = config.timer;
     this.dwellTimeEnabled = config.dwellTimeEnabled;
@@ -110,6 +122,8 @@ export class LifecycleCoordinator {
     this.hasPreviousState = config.hasPreviousState;
     this.getPreviousState = config.getPreviousState;
     this.lastInteractionAt = this.timer.now();
+
+    this.onExitIntentCallback = config.onExitIntent;
 
     // Preserve the exact undefined-vs-null semantics from the original constructor:
     //   - undefined → create a BrowserLifecycleAdapter (owned by this coordinator)
@@ -138,6 +152,8 @@ export class LifecycleCoordinator {
     this.pauseUnsub = null;
     this.resumeUnsub?.();
     this.resumeUnsub = null;
+    this.exitIntentUnsub?.();
+    this.exitIntentUnsub = null;
     this.stopIdleTracking();
 
     if (!adapter) return;
@@ -190,6 +206,14 @@ export class LifecycleCoordinator {
     });
 
     this.startIdleTracking(adapter);
+
+    // Subscribe to exit-intent detection when the adapter supports it and the
+    // coordinator has been given a callback to invoke.
+    if (this.onExitIntentCallback !== undefined && typeof adapter.onExitIntent === 'function') {
+      this.exitIntentUnsub = adapter.onExitIntent(() => {
+        this.onExitIntentCallback!();
+      });
+    }
   }
 
   /**
@@ -211,6 +235,8 @@ export class LifecycleCoordinator {
     this.tabHiddenAt = null;
     this.isIdle = false;
     this.lastInteractionAt = this.timer.now();
+    this.exitIntentUnsub?.();
+    this.exitIntentUnsub = null;
     this.bindAdapter(adapter);
   }
 
@@ -227,6 +253,8 @@ export class LifecycleCoordinator {
     this.pauseUnsub = null;
     this.resumeUnsub?.();
     this.resumeUnsub = null;
+    this.exitIntentUnsub?.();
+    this.exitIntentUnsub = null;
     if (this.ownsLifecycleAdapter) {
       this.lifecycleAdapter?.destroy();
     }

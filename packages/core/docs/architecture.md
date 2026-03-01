@@ -1280,10 +1280,16 @@ flowchart LR
             MG["MarkovGraph\nSparse Map · LFU pruning"]
         end
 
-        IM --> COORDS
-        IM --> ENGINE
-        IM --> POLICIES
-        IM --> DATA
+        IM --> PC
+        IM --> LC
+        IM --> SE
+        IM --> AD
+        IM --> DTP
+        IM --> BP
+        IM --> DFP
+        IM --> CTP
+        IM --> BF
+        IM --> MG
     end
 
     subgraph EVENTS["Emitted Events"]

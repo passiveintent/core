@@ -307,8 +307,10 @@ export interface IntentManagerConfig {
    * - At most `persistThrottleMs` ms of recent navigation data can be lost in a
    *   hard crash (OS kill, power loss, Chrome tab discard).
    *
-   * `flushNow()` and `destroy()` always bypass the throttle and write
-   * immediately regardless of this setting.
+   * `flushNow()` and `destroy()` always bypass the throttle: they request a
+   * flush as soon as possible. If no async write is in-flight, they write
+   * immediately; with `asyncStorage` and an in-flight write, they schedule a
+   * flush to run right after the current write settles.
    *
    * Recommended values:
    * - `0`       — full crash-safety (default); best for checkout / payment flows.

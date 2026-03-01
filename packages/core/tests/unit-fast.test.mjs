@@ -4410,8 +4410,10 @@ test('internally-created lifecycleAdapter IS destroyed when IntentManager.destro
 
   // Wire the spy in place of whatever adapter the constructor created
   // (null in a non-browser env, or BrowserLifecycleAdapter in a browser env).
-  manager.lifecycleAdapter = spyAdapter;
-  manager.ownsLifecycleAdapter = true;
+  // TypeScript `private` is compile-time only — reach through the coordinator
+  // directly rather than polluting IntentManager's public API surface.
+  manager.lifecycleCoordinator.lifecycleAdapter = spyAdapter;
+  manager.lifecycleCoordinator.ownsLifecycleAdapter = true;
 
   // Prime resumeCallback so we can later verify it was cleared by destroy().
   spyAdapter.onResume(() => {});

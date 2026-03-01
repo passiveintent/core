@@ -83,6 +83,9 @@ export class PersistenceCoordinator {
   private throttleTimer: TimerHandle | null = null;
   private retryTimer: TimerHandle | null = null;
 
+  /* Lifecycle */
+  private isClosed = false;
+
   /* Mutable coordination flags exposed to IntentManager */
   isDirty = false;
   engineHealthInternal: PassiveIntentTelemetry['engineHealth'] = 'healthy';
@@ -256,7 +259,7 @@ export class PersistenceCoordinator {
             });
           }
           this.hasPendingAsyncPersist = false;
-          if (this.asyncWriteFailCount === 1) {
+          if (!this.isClosed && this.asyncWriteFailCount === 1) {
             this.schedulePersist();
           }
         });
@@ -305,11 +308,37 @@ export class PersistenceCoordinator {
     this.persist();
   }
 
+  /**
+   * Mark this coordinator as permanently closed.
+   *
+   * After this call:
+   *   - `persist()` and `schedulePersist()` become no-ops.
+   *   - Any in-flight async `setItem` that rejects can no longer re-arm
+   *     timers or trigger a retry.
+   *   - Pending throttle/retry timers are cancelled immediately.
+   *
+   * Call this from `IntentManager.destroy()` *after* `flushNow()` so the
+   * best-effort final write is still attempted, but its failure cannot
+   * schedule further work on the torn-down instance.
+   */
+  close(): void {
+    this.isClosed = true;
+    if (this.throttleTimer !== null) {
+      this.timer.clearTimeout(this.throttleTimer);
+      this.throttleTimer = null;
+    }
+    if (this.retryTimer !== null) {
+      this.timer.clearTimeout(this.retryTimer);
+      this.retryTimer = null;
+    }
+  }
+
   /* ================================================================== */
   /*  Retry                                                               */
   /* ================================================================== */
 
   private schedulePersist(): void {
+    if (this.isClosed) return;
     if (this.retryTimer !== null) {
       this.timer.clearTimeout(this.retryTimer);
     }

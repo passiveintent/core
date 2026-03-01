@@ -278,12 +278,12 @@ export class SignalEngine {
 
     const real = MarkovGraph.logLikelihoodTrajectory(
       this.graph,
-      trajectory as string[],
+      trajectory,
       this.trajectorySmoothingEpsilon,
     );
     const expected = MarkovGraph.logLikelihoodTrajectory(
       this.baseline,
-      trajectory as string[],
+      trajectory,
       this.trajectorySmoothingEpsilon,
     );
 
@@ -351,6 +351,7 @@ export class SignalEngine {
    * Fires `dwell_time_anomaly` when the z-score exceeds the configured threshold.
    */
   evaluateDwellTime(state: string, dwellMs: number): void {
+    if (!this.dwellTimeEnabled) return;
     if (dwellMs <= 0) return;
 
     const updated = updateDwellStats(this.dwellStats.get(state), dwellMs);

@@ -61,26 +61,6 @@ export class IntentManager {
   private readonly persistenceCoordinator: PersistenceCoordinator;
   private readonly lifecycleCoordinator: LifecycleCoordinator;
 
-  /**
-   * Test-accessible proxy to the coordinator's adapter field.
-   * TypeScript `private` is compile-time only — tests can still write to this
-   * to swap in a spy adapter after construction.
-   */
-  get lifecycleAdapter() {
-    return this.lifecycleCoordinator.lifecycleAdapter;
-  }
-  set lifecycleAdapter(v) {
-    this.lifecycleCoordinator.lifecycleAdapter = v;
-  }
-
-  /** Test-accessible proxy to the coordinator's ownership flag. */
-  get ownsLifecycleAdapter() {
-    return this.lifecycleCoordinator.ownsLifecycleAdapter;
-  }
-  set ownsLifecycleAdapter(v) {
-    this.lifecycleCoordinator.ownsLifecycleAdapter = v;
-  }
-
   /* Pipeline state */
   private previousState: string | null = null;
   private previousStateEnteredAt: number = 0;
@@ -477,7 +457,8 @@ export class IntentManager {
    * After `destroy()` the instance should be discarded.
    */
   destroy(): void {
-    this.persistenceCoordinator.flushNow();
+    this.persistenceCoordinator.flushNow(); // best-effort final write (may be async)
+    this.persistenceCoordinator.close(); // prevent post-destroy timer re-arm
     this.emitter.removeAll();
     this.lifecycleCoordinator.destroy();
     this.broadcastSync?.close();

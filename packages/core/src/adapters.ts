@@ -339,20 +339,16 @@ export class BrowserLifecycleAdapter implements LifecycleAdapter {
     this.exitIntentCallbacks.push(callback);
 
     // Lazily attach the DOM listener on the first subscription.
-    if (
-      this.exitIntentHandler === null &&
-      typeof document !== 'undefined' &&
-      typeof document.documentElement !== 'undefined'
-    ) {
-      this.exitIntentHandler = (e: MouseEvent) => {
-        if (e.clientY <= 0) {
-          for (const cb of this.exitIntentCallbacks) cb();
-        }
-      };
-      document.documentElement.addEventListener(
-        'mouseleave',
-        this.exitIntentHandler as EventListener,
-      );
+    if (this.exitIntentHandler === null) {
+      const root = typeof document !== 'undefined' ? document?.documentElement : null;
+      if (root !== null && root !== undefined) {
+        this.exitIntentHandler = (e: MouseEvent) => {
+          if (e.clientY <= 0) {
+            for (const cb of this.exitIntentCallbacks) cb();
+          }
+        };
+        root.addEventListener('mouseleave', this.exitIntentHandler as EventListener);
+      }
     }
 
     return () => {
@@ -368,15 +364,11 @@ export class BrowserLifecycleAdapter implements LifecycleAdapter {
 
   /** Remove the exit-intent DOM listener if currently attached. */
   private teardownExitIntentListener(): void {
-    if (
-      this.exitIntentHandler !== null &&
-      typeof document !== 'undefined' &&
-      typeof document.documentElement !== 'undefined'
-    ) {
-      document.documentElement.removeEventListener(
-        'mouseleave',
-        this.exitIntentHandler as EventListener,
-      );
+    if (this.exitIntentHandler !== null) {
+      const root = typeof document !== 'undefined' ? document?.documentElement : null;
+      if (root !== null && root !== undefined) {
+        root.removeEventListener('mouseleave', this.exitIntentHandler as EventListener);
+      }
     }
     this.exitIntentHandler = null;
   }

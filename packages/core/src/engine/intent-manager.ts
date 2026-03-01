@@ -149,8 +149,9 @@ export class IntentManager {
       policies.push(
         new DwellTimePolicy({
           isSuspected: () => this.signalEngine.suspected,
-          evaluateDwellTime: (state, dwellMs) =>
-            this.signalEngine.evaluateDwellTime(state, dwellMs),
+          evaluateDwellTime: (state, dwellMs) => {
+            this.signalEngine.dispatch(this.signalEngine.evaluateDwellTime(state, dwellMs));
+          },
           getPreviousStateEnteredAt: () => this.previousStateEnteredAt,
           emitter: this.emitter,
         }),
@@ -361,8 +362,10 @@ export class IntentManager {
         this.policies[i].onTransition?.(ctx.from, ctx.state, this.recentTrajectory);
 
       this.persistenceCoordinator.markDirty();
-      this.signalEngine.evaluateEntropy(ctx.state);
-      this.signalEngine.evaluateTrajectory(ctx.from, ctx.state, this.recentTrajectory);
+      this.signalEngine.dispatch(this.signalEngine.evaluateEntropy(ctx.state));
+      this.signalEngine.dispatch(
+        this.signalEngine.evaluateTrajectory(ctx.from, ctx.state, this.recentTrajectory),
+      );
 
       // Cross-tab broadcast — delegated to CrossTabSyncPolicy when enabled.
       for (let i = 0; i < this.policies.length; i += 1)

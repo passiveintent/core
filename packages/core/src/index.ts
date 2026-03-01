@@ -23,6 +23,11 @@ export {
   MAX_STATE_LENGTH,
   MAX_PLAUSIBLE_DWELL_MS,
   normalizeRouteState,
+  AnomalyDispatcher,
+  SignalEngine,
+  EventEmitter,
+  DriftProtectionPolicy,
+  BenchmarkRecorder,
 } from './intent-sdk.js';
 
 export type {
@@ -43,6 +48,14 @@ export type {
   PassiveIntentError,
   DwellTimeConfig,
   SerializedMarkovGraph,
+  AnomalyDecision,
+  EntropyDecision,
+  TrajectoryDecision,
+  DwellDecision,
+  AnomalyDispatcherConfig,
+  AnomalyEventEmitter,
+  DriftProtectionPolicyLike,
+  SignalEngineConfig,
 } from './intent-sdk.js';
 
 /* ---- Adapters ---- */

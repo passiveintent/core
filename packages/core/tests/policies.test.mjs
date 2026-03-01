@@ -239,7 +239,11 @@ test('DriftProtectionPolicy: baseline status transitions to drifted at high anom
     }
 
     const telemetry = manager.getTelemetry();
-    assert.strictEqual(telemetry.baselineStatus, 'drifted', 'Baseline should be flagged as drifted');
+    assert.strictEqual(
+      telemetry.baselineStatus,
+      'drifted',
+      'Baseline should be flagged as drifted',
+    );
     manager.destroy();
   } finally {
     globalThis.performance.now = originalNow;

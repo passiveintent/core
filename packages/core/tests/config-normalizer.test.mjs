@@ -8,10 +8,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 
-import {
-  buildIntentManagerOptions,
-  SMOOTHING_EPSILON,
-} from '../dist/src/intent-sdk.js';
+import { buildIntentManagerOptions, SMOOTHING_EPSILON } from '../dist/src/intent-sdk.js';
 
 // ─── Default values ──────────────────────────────────────────────────────────
 

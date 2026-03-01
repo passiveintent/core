@@ -81,7 +81,10 @@ export function buildIntentManagerOptions(
   const crossTabSync = config.crossTabSync === true;
 
   // ── Holdout — clamped to [0, 100] ──────────────────────────────────────
-  const holdoutPercent = Math.min(100, Math.max(0, config.holdoutConfig?.percentage ?? 0));
+  const rawHoldoutPct = config.holdoutConfig?.percentage;
+  const holdoutPercent = Number.isFinite(rawHoldoutPct)
+    ? Math.min(100, Math.max(0, rawHoldoutPct as number))
+    : 0;
 
   // ── Merge top-level convenience aliases into the nested graph config ────
   // Top-level fields take precedence when both are supplied.

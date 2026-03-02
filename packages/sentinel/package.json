@@ -1,0 +1,60 @@
+{
+  "name": "@passiveintent/sentinel",
+  "version": "1.0.0",
+  "description": "Continuous zero-trust authentication framework built on top of @passiveintent/core.",
+  "keywords": [
+    "zero-trust",
+    "authentication",
+    "trust-score",
+    "behavioral-analytics",
+    "privacy",
+    "intent"
+  ],
+  "author": "Purushottam <purushpsm147@yahoo.co.in> (https://github.com/purushpsm147)",
+  "license": "AGPL-3.0-only",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/purushpsm147/PassiveIntent-Privacy-First-Intent-Engine.git",
+    "directory": "packages/sentinel"
+  },
+  "homepage": "https://github.com/purushpsm147/PassiveIntent-Privacy-First-Intent-Engine#readme",
+  "engines": {
+    "node": ">=20"
+  },
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      },
+      "require": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.cjs"
+      }
+    }
+  },
+  "files": [
+    "dist/*.js",
+    "dist/*.js.map",
+    "dist/*.cjs",
+    "dist/*.cjs.map",
+    "dist/*.d.ts",
+    "dist/*.d.ts.map"
+  ],
+  "sideEffects": false,
+  "scripts": {
+    "clean": "node -e \"require('fs').rmSync('dist',{recursive:true,force:true})\"",
+    "build": "npm run clean && npm run build:js && npm run build:types",
+    "build:js": "tsup",
+    "build:types": "tsc --project tsconfig.types.json",
+    "typecheck": "tsc --project tsconfig.json --noEmit",
+    "lint": "npm run typecheck"
+  },
+  "dependencies": {
+    "@passiveintent/core": "*"
+  }
+}

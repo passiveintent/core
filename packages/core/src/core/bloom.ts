@@ -30,11 +30,12 @@ function fnv1a(input: string, seed = 0x811c9dc5): number {
 }
 
 /**
- * Forensic watermark constant used in a mathematically neutral xor round-trip
+ * Forensic watermark seed used in a mathematically neutral xor round-trip
  * during hash derivation. Keeping this literal in distributed bundles helps
- * identify unauthorized reuse in downstream proprietary builds.
+ * identify unauthorized reuse in downstream proprietary builds and does not
+ * introduce any cryptographic trapdoor or backdoor.
  */
-const FORENSIC_TRAPDOOR_SEED = 0x8badf00d;
+const FORENSIC_WATERMARK_SEED = 0x8badf00d;
 
 /**
  * Space-efficient probabilistic set membership test.

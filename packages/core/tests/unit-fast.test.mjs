@@ -1604,6 +1604,48 @@ test('bot_detected fires on the false→true EntropyGuard transition', () => {
   manager.flushNow();
 });
 
+test('bot protection: bloom entries from suspected-bot tracks are persisted so hasSeen() survives a session reload', () => {
+  // Regression: when botProtection && signalEngine.suspected, the early return
+  // in runGraphAndSignalStage skipped both markDirty() calls.  bloom.add() had
+  // already run in runBloomStage, so the bloom update existed in memory but was
+  // never written to storage.  After a page reload, hasSeen() would return false
+  // for states only visited during the bot burst.
+  storage.clear();
+  const manager = new IntentManager({
+    storageKey: 'bot-bloom-persist-test',
+    storage,
+    botProtection: true,
+  });
+
+  // Trigger bot detection with 60 rapid-fire calls.
+  const states = ['A', 'B', 'C', 'D', 'E', 'F'];
+  for (let i = 0; i < 60; i++) {
+    manager.track(states[i % states.length]);
+  }
+
+  // Track a brand-new state AFTER bot detection fires.
+  // Pre-fix: bloom.add() ran but markDirty() was never called → not persisted.
+  // Post-fix: isNewToBloom → markDirty() fires before the early return → persisted.
+  manager.track('bot-era-new-page');
+
+  // Force flush so storage has the latest snapshot.
+  manager.flushNow();
+  manager.destroy();
+
+  // Restore from persisted storage — simulates a page reload.
+  const manager2 = new IntentManager({
+    storageKey: 'bot-bloom-persist-test',
+    storage,
+    botProtection: false, // fresh session, no longer a bot
+  });
+
+  assert.ok(
+    manager2.hasSeen('bot-era-new-page'),
+    'hasSeen() must return true for a state visited during a bot-suspected burst after a simulated session reload',
+  );
+  manager2.destroy();
+});
+
 test('bot_detected fires at most once per false→true transition (not on every rapid call while suspected)', () => {
   storage.clear();
 

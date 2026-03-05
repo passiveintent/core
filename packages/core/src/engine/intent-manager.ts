@@ -389,7 +389,15 @@ export class IntentManager {
     // Skip graph updates when the session is flagged as a bot.
     // This prevents automation / scrapers from poisoning the Markov
     // transition probabilities that drive real-user predictions.
-    if (this.botProtection && this.signalEngine.suspected) return;
+    if (this.botProtection && this.signalEngine.suspected) {
+      // Bloom updates from runBloomStage still need to be persisted even when
+      // graph writes are skipped.  hasSeen() is a public API that should stay
+      // consistent across session reloads: if a URL was visited (even during a
+      // suspected-bot burst), it should remain "seen" after the page reloads.
+      // Only the Markov graph is protected from bot poisoning, not bloom membership.
+      if (ctx.isNewToBloom) this.persistenceCoordinator.markDirty();
+      return;
+    }
 
     if (ctx.from) {
       const incrementStart = this.benchmark.now();

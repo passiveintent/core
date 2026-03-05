@@ -1,14 +1,18 @@
 import React, { type ReactNode } from 'react';
 import { useIntent } from './IntentContext';
+import IntentMeter from './components/IntentMeter';
 import type { DemoKey } from './App';
 
-interface NavItem { key: DemoKey; label: string }
+interface NavItem {
+  key: DemoKey;
+  label: string;
+}
 
 const NAV: Array<{ section: string; items: NavItem[] }> = [
   {
     section: 'Getting Started',
     items: [
-      { key: 'overview',       label: '📊 Overview & Telemetry' },
+      { key: 'overview', label: '📊 Overview & Telemetry' },
       { key: 'basic-tracking', label: '📍 Basic Tracking' },
     ],
   },
@@ -16,24 +20,24 @@ const NAV: Array<{ section: string; items: NavItem[] }> = [
     section: 'Behavioral Signals',
     items: [
       { key: 'high-entropy', label: '⚡ High Entropy' },
-      { key: 'dwell-time',   label: '⏱ Dwell Time Anomaly' },
-      { key: 'trajectory',   label: '🛤 Trajectory Anomaly' },
-      { key: 'hesitation',   label: '🤔 Hesitation Detection' },
+      { key: 'dwell-time', label: '⏱ Dwell Time Anomaly' },
+      { key: 'trajectory', label: '🛤 Trajectory Anomaly' },
+      { key: 'hesitation', label: '🤔 Hesitation Detection' },
     ],
   },
   {
     section: 'Lifecycle Events',
     items: [
       { key: 'attention-return', label: '👁 Attention Return' },
-      { key: 'idle-detection',   label: '💤 Idle Detection' },
-      { key: 'exit-intent',      label: '🚪 Exit Intent' },
+      { key: 'idle-detection', label: '💤 Idle Detection' },
+      { key: 'exit-intent', label: '🚪 Exit Intent' },
     ],
   },
   {
     section: 'Intelligence',
     items: [
-      { key: 'bloom-filter',  label: '🌸 Bloom Filter' },
-      { key: 'markov-graph',  label: '🕸 Markov Predictions' },
+      { key: 'bloom-filter', label: '🌸 Bloom Filter' },
+      { key: 'markov-graph', label: '🕸 Markov Predictions' },
       { key: 'bot-detection', label: '🤖 Bot Detection' },
     ],
   },
@@ -41,8 +45,12 @@ const NAV: Array<{ section: string; items: NavItem[] }> = [
     section: 'Business Logic',
     items: [
       { key: 'conversion', label: '💰 Conversion Tracking' },
-      { key: 'counters',   label: '🔢 Session Counters' },
+      { key: 'counters', label: '🔢 Session Counters' },
     ],
+  },
+  {
+    section: 'Playground',
+    items: [{ key: 'amazon-playground', label: '🛒 Amazon Playground' }],
   },
 ];
 
@@ -105,6 +113,9 @@ export default function Shell({ active, onNavigate, children }: Props) {
         {/* Main content */}
         <main className="content">{children}</main>
 
+        {/* Intent Meter */}
+        <IntentMeter />
+
         {/* Live event log */}
         <aside className="event-log">
           <div className="event-log-header">
@@ -117,9 +128,7 @@ export default function Shell({ active, onNavigate, children }: Props) {
             {logEntries.length === 0 ? (
               <div className="log-empty">Events appear here as you interact.</div>
             ) : (
-              logEntries.map(entry => (
-                <LogEntry key={entry.id} entry={entry} />
-              ))
+              logEntries.map((entry) => <LogEntry key={entry.id} entry={entry} />)
             )}
           </div>
         </aside>

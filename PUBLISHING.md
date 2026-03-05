@@ -77,12 +77,14 @@ npm publish
 ```
 
 **Expected output:**
+
 ```
 npm notice Publishing to https://registry.npmjs.org/ with tag latest and public access
 + @passiveintent/core@1.0.0
 ```
 
 **Verify it is live:**
+
 ```bash
 npm view @passiveintent/core
 # should show version, description, dist-tags: latest → 1.0.0
@@ -102,6 +104,7 @@ npm publish
 ```
 
 **Verify:**
+
 ```bash
 npm view @passiveintent/react
 ```
@@ -165,6 +168,7 @@ https://stackblitz.com/github/purushpsm147/PassiveIntent-Privacy-First-Intent-En
 ```
 
 Click it (or share it) — StackBlitz will:
+
 1. Clone the `demo/` subfolder
 2. Run `npm install` (pulls `@passiveintent/core` from npm)
 3. Start `vite` via the `.stackblitzrc` `startCommand`
@@ -173,6 +177,7 @@ Click it (or share it) — StackBlitz will:
 ### Share the demo
 
 Use the short StackBlitz share URL that appears in the browser bar after the project opens, e.g.:
+
 ```
 https://stackblitz.com/edit/passiveintent-demo
 ```
@@ -210,6 +215,7 @@ npm publish
 ```
 
 > `npm version` automatically creates a git commit + tag. Push with:
+>
 > ```bash
 > git push --follow-tags
 > ```
@@ -230,11 +236,11 @@ git push
 
 ## Troubleshooting
 
-| Error | Fix |
-|---|---|
-| `402 Payment Required` | The `publishConfig.access: "public"` is missing — already fixed in this repo. |
-| `403 Forbidden` | Wrong npm account logged in. Run `npm whoami` and `npm login`. |
-| `ENEEDAUTH` | Run `npm login` first. |
-| `E404 Not Found` on peerDep | Publish `@passiveintent/core` before `@passiveintent/react`. |
-| StackBlitz shows `Module not found: @passiveintent/core` | The package isn't on npm yet. Publish first, then open the StackBlitz URL. |
-| `dist/` not found | Run `npm run build` in `packages/core` before packing. `prepublishOnly` does this automatically. |
+| Error                                                    | Fix                                                                                              |
+| -------------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
+| `402 Payment Required`                                   | The `publishConfig.access: "public"` is missing — already fixed in this repo.                    |
+| `403 Forbidden`                                          | Wrong npm account logged in. Run `npm whoami` and `npm login`.                                   |
+| `ENEEDAUTH`                                              | Run `npm login` first.                                                                           |
+| `E404 Not Found` on peerDep                              | Publish `@passiveintent/core` before `@passiveintent/react`.                                     |
+| StackBlitz shows `Module not found: @passiveintent/core` | The package isn't on npm yet. Publish first, then open the StackBlitz URL.                       |
+| `dist/` not found                                        | Run `npm run build` in `packages/core` before packing. `prepublishOnly` does this automatically. |

@@ -55,41 +55,55 @@ export class ControllableLifecycleAdapter implements LifecycleAdapter {
 
   constructor() {
     document.addEventListener('visibilitychange', this.visibilityHandler);
-    document.documentElement.addEventListener(
-      'mouseleave',
-      this.exitHandler as EventListener,
-    );
+    document.documentElement.addEventListener('mouseleave', this.exitHandler as EventListener);
   }
 
   // ── Manual triggers (called by demo buttons) ────────────────────────────
-  triggerPause()       { this.pauseCbs.forEach(cb => cb()); }
-  triggerResume()      { this.resumeCbs.forEach(cb => cb()); }
-  triggerInteraction() { this.interactionCbs.forEach(cb => cb()); }
-  triggerExitIntent()  { this.exitIntentCbs.forEach(cb => cb()); }
+  triggerPause() {
+    this.pauseCbs.forEach((cb) => cb());
+  }
+  triggerResume() {
+    this.resumeCbs.forEach((cb) => cb());
+  }
+  triggerInteraction() {
+    this.interactionCbs.forEach((cb) => cb());
+  }
+  triggerExitIntent() {
+    this.exitIntentCbs.forEach((cb) => cb());
+  }
 
   // ── LifecycleAdapter interface ──────────────────────────────────────────
   onPause(cb: () => void) {
     this.pauseCbs.push(cb);
-    return () => { const i = this.pauseCbs.indexOf(cb); if (i >= 0) this.pauseCbs.splice(i, 1); };
+    return () => {
+      const i = this.pauseCbs.indexOf(cb);
+      if (i >= 0) this.pauseCbs.splice(i, 1);
+    };
   }
   onResume(cb: () => void) {
     this.resumeCbs.push(cb);
-    return () => { const i = this.resumeCbs.indexOf(cb); if (i >= 0) this.resumeCbs.splice(i, 1); };
+    return () => {
+      const i = this.resumeCbs.indexOf(cb);
+      if (i >= 0) this.resumeCbs.splice(i, 1);
+    };
   }
   onInteraction(cb: () => void) {
     this.interactionCbs.push(cb);
-    return () => { const i = this.interactionCbs.indexOf(cb); if (i >= 0) this.interactionCbs.splice(i, 1); };
+    return () => {
+      const i = this.interactionCbs.indexOf(cb);
+      if (i >= 0) this.interactionCbs.splice(i, 1);
+    };
   }
   onExitIntent(cb: () => void) {
     this.exitIntentCbs.push(cb);
-    return () => { const i = this.exitIntentCbs.indexOf(cb); if (i >= 0) this.exitIntentCbs.splice(i, 1); };
+    return () => {
+      const i = this.exitIntentCbs.indexOf(cb);
+      if (i >= 0) this.exitIntentCbs.splice(i, 1);
+    };
   }
   destroy() {
     document.removeEventListener('visibilitychange', this.visibilityHandler);
-    document.documentElement.removeEventListener(
-      'mouseleave',
-      this.exitHandler as EventListener,
-    );
+    document.documentElement.removeEventListener('mouseleave', this.exitHandler as EventListener);
     this.pauseCbs = [];
     this.resumeCbs = [];
     this.interactionCbs = [];
@@ -98,5 +112,5 @@ export class ControllableLifecycleAdapter implements LifecycleAdapter {
 }
 
 // Singletons — created once per app lifetime, passed via context
-export const timerAdapter     = new ControllableTimerAdapter();
+export const timerAdapter = new ControllableTimerAdapter();
 export const lifecycleAdapter = new ControllableLifecycleAdapter();

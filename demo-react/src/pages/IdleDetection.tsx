@@ -8,8 +8,8 @@ import type { UserIdlePayload, UserResumedPayload } from '@passiveintent/core';
 
 export default function IdleDetection() {
   const { track, on, timer, lifecycle } = useIntent();
-  const [idleEvent,    setIdleEvent]    = useState<UserIdlePayload | null>(null);
-  const [resumeEvent,  setResumeEvent]  = useState<UserResumedPayload | null>(null);
+  const [idleEvent, setIdleEvent] = useState<UserIdlePayload | null>(null);
+  const [resumeEvent, setResumeEvent] = useState<UserResumedPayload | null>(null);
   const [status, setStatus] = useState<string | null>(null);
 
   useEffect(() => {
@@ -23,7 +23,7 @@ export default function IdleDetection() {
   function simulateIdle() {
     track('/checkout/payment');
     timer.fastForward(3 * 60 * 1000); // 3 min — past 2-min threshold
-    setStatus('Fast-forwarded 3 minutes. user_idle will fire if the engine\'s idle timer ticks.');
+    setStatus("Fast-forwarded 3 minutes. user_idle will fire if the engine's idle timer ticks.");
   }
 
   function simulateResume() {
@@ -37,10 +37,11 @@ export default function IdleDetection() {
         <div className="hook-callout">⚛️ on('user_idle') + on('user_resumed')</div>
         <h2 className="demo-title">Idle Detection</h2>
         <p className="demo-description">
-          <strong>user_idle</strong> fires after 2 minutes of no interaction (mouse, keyboard, scroll, touch).
-          <strong> user_resumed</strong> fires on the next interaction, with total <code>idleMs</code>.
-          The dwell-time baseline is adjusted to exclude the idle gap automatically — keeping your Welford
-          accumulator clean.
+          <strong>user_idle</strong> fires after 2 minutes of no interaction (mouse, keyboard,
+          scroll, touch).
+          <strong> user_resumed</strong> fires on the next interaction, with total{' '}
+          <code>idleMs</code>. The dwell-time baseline is adjusted to exclude the idle gap
+          automatically — keeping your Welford accumulator clean.
         </p>
       </div>
 
@@ -54,14 +55,20 @@ export default function IdleDetection() {
             🖱 Simulate Interaction (resume)
           </button>
         </div>
-        {status && <div className="alert alert-info" style={{ marginTop: 12 }}>{status}</div>}
+        {status && (
+          <div className="alert alert-info" style={{ marginTop: 12 }}>
+            {status}
+          </div>
+        )}
       </div>
 
       <div className="two-col">
         {idleEvent && (
           <div className="card">
             <div className="card-title">user_idle payload</div>
-            <div style={{ fontFamily: 'var(--font-mono)', fontSize: 13, color: 'var(--text-muted)' }}>
+            <div
+              style={{ fontFamily: 'var(--font-mono)', fontSize: 13, color: 'var(--text-muted)' }}
+            >
               state: <span style={{ color: 'var(--accent-h)' }}>{idleEvent.state}</span>
             </div>
           </div>
@@ -69,9 +76,18 @@ export default function IdleDetection() {
         {resumeEvent && (
           <div className="card">
             <div className="card-title">user_resumed payload</div>
-            <div style={{ fontFamily: 'var(--font-mono)', fontSize: 13, color: 'var(--text-muted)' }}>
-              <div>state: <span style={{ color: 'var(--accent-h)' }}>{resumeEvent.state}</span></div>
-              <div>idleMs: <span style={{ color: 'var(--green)' }}>{resumeEvent.idleMs?.toLocaleString() ?? '—'} ms</span></div>
+            <div
+              style={{ fontFamily: 'var(--font-mono)', fontSize: 13, color: 'var(--text-muted)' }}
+            >
+              <div>
+                state: <span style={{ color: 'var(--accent-h)' }}>{resumeEvent.state}</span>
+              </div>
+              <div>
+                idleMs:{' '}
+                <span style={{ color: 'var(--green)' }}>
+                  {resumeEvent.idleMs?.toLocaleString() ?? '—'} ms
+                </span>
+              </div>
             </div>
           </div>
         )}

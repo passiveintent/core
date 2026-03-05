@@ -68,7 +68,10 @@ export default function Hesitation() {
           </button>
         </div>
         {status && (
-          <div className={`alert alert-${lastEvent ? 'warning' : 'success'}`} style={{ marginTop: 12 }}>
+          <div
+            className={`alert alert-${lastEvent ? 'warning' : 'success'}`}
+            style={{ marginTop: 12 }}
+          >
             {status}
           </div>
         )}
@@ -80,16 +83,21 @@ export default function Hesitation() {
           <div className="progress-row" style={{ marginBottom: 14 }}>
             <span className="progress-label">Severity score</span>
             <div className="progress-track">
-              <div className="prob-fill" style={{ width: `${Math.min((severity / 5) * 100, 100)}%`, height: '100%' }} />
+              <div
+                className="prob-fill"
+                style={{ width: `${Math.min((severity / 5) * 100, 100)}%`, height: '100%' }}
+              />
             </div>
             <span className="progress-value">{severity.toFixed(2)}</span>
           </div>
-          <div className={`alert alert-${severity < 2.5 ? 'info' : severity < 3.5 ? 'warning' : 'error'}`}>
+          <div
+            className={`alert alert-${severity < 2.5 ? 'info' : severity < 3.5 ? 'warning' : 'error'}`}
+          >
             {severity < 2.5
               ? '💬 Severity LOW → show a tooltip'
               : severity < 3.5
-              ? '🪟 Severity MED → show a modal discount'
-              : '🎧 Severity HIGH → open proactive live chat'}
+                ? '🪟 Severity MED → show a modal discount'
+                : '🎧 Severity HIGH → open proactive live chat'}
           </div>
         </div>
       )}

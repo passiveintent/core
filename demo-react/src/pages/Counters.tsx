@@ -7,17 +7,17 @@ import { useIntent } from '../IntentContext';
 import CodeBlock from '../components/CodeBlock';
 
 const PRESETS: Array<{ label: string; key: string; by: number }> = [
-  { label: 'Modal shown',       key: 'offer-impressions', by:  1 },
-  { label: 'CTA clicked',       key: 'cta-clicks',        by:  1 },
-  { label: 'Page viewed',       key: 'pages-viewed',      by:  1 },
-  { label: 'Cart item added',   key: 'cart-items',        by:  1 },
-  { label: 'Cart item removed', key: 'cart-items',        by: -1 },
+  { label: 'Modal shown', key: 'offer-impressions', by: 1 },
+  { label: 'CTA clicked', key: 'cta-clicks', by: 1 },
+  { label: 'Page viewed', key: 'pages-viewed', by: 1 },
+  { label: 'Cart item added', key: 'cart-items', by: 1 },
+  { label: 'Cart item removed', key: 'cart-items', by: -1 },
 ];
 
 export default function Counters() {
   const { incrementCounter, getCounter, resetCounter } = useIntent();
-  const [key,    setKey]    = useState('offer-impressions');
-  const [by,     setBy]     = useState(1);
+  const [key, setKey] = useState('offer-impressions');
+  const [by, setBy] = useState(1);
   const [result, setResult] = useState<string | null>(null);
 
   const handleInc = useCallback(() => {
@@ -34,11 +34,14 @@ export default function Counters() {
     setResult(`${key} reset to 0`);
   }, [resetCounter, key]);
 
-  const handlePreset = useCallback((p: typeof PRESETS[number]) => {
-    const v = incrementCounter(p.key, p.by);
-    setResult(`${p.key} = ${v}`);
-    setKey(p.key);
-  }, [incrementCounter]);
+  const handlePreset = useCallback(
+    (p: (typeof PRESETS)[number]) => {
+      const v = incrementCounter(p.key, p.by);
+      setResult(`${p.key} = ${v}`);
+      setKey(p.key);
+    },
+    [incrementCounter],
+  );
 
   return (
     <>
@@ -46,23 +49,44 @@ export default function Counters() {
         <div className="hook-callout">⚛️ incrementCounter / getCounter / resetCounter</div>
         <h2 className="demo-title">Session Counters</h2>
         <p className="demo-description">
-          Exact integer counters scoped to the session. <strong>Never persisted.</strong> Ideal
-          for tracking offer impressions, modal views, or cart quantity — without any server round-trips.
-          Syncs cross-tab when <code>crossTabSync: true</code>.
+          Exact integer counters scoped to the session. <strong>Never persisted.</strong> Ideal for
+          tracking offer impressions, modal views, or cart quantity — without any server
+          round-trips. Syncs cross-tab when <code>crossTabSync: true</code>.
         </p>
       </div>
 
       <div className="card">
         <div className="card-title">Counter controls</div>
         <div className="input-row">
-          <input type="text" value={key} onChange={e => setKey(e.target.value)} placeholder="counter-key" />
-          <input type="number" value={by} onChange={e => setBy(+e.target.value)} style={{ width: 70 }} />
-          <button className="btn btn-primary"   onClick={handleInc}>  +Increment</button>
-          <button className="btn btn-secondary" onClick={handleGet}>  Get</button>
-          <button className="btn btn-ghost"     onClick={handleReset}>Reset</button>
+          <input
+            type="text"
+            value={key}
+            onChange={(e) => setKey(e.target.value)}
+            placeholder="counter-key"
+          />
+          <input
+            type="number"
+            value={by}
+            onChange={(e) => setBy(+e.target.value)}
+            style={{ width: 70 }}
+          />
+          <button className="btn btn-primary" onClick={handleInc}>
+            {' '}
+            +Increment
+          </button>
+          <button className="btn btn-secondary" onClick={handleGet}>
+            {' '}
+            Get
+          </button>
+          <button className="btn btn-ghost" onClick={handleReset}>
+            Reset
+          </button>
         </div>
         {result && (
-          <div className="alert alert-info" style={{ marginTop: 10, fontFamily: 'var(--font-mono)' }}>
+          <div
+            className="alert alert-info"
+            style={{ marginTop: 10, fontFamily: 'var(--font-mono)' }}
+          >
             {result}
           </div>
         )}
@@ -77,7 +101,8 @@ export default function Counters() {
               className="btn btn-secondary"
               onClick={() => handlePreset(p)}
             >
-              {p.label} ({p.by > 0 ? '+' : ''}{p.by})
+              {p.label} ({p.by > 0 ? '+' : ''}
+              {p.by})
             </button>
           ))}
         </div>

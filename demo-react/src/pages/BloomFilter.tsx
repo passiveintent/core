@@ -9,7 +9,7 @@ import { useIntent } from '../IntentContext';
 import CodeBlock from '../components/CodeBlock';
 
 function getBits(bf: BloomFilter): boolean[] {
-  const b64   = bf.toBase64();
+  const b64 = bf.toBase64();
   const bytes = atob(b64);
   const bits: boolean[] = [];
   for (let i = 0; i < Math.min(bytes.length, 32); i++) {
@@ -35,8 +35,12 @@ export default function BloomFilterPage() {
 
   // computeBloomConfig panel
   const [cfgItems, setCfgItems] = useState(1000);
-  const [cfgFpr,   setCfgFpr]   = useState(0.01);
-  const [cfgResult, setCfgResult] = useState<{ bitSize: number; hashCount: number; estimatedFpRate: number } | null>(null);
+  const [cfgFpr, setCfgFpr] = useState(0.01);
+  const [cfgResult, setCfgResult] = useState<{
+    bitSize: number;
+    hashCount: number;
+    estimatedFpRate: number;
+  } | null>(null);
 
   const handleCheck = useCallback(() => {
     setCheckResult(hasSeen(checkInput.trim()));
@@ -44,9 +48,11 @@ export default function BloomFilterPage() {
 
   const handleAdd = useCallback(() => {
     bf.add(bfInput);
-    setBfItems(n => n + 1);
+    setBfItems((n) => n + 1);
     setBits(getBits(bf));
-    setBfResult(`Added "${bfInput}". Estimated FPR: ${(bf.estimateCurrentFPR(bfItems + 1) * 100).toFixed(3)}%`);
+    setBfResult(
+      `Added "${bfInput}". Estimated FPR: ${(bf.estimateCurrentFPR(bfItems + 1) * 100).toFixed(3)}%`,
+    );
   }, [bf, bfInput, bfItems]);
 
   const handleTest = useCallback(() => {
@@ -64,9 +70,9 @@ export default function BloomFilterPage() {
         <div className="hook-callout">⚛️ hasSeen() + standalone BloomFilter</div>
         <h2 className="demo-title">Bloom Filter API</h2>
         <p className="demo-description">
-          <strong>hasSeen(route)</strong> is an O(k) membership test on the engine's internal
-          Bloom filter — useful to check if a user has ever visited a page without storing a list.
-          Use <strong>BloomFilter</strong> standalone for your own deduplication needs, and
+          <strong>hasSeen(route)</strong> is an O(k) membership test on the engine's internal Bloom
+          filter — useful to check if a user has ever visited a page without storing a list. Use{' '}
+          <strong>BloomFilter</strong> standalone for your own deduplication needs, and
           <strong> computeBloomConfig()</strong> to size it optimally.
         </p>
       </div>
@@ -78,14 +84,19 @@ export default function BloomFilterPage() {
             <input
               type="text"
               value={checkInput}
-              onChange={e => setCheckInput(e.target.value)}
-              onKeyDown={e => e.key === 'Enter' && handleCheck()}
+              onChange={(e) => setCheckInput(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && handleCheck()}
             />
-            <button className="btn btn-primary" onClick={handleCheck}>Check</button>
+            <button className="btn btn-primary" onClick={handleCheck}>
+              Check
+            </button>
           </div>
           {checkResult !== null && (
-            <div className={`alert alert-${checkResult ? 'warning' : 'info'}`} style={{ marginTop: 10 }}>
-              <code style={{ fontFamily: 'var(--font-mono)' }}>{checkInput}</code>{' '}→{' '}
+            <div
+              className={`alert alert-${checkResult ? 'warning' : 'info'}`}
+              style={{ marginTop: 10 }}
+            >
+              <code style={{ fontFamily: 'var(--font-mono)' }}>{checkInput}</code> →{' '}
               <strong>{checkResult ? '✓ Probably seen' : '✗ Definitely not seen'}</strong>
             </div>
           )}
@@ -94,15 +105,23 @@ export default function BloomFilterPage() {
         <div className="card">
           <div className="card-title">Standalone BloomFilter</div>
           <div className="input-row">
-            <input type="text" value={bfInput} onChange={e => setBfInput(e.target.value)} />
-            <button className="btn btn-secondary" onClick={handleAdd}>Add</button>
-            <button className="btn btn-primary" onClick={handleTest}>Test</button>
+            <input type="text" value={bfInput} onChange={(e) => setBfInput(e.target.value)} />
+            <button className="btn btn-secondary" onClick={handleAdd}>
+              Add
+            </button>
+            <button className="btn btn-primary" onClick={handleTest}>
+              Test
+            </button>
           </div>
           {bfResult && (
-            <div className="alert alert-info" style={{ marginTop: 10 }}>{bfResult}</div>
+            <div className="alert alert-info" style={{ marginTop: 10 }}>
+              {bfResult}
+            </div>
           )}
           <div className="bit-viz" style={{ marginTop: 12 }}>
-            {bits.map((on, i) => <div key={i} className={`bit${on ? ' on' : ''}`} />)}
+            {bits.map((on, i) => (
+              <div key={i} className={`bit${on ? ' on' : ''}`} />
+            ))}
           </div>
           <p style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 6 }}>
             First 256 bits of the filter (lit = set)
@@ -114,14 +133,23 @@ export default function BloomFilterPage() {
         <div className="card-title">computeBloomConfig() — optimal sizing</div>
         <div className="input-row">
           <label>Expected items:</label>
-          <input type="number" value={cfgItems} onChange={e => setCfgItems(+e.target.value)} />
+          <input type="number" value={cfgItems} onChange={(e) => setCfgItems(+e.target.value)} />
           <label>Target FPR:</label>
-          <input type="number" value={cfgFpr} step={0.001} onChange={e => setCfgFpr(+e.target.value)} style={{ width: 80 }} />
-          <button className="btn btn-secondary" onClick={handleComputeCfg}>Compute</button>
+          <input
+            type="number"
+            value={cfgFpr}
+            step={0.001}
+            onChange={(e) => setCfgFpr(+e.target.value)}
+            style={{ width: 80 }}
+          />
+          <button className="btn btn-secondary" onClick={handleComputeCfg}>
+            Compute
+          </button>
         </div>
         {cfgResult && (
           <div className="alert alert-success" style={{ marginTop: 10 }}>
-            bitSize: <strong>{cfgResult.bitSize}</strong> ({(cfgResult.bitSize / 8 / 1024).toFixed(1)} KB)
+            bitSize: <strong>{cfgResult.bitSize}</strong> (
+            {(cfgResult.bitSize / 8 / 1024).toFixed(1)} KB)
             {' | '}hashCount: <strong>{cfgResult.hashCount}</strong>
             {' | '}actual FPR: <strong>{(cfgResult.estimatedFpRate * 100).toFixed(3)}%</strong>
           </div>

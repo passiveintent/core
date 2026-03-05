@@ -8,10 +8,30 @@ import type { SerializedMarkovGraph } from '@passiveintent/core';
 function build(): SerializedMarkovGraph {
   const g = new MarkovGraph({ maxStates: 100 });
   const funnels: Array<Array<[string, string]>> = [
-    [['/home', '/products'], ['/products', '/product/item'], ['/product/item', '/cart'], ['/cart', '/checkout/payment'], ['/checkout/payment', '/thank-you']],
-    [['/home', '/pricing'], ['/pricing', '/checkout/payment'], ['/checkout/payment', '/thank-you']],
-    [['/home', '/products'], ['/products', '/product/item'], ['/product/item', '/checkout/payment'], ['/checkout/payment', '/thank-you']],
-    [['/home', '/blog'], ['/blog', '/products'], ['/products', '/cart'], ['/cart', '/checkout/payment']],
+    [
+      ['/home', '/products'],
+      ['/products', '/product/item'],
+      ['/product/item', '/cart'],
+      ['/cart', '/checkout/payment'],
+      ['/checkout/payment', '/thank-you'],
+    ],
+    [
+      ['/home', '/pricing'],
+      ['/pricing', '/checkout/payment'],
+      ['/checkout/payment', '/thank-you'],
+    ],
+    [
+      ['/home', '/products'],
+      ['/products', '/product/item'],
+      ['/product/item', '/checkout/payment'],
+      ['/checkout/payment', '/thank-you'],
+    ],
+    [
+      ['/home', '/blog'],
+      ['/blog', '/products'],
+      ['/products', '/cart'],
+      ['/cart', '/checkout/payment'],
+    ],
   ];
   for (let i = 0; i < 50; i++) {
     const funnel = funnels[i % funnels.length];

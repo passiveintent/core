@@ -9,9 +9,21 @@ import CodeBlock from '../components/CodeBlock';
 import type { HighEntropyPayload } from '@passiveintent/core';
 
 const RANDOM_STATES = [
-  '/search','/cart','/wishlist','/account/profile','/returns','/support',
-  '/blog/tips','/sitemap','/faq','/shipping','/privacy','/about',
-  '/deal-of-day','/newsletter','/404',
+  '/search',
+  '/cart',
+  '/wishlist',
+  '/account/profile',
+  '/returns',
+  '/support',
+  '/blog/tips',
+  '/sitemap',
+  '/faq',
+  '/shipping',
+  '/privacy',
+  '/about',
+  '/deal-of-day',
+  '/newsletter',
+  '/404',
 ];
 
 export default function HighEntropy() {
@@ -22,7 +34,7 @@ export default function HighEntropy() {
   useEffect(() => {
     return on('high_entropy', (payload) => {
       setLastEvent(payload as HighEntropyPayload);
-      setCount(c => c + 1);
+      setCount((c) => c + 1);
     });
   }, [on]);
 
@@ -49,10 +61,10 @@ export default function HighEntropy() {
         <div className="hook-callout">⚛️ on('high_entropy', handler)</div>
         <h2 className="demo-title">High Entropy Detection</h2>
         <p className="demo-description">
-          Fires when the Shannon entropy of the outgoing-transition distribution from a
-          state exceeds <code>highEntropyThreshold</code> (0.72 here). Rapid-firing many
-          random destinations from the same origin spreads probability mass and spikes entropy
-          — classic erratic navigation or frustration signal.
+          Fires when the Shannon entropy of the outgoing-transition distribution from a state
+          exceeds <code>highEntropyThreshold</code> (0.72 here). Rapid-firing many random
+          destinations from the same origin spreads probability mass and spikes entropy — classic
+          erratic navigation or frustration signal.
         </p>
       </div>
 
@@ -60,12 +72,17 @@ export default function HighEntropy() {
         <div className="card">
           <div className="card-title">Simulate erratic navigation</div>
           <p style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 12 }}>
-            "Rapid Fire" tracks 15 random destinations from <code style={{ fontFamily: 'var(--font-mono)' }}>/checkout/payment</code>
-            — this spreads transition mass across many edges and triggers the event.
+            "Rapid Fire" tracks 15 random destinations from{' '}
+            <code style={{ fontFamily: 'var(--font-mono)' }}>/checkout/payment</code>— this spreads
+            transition mass across many edges and triggers the event.
           </p>
           <div className="btn-row">
-            <button className="btn btn-primary" onClick={rapidFire}>⚡ Rapid Fire (15×)</button>
-            <button className="btn btn-secondary" onClick={normalNav}>✅ Normal Path</button>
+            <button className="btn btn-primary" onClick={rapidFire}>
+              ⚡ Rapid Fire (15×)
+            </button>
+            <button className="btn btn-secondary" onClick={normalNav}>
+              ✅ Normal Path
+            </button>
           </div>
           {count > 0 && (
             <div className="alert alert-warning" style={{ marginTop: 12 }}>
@@ -80,22 +97,29 @@ export default function HighEntropy() {
             <>
               <div style={{ marginBottom: 10 }}>
                 <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>state: </span>
-                <code style={{ fontFamily: 'var(--font-mono)', color: 'var(--accent-h)' }}>{lastEvent.state}</code>
+                <code style={{ fontFamily: 'var(--font-mono)', color: 'var(--accent-h)' }}>
+                  {lastEvent.state}
+                </code>
               </div>
               <div style={{ marginBottom: 10 }}>
-                <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>normalizedEntropy: </span>
+                <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>
+                  normalizedEntropy:{' '}
+                </span>
                 <strong style={{ color: 'var(--yellow)', fontFamily: 'var(--font-mono)' }}>
                   {lastEvent.normalizedEntropy.toFixed(4)}
                 </strong>
               </div>
               <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>
-                outgoing entropy: <strong style={{ color: 'var(--text)' }}>
+                outgoing entropy:{' '}
+                <strong style={{ color: 'var(--text)' }}>
                   {lastEvent.entropy?.toFixed(4) ?? '—'}
                 </strong>
               </div>
             </>
           ) : (
-            <p style={{ color: 'var(--text-muted)', fontSize: 13 }}>Fire "Rapid Fire" to see payload.</p>
+            <p style={{ color: 'var(--text-muted)', fontSize: 13 }}>
+              Fire "Rapid Fire" to see payload.
+            </p>
           )}
         </div>
       </div>

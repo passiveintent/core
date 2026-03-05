@@ -6,7 +6,7 @@ import { useIntent } from '../IntentContext';
 import CodeBlock from '../components/CodeBlock';
 import type { BotDetectedPayload, PassiveIntentTelemetry } from '@passiveintent/core';
 
-const STATES = ['/home','/products','/cart','/checkout','/search','/blog'];
+const STATES = ['/home', '/products', '/cart', '/checkout', '/search', '/blog'];
 
 export default function BotDetection() {
   const { track, on, getTelemetry } = useIntent();
@@ -73,18 +73,26 @@ export default function BotDetection() {
       <div className="card">
         <div className="card-title">EntropyGuard score factors</div>
         <table className="data-table">
-          <thead><tr><th>Signal</th><th>+Score</th><th>Description</th></tr></thead>
+          <thead>
+            <tr>
+              <th>Signal</th>
+              <th>+Score</th>
+              <th>Description</th>
+            </tr>
+          </thead>
           <tbody>
             {[
               ['Sub-ms transitions', '+1', 'Δt < 1ms — physically impossible'],
-              ['Uniform intervals',  '+1', 'Identical timing — scripted'],
-              ['High visit rate',    '+1', '>30 transitions in <5 seconds'],
-              ['Round timing',       '+1', 'Exact 100ms/500ms/1000ms intervals'],
-              ['Zero variance',      '+1', 'No timing jitter whatsoever'],
+              ['Uniform intervals', '+1', 'Identical timing — scripted'],
+              ['High visit rate', '+1', '>30 transitions in <5 seconds'],
+              ['Round timing', '+1', 'Exact 100ms/500ms/1000ms intervals'],
+              ['Zero variance', '+1', 'No timing jitter whatsoever'],
             ].map(([s, sc, d]) => (
               <tr key={s}>
                 <td>{s}</td>
-                <td><strong style={{ color: 'var(--red)' }}>{sc}</strong></td>
+                <td>
+                  <strong style={{ color: 'var(--red)' }}>{sc}</strong>
+                </td>
                 <td style={{ color: 'var(--text-muted)' }}>{d}</td>
               </tr>
             ))}

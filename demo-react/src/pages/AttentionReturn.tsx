@@ -40,9 +40,10 @@ export default function AttentionReturn() {
         <div className="hook-callout">⚛️ on('attention_return', handler)</div>
         <h2 className="demo-title">Attention Return</h2>
         <p className="demo-description">
-          Fires when the user returns to the tab after being hidden for ≥ <strong>15 seconds</strong>.
-          Works independently of <code>dwellTime.enabled</code>. Use it for a personalized
-          "Welcome Back" discount modal — the user was almost certainly comparison-shopping.
+          Fires when the user returns to the tab after being hidden for ≥{' '}
+          <strong>15 seconds</strong>. Works independently of <code>dwellTime.enabled</code>. Use it
+          for a personalized "Welcome Back" discount modal — the user was almost certainly
+          comparison-shopping.
         </p>
       </div>
 
@@ -77,9 +78,9 @@ export default function AttentionReturn() {
 
       {lastEvent && (
         <div className="alert alert-success">
-          <strong>attention_return</strong> fired!{' '}
-          state: <code style={{ fontFamily: 'var(--font-mono)' }}>{lastEvent.state}</code>{' '}
-          | hidden for: <strong>{lastEvent.hiddenDuration.toLocaleString()} ms</strong>
+          <strong>attention_return</strong> fired! state:{' '}
+          <code style={{ fontFamily: 'var(--font-mono)' }}>{lastEvent.state}</code> | hidden for:{' '}
+          <strong>{lastEvent.hiddenDuration.toLocaleString()} ms</strong>
         </div>
       )}
 

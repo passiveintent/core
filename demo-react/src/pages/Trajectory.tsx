@@ -7,8 +7,24 @@ import CodeBlock from '../components/CodeBlock';
 import { ECOMMERCE_BASELINE } from '../baseline';
 import type { TrajectoryAnomalyPayload, SerializedMarkovGraph } from '@passiveintent/core';
 
-const NORMAL_PATH    = ['/home','/products','/product/headphones','/cart','/checkout/payment','/thank-you'];
-const ANOMALOUS_PATH = ['/home','/pricing','/support','/404','/faq','/returns','/support','/404'];
+const NORMAL_PATH = [
+  '/home',
+  '/products',
+  '/product/headphones',
+  '/cart',
+  '/checkout/payment',
+  '/thank-you',
+];
+const ANOMALOUS_PATH = [
+  '/home',
+  '/pricing',
+  '/support',
+  '/404',
+  '/faq',
+  '/returns',
+  '/support',
+  '/404',
+];
 
 export default function Trajectory() {
   const { track, on, timer } = useIntent();
@@ -16,12 +32,12 @@ export default function Trajectory() {
 
   useEffect(() => {
     return on('trajectory_anomaly', (payload) => {
-      setEvents(prev => [payload as TrajectoryAnomalyPayload, ...prev].slice(0, 5));
+      setEvents((prev) => [payload as TrajectoryAnomalyPayload, ...prev].slice(0, 5));
     });
   }, [on]);
 
   function walkNormal() {
-    NORMAL_PATH.forEach(s => track(s));
+    NORMAL_PATH.forEach((s) => track(s));
   }
   function walkAnomalous() {
     ANOMALOUS_PATH.forEach((s, i) => {
@@ -30,8 +46,8 @@ export default function Trajectory() {
     });
   }
 
-const stateList = (ECOMMERCE_BASELINE as SerializedMarkovGraph).states;
-      const rows      = (ECOMMERCE_BASELINE as SerializedMarkovGraph).rows;
+  const stateList = (ECOMMERCE_BASELINE as SerializedMarkovGraph).states;
+  const rows = (ECOMMERCE_BASELINE as SerializedMarkovGraph).rows;
 
   return (
     <>
@@ -52,14 +68,18 @@ const stateList = (ECOMMERCE_BASELINE as SerializedMarkovGraph).states;
           <p style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 10 }}>
             {NORMAL_PATH.join(' → ')}
           </p>
-          <button className="btn btn-green" onClick={walkNormal}>✅ Walk Normal Path</button>
+          <button className="btn btn-green" onClick={walkNormal}>
+            ✅ Walk Normal Path
+          </button>
         </div>
         <div className="card">
           <div className="card-title">Anomalous path (deviates sharply)</div>
           <p style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 10 }}>
             {ANOMALOUS_PATH.join(' → ')}
           </p>
-          <button className="btn btn-danger" onClick={walkAnomalous}>🚨 Walk Anomalous Path</button>
+          <button className="btn btn-danger" onClick={walkAnomalous}>
+            🚨 Walk Anomalous Path
+          </button>
         </div>
       </div>
 
@@ -68,13 +88,23 @@ const stateList = (ECOMMERCE_BASELINE as SerializedMarkovGraph).states;
           <div className="card-title">Recent trajectory_anomaly events</div>
           <table className="data-table">
             <thead>
-              <tr><th>State</th><th>Z-Score</th><th>Log-Likelihood</th></tr>
+              <tr>
+                <th>State</th>
+                <th>Z-Score</th>
+                <th>Log-Likelihood</th>
+              </tr>
             </thead>
             <tbody>
               {events.map((e, i) => (
                 <tr key={i}>
-                  <td><code style={{ fontFamily: 'var(--font-mono)', color: 'var(--accent-h)' }}>{e.stateTo}</code></td>
-                  <td><strong style={{ color: 'var(--yellow)' }}>{e.zScore.toFixed(3)}</strong></td>
+                  <td>
+                    <code style={{ fontFamily: 'var(--font-mono)', color: 'var(--accent-h)' }}>
+                      {e.stateTo}
+                    </code>
+                  </td>
+                  <td>
+                    <strong style={{ color: 'var(--yellow)' }}>{e.zScore.toFixed(3)}</strong>
+                  </td>
                   <td style={{ fontFamily: 'var(--font-mono)', color: 'var(--text-muted)' }}>
                     {e.realLogLikelihood?.toFixed(4) ?? '—'}
                   </td>
@@ -90,7 +120,7 @@ const stateList = (ECOMMERCE_BASELINE as SerializedMarkovGraph).states;
         {rows.slice(0, 5).map(([fromIdx, , transitions]) => {
           const state = stateList[fromIdx];
           if (!state) return null;
-          const top = [...transitions].sort(([,a],[,b]) => b - a).slice(0, 2);
+          const top = [...transitions].sort(([, a], [, b]) => b - a).slice(0, 2);
           return (
             <div key={state} className="progress-row">
               <span className="progress-label">{state}</span>

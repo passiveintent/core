@@ -33,10 +33,10 @@ export default function ExitIntent() {
         <div className="hook-callout">⚛️ on('exit_intent', handler)</div>
         <h2 className="demo-title">Smart Exit Intent</h2>
         <p className="demo-description">
-          Fires when the pointer moves above the viewport <em>and</em> the Markov graph has
-          at least one candidate with probability ≥ 0.4. <strong>No graph = no event</strong> —
-          this prevents spammy overlays on accidental toolbar skims. The <code>likelyNext</code>{' '}
-          field tells you exactly where the user was heading.
+          Fires when the pointer moves above the viewport <em>and</em> the Markov graph has at least
+          one candidate with probability ≥ 0.4. <strong>No graph = no event</strong> — this prevents
+          spammy overlays on accidental toolbar skims. The <code>likelyNext</code> field tells you
+          exactly where the user was heading.
         </p>
       </div>
 
@@ -44,8 +44,8 @@ export default function ExitIntent() {
         <div className="card">
           <div className="card-title">Browser-native</div>
           <p style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 10 }}>
-            Build the graph first, then move your cursor to the very top of the viewport
-            (above the page content, towards the browser address bar).
+            Build the graph first, then move your cursor to the very top of the viewport (above the
+            page content, towards the browser address bar).
           </p>
           <div className="btn-row">
             <button className="btn btn-secondary" onClick={buildGraph}>
@@ -72,9 +72,9 @@ export default function ExitIntent() {
 
       {lastEvent && (
         <div className="alert alert-error" style={{ marginTop: 8 }}>
-          <strong>exit_intent</strong> fired!{' '}
-          state: <code style={{ fontFamily: 'var(--font-mono)' }}>{lastEvent.state}</code>{' '}
-          | likelyNext: <code style={{ fontFamily: 'var(--font-mono)' }}>{lastEvent.likelyNext ?? 'none'}</code>
+          <strong>exit_intent</strong> fired! state:{' '}
+          <code style={{ fontFamily: 'var(--font-mono)' }}>{lastEvent.state}</code> | likelyNext:{' '}
+          <code style={{ fontFamily: 'var(--font-mono)' }}>{lastEvent.likelyNext ?? 'none'}</code>
         </div>
       )}
 

@@ -10,9 +10,16 @@ import CodeBlock from '../components/CodeBlock';
 import type { PassiveIntentTelemetry } from '@passiveintent/core';
 
 const QUICK_STATES = [
-  '/home', '/products', '/product/widget-pro', '/pricing',
-  '/checkout/step-1', '/checkout/payment', '/thank-you',
-  '/blog', '/about', '/docs',
+  '/home',
+  '/products',
+  '/product/widget-pro',
+  '/pricing',
+  '/checkout/step-1',
+  '/checkout/payment',
+  '/thank-you',
+  '/blog',
+  '/about',
+  '/docs',
 ];
 
 export default function Overview() {
@@ -33,7 +40,7 @@ export default function Overview() {
   const handleTrack = useCallback(
     (state: string) => {
       track(state);
-      setStateCount(c => c + 1);
+      setStateCount((c) => c + 1);
     },
     [track],
   );
@@ -44,25 +51,29 @@ export default function Overview() {
         <div className="hook-callout">⚛️ usePassiveIntent() — getTelemetry()</div>
         <h2 className="demo-title">Overview &amp; Live Telemetry</h2>
         <p className="demo-description">
-          Track a few states below to populate the engine, then watch the metrics
-          update live. <strong>getTelemetry()</strong> returns a GDPR-safe aggregate
-          snapshot — no raw URLs, no PII, no behavioral sequences are ever exposed.
+          Track a few states below to populate the engine, then watch the metrics update live.{' '}
+          <strong>getTelemetry()</strong> returns a GDPR-safe aggregate snapshot — no raw URLs, no
+          PII, no behavioral sequences are ever exposed.
         </p>
       </div>
 
       <div className="card">
         <div className="card-title">Quick Track</div>
         <p style={{ color: 'var(--text-muted)', fontSize: 13, marginBottom: 10 }}>
-          Click any route chip to call <code style={{ fontFamily: 'var(--font-mono)' }}>track(route)</code>:
+          Click any route chip to call{' '}
+          <code style={{ fontFamily: 'var(--font-mono)' }}>track(route)</code>:
         </p>
         <div className="chip-row">
-          {QUICK_STATES.map(s => (
-            <span key={s} className="state-chip" onClick={() => handleTrack(s)}>{s}</span>
+          {QUICK_STATES.map((s) => (
+            <span key={s} className="state-chip" onClick={() => handleTrack(s)}>
+              {s}
+            </span>
           ))}
         </div>
         {stateCount > 0 && (
           <p style={{ marginTop: 10, fontSize: 12, color: 'var(--text-muted)' }}>
-            Tracked <strong style={{ color: 'var(--accent-h)' }}>{stateCount}</strong> transitions this session.
+            Tracked <strong style={{ color: 'var(--accent-h)' }}>{stateCount}</strong> transitions
+            this session.
           </p>
         )}
       </div>
@@ -75,7 +86,9 @@ export default function Overview() {
             label="Bot Status"
             value={
               <>
-                <span className={`status-dot ${telem.botStatus === 'suspected_bot' ? 'status-red' : 'status-green'}`} />
+                <span
+                  className={`status-dot ${telem.botStatus === 'suspected_bot' ? 'status-red' : 'status-green'}`}
+                />
                 {telem.botStatus}
               </>
             }

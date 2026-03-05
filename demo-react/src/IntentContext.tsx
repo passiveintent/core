@@ -30,9 +30,7 @@ export interface LogEntry {
   time: string;
 }
 
-type LogAction =
-  | { type: 'ADD'; entry: Omit<LogEntry, 'id'> }
-  | { type: 'CLEAR' };
+type LogAction = { type: 'ADD'; entry: Omit<LogEntry, 'id'> } | { type: 'CLEAR' };
 
 let _logSeq = 0;
 
@@ -51,22 +49,25 @@ function logReducer(state: LogEntry[], action: LogAction): LogEntry[] {
 
 interface IntentCtx {
   // From usePassiveIntent
-  track:             (state: string) => void;
-  on:                (event: IntentEventName, handler: (payload: unknown) => void) => () => void;
-  getTelemetry:      () => PassiveIntentTelemetry;
-  predictNextStates: (threshold?: number, sanitize?: (s: string) => boolean) => { state: string; probability: number }[];
-  hasSeen:           (route: string) => boolean;
-  incrementCounter:  (key: string, by?: number) => number;
-  getCounter:        (key: string) => number;
-  resetCounter:      (key: string) => void;
+  track: (state: string) => void;
+  on: (event: IntentEventName, handler: (payload: unknown) => void) => () => void;
+  getTelemetry: () => PassiveIntentTelemetry;
+  predictNextStates: (
+    threshold?: number,
+    sanitize?: (s: string) => boolean,
+  ) => { state: string; probability: number }[];
+  hasSeen: (route: string) => boolean;
+  incrementCounter: (key: string, by?: number) => number;
+  getCounter: (key: string) => number;
+  resetCounter: (key: string) => void;
 
   // Controllable adapters (for demo simulation buttons)
-  timer:     typeof timerAdapter;
+  timer: typeof timerAdapter;
   lifecycle: typeof lifecycleAdapter;
 
   // Event log
   logEntries: LogEntry[];
-  clearLog:   () => void;
+  clearLog: () => void;
 }
 
 const IntentContext = createContext<IntentCtx | null>(null);
@@ -77,41 +78,56 @@ const IntentContext = createContext<IntentCtx | null>(null);
 const memStorage = new MemoryStorageAdapter();
 
 const ALL_EVENTS: IntentEventName[] = [
-  'state_change', 'high_entropy', 'trajectory_anomaly', 'dwell_time_anomaly',
-  'bot_detected', 'hesitation_detected', 'session_stale', 'attention_return',
-  'user_idle', 'user_resumed', 'exit_intent', 'conversion',
+  'state_change',
+  'high_entropy',
+  'trajectory_anomaly',
+  'dwell_time_anomaly',
+  'bot_detected',
+  'hesitation_detected',
+  'session_stale',
+  'attention_return',
+  'user_idle',
+  'user_resumed',
+  'exit_intent',
+  'conversion',
 ];
 
 export function IntentProvider({ children }: { children: ReactNode }) {
   const [logEntries, dispatch] = useReducer(logReducer, []);
 
   const {
-    track, on, getTelemetry, predictNextStates, hasSeen,
-    incrementCounter, getCounter, resetCounter,
+    track,
+    on,
+    getTelemetry,
+    predictNextStates,
+    hasSeen,
+    incrementCounter,
+    getCounter,
+    resetCounter,
   } = usePassiveIntent({
-    storageKey:       'pi-react-demo',
-    storage:          memStorage,
-    timer:            timerAdapter,
+    storageKey: 'pi-react-demo',
+    storage: memStorage,
+    timer: timerAdapter,
     lifecycleAdapter: lifecycleAdapter,
-    botProtection:    true,
-    crossTabSync:     false,
-    enableBigrams:    true,
+    botProtection: true,
+    crossTabSync: false,
+    enableBigrams: true,
     persistThrottleMs: 200,
-    baseline:         ECOMMERCE_BASELINE,
-    baselineMeanLL:   -1.4,
-    baselineStdLL:    0.35,
+    baseline: ECOMMERCE_BASELINE,
+    baselineMeanLL: -1.4,
+    baselineStdLL: 0.35,
     graph: {
       highEntropyThreshold: 0.72,
-      divergenceThreshold:  2.5,
-      maxStates:            500,
-      smoothingAlpha:       0.1,
+      divergenceThreshold: 2.5,
+      maxStates: 500,
+      smoothingAlpha: 0.1,
     },
     dwellTime: { enabled: true, minSamples: 3, zScoreThreshold: 2.0 },
   });
 
   // Subscribe to all events once, log them all
   useEffect(() => {
-    const unsubs = ALL_EVENTS.map(ev =>
+    const unsubs = ALL_EVENTS.map((ev) =>
       on(ev as IntentEventName, (payload) => {
         dispatch({
           type: 'ADD',
@@ -123,7 +139,7 @@ export function IntentProvider({ children }: { children: ReactNode }) {
         });
       }),
     );
-    return () => unsubs.forEach(u => u());
+    return () => unsubs.forEach((u) => u());
   }, [on]);
 
   const clearLog = useCallback(() => dispatch({ type: 'CLEAR' }), []);
@@ -131,9 +147,15 @@ export function IntentProvider({ children }: { children: ReactNode }) {
   return (
     <IntentContext.Provider
       value={{
-        track, on, getTelemetry, predictNextStates, hasSeen,
-        incrementCounter, getCounter, resetCounter,
-        timer:     timerAdapter,
+        track,
+        on,
+        getTelemetry,
+        predictNextStates,
+        hasSeen,
+        incrementCounter,
+        getCounter,
+        resetCounter,
+        timer: timerAdapter,
         lifecycle: lifecycleAdapter,
         logEntries,
         clearLog,

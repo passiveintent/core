@@ -43,31 +43,54 @@ class ControllableLifecycleAdapter implements LifecycleAdapter {
     document.documentElement.addEventListener('mouseleave', this.exitHandler as EventListener);
   }
 
-  triggerPause()      { this.pauseCbs.forEach(cb => cb()); }
-  triggerResume()     { this.resumeCbs.forEach(cb => cb()); }
-  triggerInteraction(){ this.interactionCbs.forEach(cb => cb()); }
-  triggerExitIntent() { this.exitIntentCbs.forEach(cb => cb()); }
+  triggerPause() {
+    this.pauseCbs.forEach((cb) => cb());
+  }
+  triggerResume() {
+    this.resumeCbs.forEach((cb) => cb());
+  }
+  triggerInteraction() {
+    this.interactionCbs.forEach((cb) => cb());
+  }
+  triggerExitIntent() {
+    this.exitIntentCbs.forEach((cb) => cb());
+  }
 
   onPause(cb: () => void) {
     this.pauseCbs.push(cb);
-    return () => { const i = this.pauseCbs.indexOf(cb); if (i >= 0) this.pauseCbs.splice(i, 1); };
+    return () => {
+      const i = this.pauseCbs.indexOf(cb);
+      if (i >= 0) this.pauseCbs.splice(i, 1);
+    };
   }
   onResume(cb: () => void) {
     this.resumeCbs.push(cb);
-    return () => { const i = this.resumeCbs.indexOf(cb); if (i >= 0) this.resumeCbs.splice(i, 1); };
+    return () => {
+      const i = this.resumeCbs.indexOf(cb);
+      if (i >= 0) this.resumeCbs.splice(i, 1);
+    };
   }
   onInteraction(cb: () => void) {
     this.interactionCbs.push(cb);
-    return () => { const i = this.interactionCbs.indexOf(cb); if (i >= 0) this.interactionCbs.splice(i, 1); };
+    return () => {
+      const i = this.interactionCbs.indexOf(cb);
+      if (i >= 0) this.interactionCbs.splice(i, 1);
+    };
   }
   onExitIntent(cb: () => void) {
     this.exitIntentCbs.push(cb);
-    return () => { const i = this.exitIntentCbs.indexOf(cb); if (i >= 0) this.exitIntentCbs.splice(i, 1); };
+    return () => {
+      const i = this.exitIntentCbs.indexOf(cb);
+      if (i >= 0) this.exitIntentCbs.splice(i, 1);
+    };
   }
   destroy() {
     document.removeEventListener('visibilitychange', this.visibilityHandler);
     document.documentElement.removeEventListener('mouseleave', this.exitHandler as EventListener);
-    this.pauseCbs = []; this.resumeCbs = []; this.interactionCbs = []; this.exitIntentCbs = [];
+    this.pauseCbs = [];
+    this.resumeCbs = [];
+    this.interactionCbs = [];
+    this.exitIntentCbs = [];
   }
 }
 
@@ -87,17 +110,23 @@ class ControllableTimerAdapter implements TimerAdapter {
     if (r !== undefined) globalThis.clearTimeout(r);
     this.realIds.delete(id);
   }
-  now(): number { return performance.now() + this.offset; }
+  now(): number {
+    return performance.now() + this.offset;
+  }
   /** Simulate the passage of time without waiting. */
-  fastForward(ms: number): void { this.offset += ms; }
-  reset(): void { this.offset = 0; }
+  fastForward(ms: number): void {
+    this.offset += ms;
+  }
+  reset(): void {
+    this.offset = 0;
+  }
 }
 
 // ─── Helper: extract outgoing transitions from SerializedMarkovGraph rows ─────
 function getNodeTransitions(graph: SerializedMarkovGraph, state: string): Record<string, number> {
   const idx = graph.states.indexOf(state);
   if (idx === -1) return {};
-  const row = graph.rows.find(r => r[0] === idx);
+  const row = graph.rows.find((r) => r[0] === idx);
   if (!row) return {};
   const result: Record<string, number> = {};
   for (const [toIdx, count] of row[2]) {
@@ -109,39 +138,49 @@ function getNodeTransitions(graph: SerializedMarkovGraph, state: string): Record
 
 // ─── Shared IntentManager instance ───────────────────────────────────────────
 const lifecycle = new ControllableLifecycleAdapter();
-const timer     = new ControllableTimerAdapter();
+const timer = new ControllableTimerAdapter();
 
 /** Pre-built e-commerce funnel baseline for trajectory-anomaly demos */
 const ECOMMERCE_BASELINE = buildEcommerceBaseline();
 
 const intent = new IntentManager({
-  storageKey:          'pi-demo',
-  storage:             new MemoryStorageAdapter(),   // no localStorage pollution
+  storageKey: 'pi-demo',
+  storage: new MemoryStorageAdapter(), // no localStorage pollution
   timer,
-  lifecycleAdapter:    lifecycle,
-  botProtection:       true,
-  crossTabSync:        false,
-  enableBigrams:       true,
-  persistThrottleMs:   200,
-  baseline:            ECOMMERCE_BASELINE,
-  baselineMeanLL:      -1.4,
-  baselineStdLL:       0.35,
+  lifecycleAdapter: lifecycle,
+  botProtection: true,
+  crossTabSync: false,
+  enableBigrams: true,
+  persistThrottleMs: 200,
+  baseline: ECOMMERCE_BASELINE,
+  baselineMeanLL: -1.4,
+  baselineStdLL: 0.35,
   graph: {
     highEntropyThreshold: 0.72,
-    divergenceThreshold:  2.5,
-    maxStates:            500,
-    smoothingAlpha:       0.1,
-    smoothingEpsilon:     0.01,
+    divergenceThreshold: 2.5,
+    maxStates: 500,
+    smoothingAlpha: 0.1,
+    smoothingEpsilon: 0.01,
   },
   dwellTime: { enabled: true, minSamples: 3, zScoreThreshold: 2.0 },
-  onError: (err) => logEvent('error', '⚠ onError', { message: err.message, code: (err as { code?: string }).code }),
+  onError: (err) =>
+    logEvent('error', '⚠ onError', { message: err.message, code: (err as { code?: string }).code }),
 });
 
 // ─── Global event subscriptions ───────────────────────────────────────────────
 const ALL_EVENTS: IntentEventName[] = [
-  'state_change', 'high_entropy', 'trajectory_anomaly', 'dwell_time_anomaly',
-  'bot_detected', 'hesitation_detected', 'session_stale', 'attention_return',
-  'user_idle', 'user_resumed', 'exit_intent', 'conversion',
+  'state_change',
+  'high_entropy',
+  'trajectory_anomaly',
+  'dwell_time_anomaly',
+  'bot_detected',
+  'hesitation_detected',
+  'session_stale',
+  'attention_return',
+  'user_idle',
+  'user_resumed',
+  'exit_intent',
+  'conversion',
 ];
 for (const ev of ALL_EVENTS) {
   intent.on(ev, (payload) => logEvent(ev, ev.replace(/_/g, ' '), payload));
@@ -179,9 +218,8 @@ interface Demo {
 }
 
 const demos: Record<string, Demo> = {
-
   // ── 1. Overview ─────────────────────────────────────────────────────────────
-  'overview': {
+  overview: {
     title: '📊 Overview & Telemetry',
     render: () => `
       <div class="demo-header">
@@ -196,9 +234,20 @@ const demos: Record<string, Demo> = {
         <div class="card-title">Quick Track</div>
         <p style="color:var(--text-muted);font-size:13px;margin-bottom:10px">Click any route to track it:</p>
         <div class="chip-row">
-          ${['/home','/products','/product/widget-pro','/pricing','/checkout/step-1','/checkout/payment','/thank-you','/blog','/about','/docs'].map(s =>
-            `<span class="state-chip" data-track="${s}">${s}</span>`
-          ).join('')}
+          ${[
+            '/home',
+            '/products',
+            '/product/widget-pro',
+            '/pricing',
+            '/checkout/step-1',
+            '/checkout/payment',
+            '/thank-you',
+            '/blog',
+            '/about',
+            '/docs',
+          ]
+            .map((s) => `<span class="state-chip" data-track="${s}">${s}</span>`)
+            .join('')}
         </div>
       </div>
 
@@ -219,15 +268,21 @@ const demos: Record<string, Demo> = {
       <div id="telemetry-output" style="margin-top:14px"></div>
 
       <div class="divider"></div>
-      ${codeBlock('getTelemetry() — zero-PII snapshot', `<span class="kw">const</span> telemetry = intent.<span class="fn">getTelemetry</span>();
+      ${codeBlock(
+        'getTelemetry() — zero-PII snapshot',
+        `<span class="kw">const</span> telemetry = intent.<span class="fn">getTelemetry</span>();
 <span class="cmt">// Returns: { sessionId, transitionsEvaluated, botStatus,</span>
 <span class="cmt">//           anomaliesFired, engineHealth, baselineStatus, assignmentGroup }</span>
-<span class="cmt">// ✓ No raw URLs, no user identity, no behavioral sequence ever exposed.</span>`)}
+<span class="cmt">// ✓ No raw URLs, no user identity, no behavioral sequence ever exposed.</span>`,
+      )}
     `,
     setup(el) {
       refreshTelemetry();
-      el.querySelectorAll<HTMLElement>('.state-chip').forEach(chip => {
-        chip.addEventListener('click', () => { intent.track(chip.dataset.track!); refreshTelemetry(); });
+      el.querySelectorAll<HTMLElement>('.state-chip').forEach((chip) => {
+        chip.addEventListener('click', () => {
+          intent.track(chip.dataset.track!);
+          refreshTelemetry();
+        });
       });
       el.querySelector('#btn-telemetry')!.addEventListener('click', refreshTelemetry);
       el.querySelector('#btn-export-graph')!.addEventListener('click', () => {
@@ -238,16 +293,21 @@ const demos: Record<string, Demo> = {
       function refreshTelemetry() {
         const t = intent.getTelemetry();
         const p = intent.getPerformanceReport();
-        el.querySelector<HTMLElement>('#m-transitions')!.textContent = String(t.transitionsEvaluated);
-        el.querySelector<HTMLElement>('#m-anomalies')!.textContent   = String(t.anomaliesFired);
-        el.querySelector<HTMLElement>('#m-states')!.textContent      = String(p.memoryFootprint.stateCount);
-        el.querySelector<HTMLElement>('#m-bot')!.innerHTML = t.botStatus === 'suspected_bot'
-          ? '<span class="status-dot status-red"></span>bot'
-          : '<span class="status-dot status-green"></span>clean';
+        el.querySelector<HTMLElement>('#m-transitions')!.textContent = String(
+          t.transitionsEvaluated,
+        );
+        el.querySelector<HTMLElement>('#m-anomalies')!.textContent = String(t.anomaliesFired);
+        el.querySelector<HTMLElement>('#m-states')!.textContent = String(
+          p.memoryFootprint.stateCount,
+        );
+        el.querySelector<HTMLElement>('#m-bot')!.innerHTML =
+          t.botStatus === 'suspected_bot'
+            ? '<span class="status-dot status-red"></span>bot'
+            : '<span class="status-dot status-green"></span>clean';
         el.querySelector<HTMLElement>('#m-health')!.textContent = `${t.engineHealth}%`;
-        el.querySelector<HTMLElement>('#m-group')!.textContent  = t.assignmentGroup ?? '—';
+        el.querySelector<HTMLElement>('#m-group')!.textContent = t.assignmentGroup ?? '—';
       }
-    }
+    },
   },
 
   // ── 2. Basic Tracking ─────────────────────────────────────────────────────
@@ -276,11 +336,22 @@ const demos: Record<string, Demo> = {
         <div class="card-title">Simulate a user journey</div>
         <p style="color:var(--text-muted);font-size:13px;margin-bottom:10px">Click steps in order to simulate a checkout funnel:</p>
         <div class="btn-row">
-          ${['/home','/products','/product/headphones-pro','/cart','/checkout/shipping','/checkout/payment','/thank-you'].map((s, i) =>
-            `<button class="btn btn-secondary" data-step-track="${s}">
-              <span style="color:var(--text-muted);font-size:11px">${i+1}.</span> ${s}
-            </button>`
-          ).join('')}
+          ${[
+            '/home',
+            '/products',
+            '/product/headphones-pro',
+            '/cart',
+            '/checkout/shipping',
+            '/checkout/payment',
+            '/thank-you',
+          ]
+            .map(
+              (s, i) =>
+                `<button class="btn btn-secondary" data-step-track="${s}">
+              <span style="color:var(--text-muted);font-size:11px">${i + 1}.</span> ${s}
+            </button>`,
+            )
+            .join('')}
         </div>
       </div>
 
@@ -292,7 +363,9 @@ const demos: Record<string, Demo> = {
         </table>
       </div>
 
-      ${codeBlock('Basic usage', `<span class="kw">import</span> { <span class="type">IntentManager</span>, <span class="type">BrowserStorageAdapter</span>, <span class="type">BrowserTimerAdapter</span> } <span class="kw">from</span> <span class="str">'@passiveintent/core'</span>;
+      ${codeBlock(
+        'Basic usage',
+        `<span class="kw">import</span> { <span class="type">IntentManager</span>, <span class="type">BrowserStorageAdapter</span>, <span class="type">BrowserTimerAdapter</span> } <span class="kw">from</span> <span class="str">'@passiveintent/core'</span>;
 
 <span class="kw">const</span> intent = <span class="kw">new</span> <span class="fn">IntentManager</span>({ storageKey: <span class="str">'my-app'</span> });
 
@@ -301,7 +374,8 @@ intent.<span class="fn">track</span>(<span class="str">'/checkout/abc-123-paymen
 
 intent.<span class="fn">on</span>(<span class="str">'state_change'</span>, ({ <span class="prop">from</span>, <span class="prop">to</span>, <span class="prop">probability</span> }) => {
   console.<span class="fn">log</span>(<span class="str">\`\${from} → \${to} (\${(probability * 100).<span class="fn">toFixed</span>(1)}%)\`</span>);
-});`)}
+});`,
+      )}
     `,
     setup(el) {
       const normExamples = [
@@ -311,18 +385,21 @@ intent.<span class="fn">on</span>(<span class="str">'state_change'</span>, ({ <s
         ['/order/abc123def456789012345678', '/order/:id'],
       ];
       const tbody = el.querySelector<HTMLElement>('#normalization-table')!;
-      tbody.innerHTML = normExamples.map(([raw, norm]) =>
-        `<tr><td><code style="color:var(--text-muted)">${raw}</code></td><td><code style="color:var(--green)">${norm}</code></td></tr>`
-      ).join('');
+      tbody.innerHTML = normExamples
+        .map(
+          ([raw, norm]) =>
+            `<tr><td><code style="color:var(--text-muted)">${raw}</code></td><td><code style="color:var(--green)">${norm}</code></td></tr>`,
+        )
+        .join('');
 
       el.querySelector('#btn-track-custom')!.addEventListener('click', () => {
-        const v = (el.querySelector<HTMLInputElement>('#custom-state')!).value.trim();
+        const v = el.querySelector<HTMLInputElement>('#custom-state')!.value.trim();
         if (v) intent.track(v);
       });
-      el.querySelectorAll<HTMLElement>('[data-step-track]').forEach(btn => {
+      el.querySelectorAll<HTMLElement>('[data-step-track]').forEach((btn) => {
         btn.addEventListener('click', () => intent.track(btn.dataset.stepTrack!));
       });
-    }
+    },
   },
 
   // ── 3. High Entropy ──────────────────────────────────────────────────────
@@ -359,7 +436,9 @@ intent.<span class="fn">on</span>(<span class="str">'state_change'</span>, ({ <s
         </div>
       </div>
 
-      ${codeBlock('high_entropy event', `intent.<span class="fn">on</span>(<span class="str">'high_entropy'</span>, ({ <span class="prop">state</span>, <span class="prop">normalizedEntropy</span>, <span class="prop">outgoingStates</span> }) => {
+      ${codeBlock(
+        'high_entropy event',
+        `intent.<span class="fn">on</span>(<span class="str">'high_entropy'</span>, ({ <span class="prop">state</span>, <span class="prop">normalizedEntropy</span>, <span class="prop">outgoingStates</span> }) => {
   <span class="kw">if</span> (normalizedEntropy > <span class="num">0.85</span>) {
     UI.<span class="fn">showHelpModal</span>({ message: <span class="str">'Having trouble? Let us help.'</span> });
   }
@@ -368,13 +447,26 @@ intent.<span class="fn">on</span>(<span class="str">'state_change'</span>, ({ <s
 <span class="cmt">// Config: control sensitivity</span>
 <span class="kw">const</span> intent = <span class="kw">new</span> <span class="fn">IntentManager</span>({
   graph: { highEntropyThreshold: <span class="num">0.72</span> } <span class="cmt">// lower = more sensitive</span>
-});`)}
+});`,
+      )}
     `,
     setup(el) {
       const RANDOM_STATES = [
-        '/search','/cart','/wishlist','/account/profile','/returns','/support',
-        '/blog/tips','/sitemap','/404','/faq','/shipping','/privacy','/about',
-        '/deal-of-day','/newsletter',
+        '/search',
+        '/cart',
+        '/wishlist',
+        '/account/profile',
+        '/returns',
+        '/support',
+        '/blog/tips',
+        '/sitemap',
+        '/404',
+        '/faq',
+        '/shipping',
+        '/privacy',
+        '/about',
+        '/deal-of-day',
+        '/newsletter',
       ];
       el.querySelector('#btn-rapid-fire')!.addEventListener('click', () => {
         intent.track('/checkout/payment');
@@ -411,12 +503,13 @@ intent.<span class="fn">on</span>(<span class="str">'state_change'</span>, ({ <s
             <span class="progress-value">${pct}%</span>
           </div>`;
         };
-        el.querySelector<HTMLElement>('#entropy-viz')!.innerHTML =
-          Object.entries(txns)
-            .sort(([,a],[,b]) => b - a).slice(0, 8)
-            .map(([s, c]) => rowHtml(s, c)).join('');
+        el.querySelector<HTMLElement>('#entropy-viz')!.innerHTML = Object.entries(txns)
+          .sort(([, a], [, b]) => b - a)
+          .slice(0, 8)
+          .map(([s, c]) => rowHtml(s, c))
+          .join('');
       }
-    }
+    },
   },
 
   // ── 4. Dwell Time Anomaly ─────────────────────────────────────────────────
@@ -455,7 +548,9 @@ intent.<span class="fn">on</span>(<span class="str">'state_change'</span>, ({ <s
         </p>
       </div>
 
-      ${codeBlock('dwell_time_anomaly event', `intent.<span class="fn">on</span>(<span class="str">'dwell_time_anomaly'</span>, ({ <span class="prop">state</span>, <span class="prop">zScore</span>, <span class="prop">dwellMs</span>, <span class="prop">mean</span>, <span class="prop">stdDev</span> }) => {
+      ${codeBlock(
+        'dwell_time_anomaly event',
+        `intent.<span class="fn">on</span>(<span class="str">'dwell_time_anomaly'</span>, ({ <span class="prop">state</span>, <span class="prop">zScore</span>, <span class="prop">dwellMs</span>, <span class="prop">mean</span>, <span class="prop">stdDev</span> }) => {
   <span class="kw">if</span> (state === <span class="str">'/checkout/payment'</span> &amp;&amp; zScore > <span class="num">2.0</span>) {
     UI.<span class="fn">showOffer</span>({ discount: <span class="str">'10%'</span>, message: <span class="str">'Free shipping today only!'</span> });
   }
@@ -464,7 +559,8 @@ intent.<span class="fn">on</span>(<span class="str">'state_change'</span>, ({ <s
 <span class="cmt">// Enable in config:</span>
 <span class="kw">const</span> intent = <span class="kw">new</span> <span class="fn">IntentManager</span>({
   dwellTime: { enabled: <span class="kw">true</span>, minSamples: <span class="num">3</span>, zScoreThreshold: <span class="num">2.0</span> }
-});`)}
+});`,
+      )}
     `,
     setup(el) {
       el.querySelector('#btn-build-dwell-baseline')!.addEventListener('click', () => {
@@ -491,11 +587,11 @@ intent.<span class="fn">on</span>(<span class="str">'state_change'</span>, ({ <s
         el.querySelector<HTMLElement>('#dwell-status')!.innerHTML =
           `<div class="alert alert-info">Timer offset reset to 0.</div>`;
       });
-    }
+    },
   },
 
   // ── 5. Trajectory Anomaly ─────────────────────────────────────────────────
-  'trajectory': {
+  trajectory: {
     title: '🛤 Trajectory Anomaly',
     render: () => `
       <div class="demo-header">
@@ -533,7 +629,9 @@ intent.<span class="fn">on</span>(<span class="str">'state_change'</span>, ({ <s
         <div id="baseline-viz"></div>
       </div>
 
-      ${codeBlock('Load a pre-trained baseline', `<span class="kw">import</span> baseline <span class="kw">from</span> <span class="str">'./baseline.json'</span>;
+      ${codeBlock(
+        'Load a pre-trained baseline',
+        `<span class="kw">import</span> baseline <span class="kw">from</span> <span class="str">'./baseline.json'</span>;
 
 <span class="kw">const</span> intent = <span class="kw">new</span> <span class="fn">IntentManager</span>({
   baseline,                  <span class="cmt">// SerializedMarkovGraph — your normal conversion path</span>
@@ -544,37 +642,53 @@ intent.<span class="fn">on</span>(<span class="str">'state_change'</span>, ({ <s
 
 intent.<span class="fn">on</span>(<span class="str">'trajectory_anomaly'</span>, ({ <span class="prop">state</span>, <span class="prop">zScore</span>, <span class="prop">logLikelihood</span> }) => {
   <span class="kw">if</span> (zScore > <span class="num">2.5</span>) analytics.<span class="fn">trackAbandonment</span>(state);
-});`)}
+});`,
+      )}
     `,
     setup(el) {
       // Show baseline graph summary
       const baseline = ECOMMERCE_BASELINE;
-      const vizHtml = baseline.rows.slice(0, 6).map(([fromIdx, , transitions]) => {
-        const state = baseline.states[fromIdx];
-        if (!state) return '';
-        const top = [...transitions].sort(([,a],[,b]) => b - a).slice(0, 2)
-          .map(([toIdx, c]) => `${baseline.states[toIdx]}(${c})`).join(', ');
-        return `<div class="progress-row">
+      const vizHtml = baseline.rows
+        .slice(0, 6)
+        .map(([fromIdx, , transitions]) => {
+          const state = baseline.states[fromIdx];
+          if (!state) return '';
+          const top = [...transitions]
+            .sort(([, a], [, b]) => b - a)
+            .slice(0, 2)
+            .map(([toIdx, c]) => `${baseline.states[toIdx]}(${c})`)
+            .join(', ');
+          return `<div class="progress-row">
           <span class="progress-label" style="font-size:11px;font-family:var(--font-mono)">${state}</span>
           <span style="font-size:11px;color:var(--text-muted)">→ ${top}</span>
         </div>`;
-      }).join('');
+        })
+        .join('');
       el.querySelector<HTMLElement>('#baseline-viz')!.innerHTML = vizHtml;
 
       el.querySelector('#btn-normal-trajectory')!.addEventListener('click', () => {
-        ['/home','/products','/product/headphones','/cart','/checkout/payment','/thank-you'].forEach(s => intent.track(s));
+        [
+          '/home',
+          '/products',
+          '/product/headphones',
+          '/cart',
+          '/checkout/payment',
+          '/thank-you',
+        ].forEach((s) => intent.track(s));
       });
       el.querySelector('#btn-anomalous-trajectory')!.addEventListener('click', () => {
-        ['/home','/pricing','/support','/404','/faq','/returns','/support','/404'].forEach((s, i) => {
-          intent.track(s);
-          if (i > 1) timer.fastForward(500);
-        });
+        ['/home', '/pricing', '/support', '/404', '/faq', '/returns', '/support', '/404'].forEach(
+          (s, i) => {
+            intent.track(s);
+            if (i > 1) timer.fastForward(500);
+          },
+        );
       });
-    }
+    },
   },
 
   // ── 6. Hesitation Detection ───────────────────────────────────────────────
-  'hesitation': {
+  hesitation: {
     title: '🤔 Hesitation Detection',
     render: () => `
       <div class="demo-header">
@@ -608,7 +722,9 @@ intent.<span class="fn">on</span>(<span class="str">'trajectory_anomaly'</span>,
         </p>
       </div>
 
-      ${codeBlock('hesitation_detected + Intervention Ladder', `intent.<span class="fn">on</span>(<span class="str">'hesitation_detected'</span>, ({ <span class="prop">state</span>, <span class="prop">zScoreDwell</span>, <span class="prop">zScoreTrajectory</span> }) => {
+      ${codeBlock(
+        'hesitation_detected + Intervention Ladder',
+        `intent.<span class="fn">on</span>(<span class="str">'hesitation_detected'</span>, ({ <span class="prop">state</span>, <span class="prop">zScoreDwell</span>, <span class="prop">zScoreTrajectory</span> }) => {
   <span class="kw">const</span> severity = (zScoreDwell + zScoreTrajectory) / <span class="num">2</span>;
 
   <span class="kw">if</span> (severity < <span class="num">2.5</span>) {
@@ -618,7 +734,8 @@ intent.<span class="fn">on</span>(<span class="str">'trajectory_anomaly'</span>,
   } <span class="kw">else</span> {
     LiveChat.<span class="fn">proactiveOpen</span>(<span class="str">'Hi! Can I help you complete your order?'</span>);
   }
-});`)}
+});`,
+      )}
     `,
     setup(el) {
       el.querySelector('#btn-prime-hesitation')!.addEventListener('click', () => {
@@ -638,11 +755,11 @@ intent.<span class="fn">on</span>(<span class="str">'trajectory_anomaly'</span>,
         // Go somewhere unusual
         intent.track('/support');
         timer.fastForward(7 * 60 * 1000); // 7 minute dwell — very abnormal
-        intent.track('/faq');              // then bounce to FAQ (anomalous path)
+        intent.track('/faq'); // then bounce to FAQ (anomalous path)
         el.querySelector<HTMLElement>('#hesitation-status')!.innerHTML =
           `<div class="alert alert-warning">Triggered anomalous path + long dwell. Check log for <strong>hesitation_detected</strong>.</div>`;
       });
-    }
+    },
   },
 
   // ── 7. Attention Return ────────────────────────────────────────────────────
@@ -679,7 +796,9 @@ intent.<span class="fn">on</span>(<span class="str">'trajectory_anomaly'</span>,
         </div>
       </div>
 
-      ${codeBlock('attention_return — Welcome Back offer', `intent.<span class="fn">on</span>(<span class="str">'attention_return'</span>, ({ <span class="prop">state</span>, <span class="prop">hiddenDuration</span> }) => {
+      ${codeBlock(
+        'attention_return — Welcome Back offer',
+        `intent.<span class="fn">on</span>(<span class="str">'attention_return'</span>, ({ <span class="prop">state</span>, <span class="prop">hiddenDuration</span> }) => {
   <span class="kw">if</span> (state === <span class="str">'/pricing'</span> || state === <span class="str">'/product'</span>) {
     Banner.<span class="fn">show</span>({
       title:   <span class="str">'Welcome back! 👋'</span>,
@@ -688,7 +807,8 @@ intent.<span class="fn">on</span>(<span class="str">'trajectory_anomaly'</span>,
     });
   }
   console.<span class="fn">log</span>(<span class="str">'Was away for'</span>, hiddenDuration, <span class="str">'ms'</span>);
-});`)}
+});`,
+      )}
     `,
     setup(el) {
       el.querySelector('#btn-track-for-attention')!.addEventListener('click', () => {
@@ -704,7 +824,7 @@ intent.<span class="fn">on</span>(<span class="str">'trajectory_anomaly'</span>,
       el.querySelector('#btn-simulate-return')!.addEventListener('click', () => {
         lifecycle.triggerResume();
       });
-    }
+    },
   },
 
   // ── 8. Idle Detection ─────────────────────────────────────────────────────
@@ -729,7 +849,9 @@ intent.<span class="fn">on</span>(<span class="str">'trajectory_anomaly'</span>,
         <div id="idle-status" style="margin-top:12px"></div>
       </div>
 
-      ${codeBlock('user_idle + user_resumed overlay', `intent.<span class="fn">on</span>(<span class="str">'user_idle'</span>, ({ <span class="prop">state</span> }) => {
+      ${codeBlock(
+        'user_idle + user_resumed overlay',
+        `intent.<span class="fn">on</span>(<span class="str">'user_idle'</span>, ({ <span class="prop">state</span> }) => {
   UI.<span class="fn">showIdleOverlay</span>({ message: <span class="str">'Still there? Your cart is saved.'</span> });
   <span class="cmt">// Pause expensive background animations</span>
   VideoPlayer.<span class="fn">pause</span>();
@@ -740,7 +862,8 @@ intent.<span class="fn">on</span>(<span class="str">'user_resumed'</span>, ({ <s
   <span class="kw">if</span> (idleMs > <span class="num">300_000</span>) {
     DataFetcher.<span class="fn">refreshStaleContent</span>(); <span class="cmt">// 5+ min: data might be stale</span>
   }
-});`)}
+});`,
+      )}
     `,
     setup(el) {
       el.querySelector('#btn-simulate-idle')!.addEventListener('click', () => {
@@ -759,7 +882,7 @@ intent.<span class="fn">on</span>(<span class="str">'user_resumed'</span>, ({ <s
         el.querySelector<HTMLElement>('#idle-status')!.innerHTML =
           `<div class="alert alert-success">Interaction fired — check log for <strong>user_resumed</strong>.</div>`;
       });
-    }
+    },
   },
 
   // ── 9. Exit Intent ────────────────────────────────────────────────────────
@@ -791,7 +914,9 @@ intent.<span class="fn">on</span>(<span class="str">'user_resumed'</span>, ({ <s
         </div>
       </div>
 
-      ${codeBlock('exit_intent — last-chance offer', `intent.<span class="fn">on</span>(<span class="str">'exit_intent'</span>, ({ <span class="prop">state</span>, <span class="prop">likelyNext</span> }) => {
+      ${codeBlock(
+        'exit_intent — last-chance offer',
+        `intent.<span class="fn">on</span>(<span class="str">'exit_intent'</span>, ({ <span class="prop">state</span>, <span class="prop">likelyNext</span> }) => {
   <span class="kw">if</span> (state === <span class="str">'/checkout/payment'</span>) {
     Modal.<span class="fn">show</span>({
       title: <span class="str">'Wait — your cart will expire in 10 minutes!'</span>,
@@ -800,7 +925,8 @@ intent.<span class="fn">on</span>(<span class="str">'user_resumed'</span>, ({ <s
   }
   <span class="cmt">// likelyNext: highest-probability Markov prediction</span>
   console.<span class="fn">log</span>(<span class="str">'Would have gone to:'</span>, likelyNext);
-});`)}
+});`,
+      )}
     `,
     setup(el) {
       el.querySelector('#btn-setup-exit-intent')!.addEventListener('click', () => {
@@ -817,7 +943,7 @@ intent.<span class="fn">on</span>(<span class="str">'user_resumed'</span>, ({ <s
       el.querySelector('#btn-simulate-exit')!.addEventListener('click', () => {
         lifecycle.triggerExitIntent();
       });
-    }
+    },
   },
 
   // ── 10. Bloom Filter ──────────────────────────────────────────────────────
@@ -866,7 +992,9 @@ intent.<span class="fn">on</span>(<span class="str">'user_resumed'</span>, ({ <s
         <div id="bloom-config-result" style="margin-top:10px"></div>
       </div>
 
-      ${codeBlock('BloomFilter API', `<span class="kw">import</span> { <span class="type">BloomFilter</span>, <span class="fn">computeBloomConfig</span> } <span class="kw">from</span> <span class="str">'@passiveintent/core'</span>;
+      ${codeBlock(
+        'BloomFilter API',
+        `<span class="kw">import</span> { <span class="type">BloomFilter</span>, <span class="fn">computeBloomConfig</span> } <span class="kw">from</span> <span class="str">'@passiveintent/core'</span>;
 
 <span class="cmt">// Optimal sizing for 1 000 items at 1% false-positive rate</span>
 <span class="kw">const</span> cfg = <span class="fn">computeBloomConfig</span>(<span class="num">1_000</span>, <span class="num">0.01</span>);
@@ -882,7 +1010,8 @@ bf.<span class="fn">check</span>(<span class="str">'other@example.com'</span>); 
 <span class="kw">const</span> restored = <span class="type">BloomFilter</span>.<span class="fn">fromBase64</span>(snapshot, cfg.hashCount);
 
 <span class="cmt">// Via IntentManager</span>
-intent.<span class="fn">hasSeen</span>(<span class="str">'/checkout/payment'</span>); <span class="cmt">// O(k), no false negatives</span>`)}
+intent.<span class="fn">hasSeen</span>(<span class="str">'/checkout/payment'</span>); <span class="cmt">// O(k), no false negatives</span>`,
+      )}
     `,
     setup(el) {
       // Standalone bloom filter for the demo
@@ -894,15 +1023,16 @@ intent.<span class="fn">hasSeen</span>(<span class="str">'/checkout/payment'</sp
         const b64 = bf.toBase64();
         const bytes = atob(b64);
         bitsEl.innerHTML = Array.from(bytes.slice(0, 32), (byte, bi) =>
-          Array.from({ length: 8 }, (_, k) =>
-            `<div class="bit ${(byte.charCodeAt(0) >> (7 - k)) & 1 ? 'on' : ''}"></div>`
-          ).join('')
+          Array.from(
+            { length: 8 },
+            (_, k) => `<div class="bit ${(byte.charCodeAt(0) >> (7 - k)) & 1 ? 'on' : ''}"></div>`,
+          ).join(''),
         ).join('');
       }
       renderBits();
 
       el.querySelector('#btn-bloom-check')!.addEventListener('click', () => {
-        const v = (el.querySelector<HTMLInputElement>('#bloom-check-input')!).value;
+        const v = el.querySelector<HTMLInputElement>('#bloom-check-input')!.value;
         const seen = intent.hasSeen(v);
         el.querySelector<HTMLElement>('#bloom-check-result')!.innerHTML =
           `<div class="alert ${seen ? 'alert-warning' : 'alert-info'}">
@@ -910,21 +1040,22 @@ intent.<span class="fn">hasSeen</span>(<span class="str">'/checkout/payment'</sp
           </div>`;
       });
       el.querySelector('#btn-bloom-add')!.addEventListener('click', () => {
-        const v = (el.querySelector<HTMLInputElement>('#bloom-add-input')!).value;
-        bf.add(v); bfItems++;
+        const v = el.querySelector<HTMLInputElement>('#bloom-add-input')!.value;
+        bf.add(v);
+        bfItems++;
         el.querySelector<HTMLElement>('#bloom-standalone-result')!.innerHTML =
           `<div class="alert alert-success">Added "${v}". Estimated FPR: ${(bf.estimateCurrentFPR(bfItems) * 100).toFixed(3)}%</div>`;
         renderBits();
       });
       el.querySelector('#btn-bloom-test')!.addEventListener('click', () => {
-        const v = (el.querySelector<HTMLInputElement>('#bloom-add-input')!).value;
+        const v = el.querySelector<HTMLInputElement>('#bloom-add-input')!.value;
         const r = bf.check(v);
         el.querySelector<HTMLElement>('#bloom-standalone-result')!.innerHTML =
           `<div class="alert ${r ? 'alert-warning' : 'alert-info'}">Test "${v}": ${r ? '✓ Probably in set' : '✗ Definitely not in set'}</div>`;
       });
       el.querySelector('#btn-compute-bloom')!.addEventListener('click', () => {
-        const items = parseInt((el.querySelector<HTMLInputElement>('#bloom-items')!).value);
-        const fpr   = parseFloat((el.querySelector<HTMLInputElement>('#bloom-fpr')!).value);
+        const items = parseInt(el.querySelector<HTMLInputElement>('#bloom-items')!.value);
+        const fpr = parseFloat(el.querySelector<HTMLInputElement>('#bloom-fpr')!.value);
         const cfg = computeBloomConfig(items, fpr);
         el.querySelector<HTMLElement>('#bloom-config-result')!.innerHTML = `
           <div class="alert alert-success">
@@ -933,7 +1064,7 @@ intent.<span class="fn">hasSeen</span>(<span class="str">'/checkout/payment'</sp
             estimated FPR: <strong>${(cfg.estimatedFpRate * 100).toFixed(3)}%</strong>
           </div>`;
       });
-    }
+    },
   },
 
   // ── 11. Markov Graph ──────────────────────────────────────────────────────
@@ -972,7 +1103,9 @@ intent.<span class="fn">hasSeen</span>(<span class="str">'/checkout/payment'</sp
         <div id="markov-output" style="margin-top:12px"></div>
       </div>
 
-      ${codeBlock('predictNextStates() + prefetch', `<span class="cmt">// Prefetch the most likely next page</span>
+      ${codeBlock(
+        'predictNextStates() + prefetch',
+        `<span class="cmt">// Prefetch the most likely next page</span>
 <span class="kw">const</span> predictions = intent.<span class="fn">predictNextStates</span>(
   <span class="num">0.3</span>,            <span class="cmt">// only states with ≥ 30% probability</span>
   (s) => !s.<span class="fn">startsWith</span>(<span class="str">'/admin'</span>)  <span class="cmt">// sanitize guard</span>
@@ -987,13 +1120,16 @@ intent.<span class="fn">hasSeen</span>(<span class="str">'/checkout/payment'</sp
 g.<span class="fn">incrementTransition</span>(<span class="str">'/home'</span>, <span class="str">'/pricing'</span>);
 g.<span class="fn">getLikelyNextStates</span>(<span class="str">'/home'</span>, <span class="num">0.1</span>);
 <span class="kw">const</span> json = g.<span class="fn">toJSON</span>();     <span class="cmt">// human-readable snapshot</span>
-<span class="kw">const</span> buf  = g.<span class="fn">toBinary</span>();   <span class="cmt">// compact binary — smaller at scale</span>`)}
+<span class="kw">const</span> buf  = g.<span class="fn">toBinary</span>();   <span class="cmt">// compact binary — smaller at scale</span>`,
+      )}
     `,
     setup(el) {
       el.querySelector('#btn-predict')!.addEventListener('click', () => {
-        const state     = (el.querySelector<HTMLInputElement>('#predict-state')!).value;
-        const threshold = parseFloat((el.querySelector<HTMLInputElement>('#predict-threshold')!).value);
-        const preds = intent.predictNextStates(threshold, s => !s.startsWith('/admin'));
+        const state = el.querySelector<HTMLInputElement>('#predict-state')!.value;
+        const threshold = parseFloat(
+          el.querySelector<HTMLInputElement>('#predict-threshold')!.value,
+        );
+        const preds = intent.predictNextStates(threshold, (s) => !s.startsWith('/admin'));
         if (!preds.length) {
           el.querySelector<HTMLElement>('#predict-result')!.innerHTML =
             `<div class="alert alert-info">No predictions for <code>${state}</code> above ${threshold}. Track more states from this origin first.</div>`;
@@ -1002,12 +1138,16 @@ g.<span class="fn">getLikelyNextStates</span>(<span class="str">'/home'</span>, 
         el.querySelector<HTMLElement>('#predict-result')!.innerHTML = `
           <table class="data-table">
             <thead><tr><th>State</th><th>Probability</th><th></th></tr></thead>
-            <tbody>${preds.map(({ state: s, probability: p }) => `
+            <tbody>${preds
+              .map(
+                ({ state: s, probability: p }) => `
               <tr>
                 <td><code style="color:var(--accent-h)">${s}</code></td>
                 <td>${(p * 100).toFixed(1)}%</td>
                 <td><div class="prob-bar"><div class="prob-fill" style="width:${Math.round(p * 200)}px"></div></div></td>
-              </tr>`).join('')}
+              </tr>`,
+              )
+              .join('')}
             </tbody>
           </table>`;
       });
@@ -1015,12 +1155,12 @@ g.<span class="fn">getLikelyNextStates</span>(<span class="str">'/home'</span>, 
       const sampleGraph = new MarkovGraph({ maxStates: 50 });
       el.querySelector('#btn-build-markov')!.addEventListener('click', () => {
         const paths = [
-          ['/home','/products','/cart','/checkout/payment','/thank-you'],
-          ['/home','/pricing','/checkout/payment','/thank-you'],
-          ['/home','/products','/product/widget','/cart','/checkout/payment','/thank-you'],
-          ['/blog','/home','/products','/cart','/checkout/payment'],
+          ['/home', '/products', '/cart', '/checkout/payment', '/thank-you'],
+          ['/home', '/pricing', '/checkout/payment', '/thank-you'],
+          ['/home', '/products', '/product/widget', '/cart', '/checkout/payment', '/thank-you'],
+          ['/blog', '/home', '/products', '/cart', '/checkout/payment'],
         ];
-        paths.forEach(path => {
+        paths.forEach((path) => {
           for (let i = 0; i < path.length - 1; i++) {
             sampleGraph.incrementTransition(path[i], path[i + 1]);
           }
@@ -1034,12 +1174,12 @@ g.<span class="fn">getLikelyNextStates</span>(<span class="str">'/home'</span>, 
           `<div class="code-block"><div class="code-label">MarkovGraph.toJSON()</div><pre>${json.slice(0, 800)}${json.length > 800 ? '\n...' : ''}</pre></div>`;
       });
       el.querySelector('#btn-binary-markov')!.addEventListener('click', () => {
-        const bin  = sampleGraph.toBinary();
+        const bin = sampleGraph.toBinary();
         const json = JSON.stringify(sampleGraph.toJSON());
         el.querySelector<HTMLElement>('#markov-output')!.innerHTML =
           `<div class="alert alert-info">Binary: <strong>${bin.byteLength} bytes</strong> | JSON: <strong>${json.length} bytes</strong> | Savings: <strong>${(((json.length - bin.byteLength) / json.length) * 100).toFixed(0)}%</strong></div>`;
       });
-    }
+    },
   },
 
   // ── 12. Bot Detection ─────────────────────────────────────────────────────
@@ -1081,7 +1221,9 @@ g.<span class="fn">getLikelyNextStates</span>(<span class="str">'/home'</span>, 
         </table>
       </div>
 
-      ${codeBlock('bot_detected + guard', `intent.<span class="fn">on</span>(<span class="str">'bot_detected'</span>, ({ <span class="prop">botScore</span> }) => {
+      ${codeBlock(
+        'bot_detected + guard',
+        `intent.<span class="fn">on</span>(<span class="str">'bot_detected'</span>, ({ <span class="prop">botScore</span> }) => {
   <span class="cmt">// Stop firing offers, analytics, or A/B experiments for this session</span>
   Session.<span class="fn">flagAsBot</span>();
 
@@ -1090,11 +1232,12 @@ g.<span class="fn">getLikelyNextStates</span>(<span class="str">'/home'</span>, 
 });
 
 <span class="cmt">// Disable bot protection in CI/E2E tests</span>
-<span class="kw">new</span> <span class="fn">IntentManager</span>({ botProtection: <span class="kw">false</span> });`)}
+<span class="kw">new</span> <span class="fn">IntentManager</span>({ botProtection: <span class="kw">false</span> });`,
+      )}
     `,
     setup(el) {
       el.querySelector('#btn-simulate-bot')!.addEventListener('click', () => {
-        const states = ['/home','/products','/cart','/checkout','/search','/blog'];
+        const states = ['/home', '/products', '/cart', '/checkout', '/search', '/blog'];
         for (let i = 0; i < 50; i++) {
           intent.track(states[i % states.length]);
         }
@@ -1109,11 +1252,11 @@ g.<span class="fn">getLikelyNextStates</span>(<span class="str">'/home'</span>, 
             Bot status: <strong>${t.botStatus}</strong>
           </div>`;
       });
-    }
+    },
   },
 
   // ── 13. Conversion Tracking ───────────────────────────────────────────────
-  'conversion': {
+  conversion: {
     title: '💰 Conversion Tracking',
     render: () => `
       <div class="demo-header">
@@ -1150,7 +1293,9 @@ g.<span class="fn">getLikelyNextStates</span>(<span class="str">'/home'</span>, 
         <button class="btn btn-primary" id="btn-track-conversion">💰 Track Conversion</button>
       </div>
 
-      ${codeBlock('trackConversion — local-only revenue tracking', `intent.<span class="fn">on</span>(<span class="str">'conversion'</span>, ({ <span class="prop">type</span>, <span class="prop">value</span>, <span class="prop">currency</span> }) => {
+      ${codeBlock(
+        'trackConversion — local-only revenue tracking',
+        `intent.<span class="fn">on</span>(<span class="str">'conversion'</span>, ({ <span class="prop">type</span>, <span class="prop">value</span>, <span class="prop">currency</span> }) => {
   <span class="cmt">// You decide what to do — the engine never sends this anywhere.</span>
   <span class="kw">if</span> (type === <span class="str">'purchase'</span>) {
     <span class="cmt">// Safe to send to YOUR server (GDPR-compliant aggregate):</span>
@@ -1158,20 +1303,21 @@ g.<span class="fn">getLikelyNextStates</span>(<span class="str">'/home'</span>, 
   }
 });
 
-intent.<span class="fn">trackConversion</span>({ type: <span class="str">'purchase'</span>, value: <span class="num">49.99</span>, currency: <span class="str">'USD'</span> });`)}
+intent.<span class="fn">trackConversion</span>({ type: <span class="str">'purchase'</span>, value: <span class="num">49.99</span>, currency: <span class="str">'USD'</span> });`,
+      )}
     `,
     setup(el) {
       el.querySelector('#btn-track-conversion')!.addEventListener('click', () => {
-        const type     = (el.querySelector<HTMLSelectElement>('#conv-type')!).value;
-        const value    = parseFloat((el.querySelector<HTMLInputElement>('#conv-value')!).value);
-        const currency = (el.querySelector<HTMLInputElement>('#conv-currency')!).value;
+        const type = el.querySelector<HTMLSelectElement>('#conv-type')!.value;
+        const value = parseFloat(el.querySelector<HTMLInputElement>('#conv-value')!.value);
+        const currency = el.querySelector<HTMLInputElement>('#conv-currency')!.value;
         intent.trackConversion({ type, value, currency });
       });
-    }
+    },
   },
 
   // ── 14. Session Counters ──────────────────────────────────────────────────
-  'counters': {
+  counters: {
     title: '🔢 Session Counters',
     render: () => `
       <div class="demo-header">
@@ -1207,7 +1353,9 @@ intent.<span class="fn">trackConversion</span>({ type: <span class="str">'purcha
         <div id="preset-outputs" style="margin-top:10px"></div>
       </div>
 
-      ${codeBlock('Session Counters API', `<span class="cmt">// Track offer impressions — cap at 3 to avoid annoyance</span>
+      ${codeBlock(
+        'Session Counters API',
+        `<span class="cmt">// Track offer impressions — cap at 3 to avoid annoyance</span>
 <span class="kw">const</span> shown = intent.<span class="fn">incrementCounter</span>(<span class="str">'offer-impressions'</span>);
 <span class="kw">if</span> (shown <= <span class="num">3</span>) Modal.<span class="fn">show</span>(offer);
 
@@ -1215,7 +1363,8 @@ intent.<span class="fn">trackConversion</span>({ type: <span class="str">'purcha
 intent.<span class="fn">incrementCounter</span>(<span class="str">'cart-items'</span>,  <span class="num">1</span>);  <span class="cmt">// add</span>
 intent.<span class="fn">incrementCounter</span>(<span class="str">'cart-items'</span>, <span class="num">-1</span>);  <span class="cmt">// remove</span>
 intent.<span class="fn">getCounter</span>(<span class="str">'cart-items'</span>);              <span class="cmt">// read</span>
-intent.<span class="fn">resetCounter</span>(<span class="str">'cart-items'</span>);             <span class="cmt">// reset to 0</span>`)}
+intent.<span class="fn">resetCounter</span>(<span class="str">'cart-items'</span>);             <span class="cmt">// reset to 0</span>`,
+      )}
     `,
     setup(el) {
       function showCounter(key: string) {
@@ -1223,31 +1372,31 @@ intent.<span class="fn">resetCounter</span>(<span class="str">'cart-items'</span
           `<div class="alert alert-info"><code>${key}</code> = <strong>${intent.getCounter(key)}</strong></div>`;
       }
       el.querySelector('#btn-inc')!.addEventListener('click', () => {
-        const key = (el.querySelector<HTMLInputElement>('#counter-key')!).value;
-        const by  = parseInt((el.querySelector<HTMLInputElement>('#counter-by')!).value);
-        const v   = intent.incrementCounter(key, by);
+        const key = el.querySelector<HTMLInputElement>('#counter-key')!.value;
+        const by = parseInt(el.querySelector<HTMLInputElement>('#counter-by')!.value);
+        const v = intent.incrementCounter(key, by);
         el.querySelector<HTMLElement>('#counter-result')!.innerHTML =
           `<div class="alert alert-success"><code>${key}</code> = <strong>${v}</strong></div>`;
       });
       el.querySelector('#btn-get')!.addEventListener('click', () => {
-        showCounter((el.querySelector<HTMLInputElement>('#counter-key')!).value);
+        showCounter(el.querySelector<HTMLInputElement>('#counter-key')!.value);
       });
       el.querySelector('#btn-reset-counter')!.addEventListener('click', () => {
-        const key = (el.querySelector<HTMLInputElement>('#counter-key')!).value;
+        const key = el.querySelector<HTMLInputElement>('#counter-key')!.value;
         intent.resetCounter(key);
         el.querySelector<HTMLElement>('#counter-result')!.innerHTML =
           `<div class="alert alert-info"><code>${key}</code> reset to <strong>0</strong></div>`;
       });
-      el.querySelectorAll<HTMLElement>('[data-preset-key]').forEach(btn => {
+      el.querySelectorAll<HTMLElement>('[data-preset-key]').forEach((btn) => {
         btn.addEventListener('click', () => {
           const key = btn.dataset.presetKey!;
-          const by  = parseInt(btn.dataset.presetBy || '1');
-          const v   = intent.incrementCounter(key, by);
+          const by = parseInt(btn.dataset.presetBy || '1');
+          const v = intent.incrementCounter(key, by);
           el.querySelector<HTMLElement>('#preset-outputs')!.innerHTML =
             `<div class="alert alert-info"><code>${key}</code> = <strong>${v}</strong></div>`;
         });
       });
-    }
+    },
   },
 
   // ── 15. Cross-Tab Sync ────────────────────────────────────────────────────
@@ -1287,7 +1436,9 @@ intent.<span class="fn">resetCounter</span>(<span class="str">'cart-items'</span
         <div id="sync-status" style="margin-top:10px"></div>
       </div>
 
-      ${codeBlock('crossTabSync config', `<span class="kw">const</span> intent = <span class="kw">new</span> <span class="fn">IntentManager</span>({
+      ${codeBlock(
+        'crossTabSync config',
+        `<span class="kw">const</span> intent = <span class="kw">new</span> <span class="fn">IntentManager</span>({
   storageKey:   <span class="str">'my-app'</span>,
   crossTabSync: <span class="kw">true</span>,   <span class="cmt">// enables BroadcastChannel</span>
 });
@@ -1297,7 +1448,8 @@ intent.<span class="fn">resetCounter</span>(<span class="str">'cart-items'</span
 intent.<span class="fn">destroy</span>(); <span class="cmt">// closes BroadcastChannel + removes all listeners</span>
 
 <span class="cmt">// BroadcastSync can also be used standalone:</span>
-<span class="kw">import</span> { <span class="type">BroadcastSync</span> } <span class="kw">from</span> <span class="str">'@passiveintent/core'</span>;`)}
+<span class="kw">import</span> { <span class="type">BroadcastSync</span> } <span class="kw">from</span> <span class="str">'@passiveintent/core'</span>;`,
+      )}
     `,
     setup(el) {
       let syncEnabled = false;
@@ -1309,13 +1461,16 @@ intent.<span class="fn">destroy</span>(); <span class="cmt">// closes BroadcastC
           return;
         }
         syncEnabled = !syncEnabled;
-        (el.querySelector('#btn-enable-sync') as HTMLButtonElement).textContent =
-          syncEnabled ? '✓ Sync Enabled' : 'Enable Cross-Tab Sync';
+        (el.querySelector('#btn-enable-sync') as HTMLButtonElement).textContent = syncEnabled
+          ? '✓ Sync Enabled'
+          : 'Enable Cross-Tab Sync';
         el.querySelector<HTMLElement>('#sync-status')!.innerHTML =
           `<div class="alert ${syncEnabled ? 'alert-success' : 'alert-info'}">
-            ${syncEnabled
-              ? 'Cross-tab sync conceptually enabled. Open a second tab to see shared graph state after npm publish.'
-              : 'Cross-tab sync disabled.'}
+            ${
+              syncEnabled
+                ? 'Cross-tab sync conceptually enabled. Open a second tab to see shared graph state after npm publish.'
+                : 'Cross-tab sync disabled.'
+            }
            </div>`;
       });
 
@@ -1329,7 +1484,324 @@ intent.<span class="fn">destroy</span>(); <span class="cmt">// closes BroadcastC
             `<div class="alert alert-success">Tracked + broadcast <code>/checkout/payment</code>.</div>`;
         }
       });
-    }
+    },
+  },
+
+  // ── 16. Amazon Playground ─────────────────────────────────────────────────
+  'amazon-playground': {
+    title: '🛒 Amazon Playground',
+    render: () => {
+      const products = [
+        {
+          id: 'p1',
+          name: 'Wireless Headphones',
+          emoji: '🎧',
+          price: 79.99,
+          orig: 129.99,
+          rating: 4.5,
+          reviews: 2341,
+          state: '/product/headphones',
+        },
+        {
+          id: 'p2',
+          name: 'Mechanical Keyboard',
+          emoji: '⌨️',
+          price: 149.99,
+          orig: 199.99,
+          rating: 4.7,
+          reviews: 1893,
+          state: '/product/keyboard',
+        },
+        {
+          id: 'p3',
+          name: 'USB-C Monitor',
+          emoji: '🖥️',
+          price: 349.99,
+          orig: 499.99,
+          rating: 4.3,
+          reviews: 876,
+          state: '/product/monitor',
+        },
+        {
+          id: 'p4',
+          name: 'Ergonomic Mouse',
+          emoji: '🖱️',
+          price: 59.99,
+          orig: 89.99,
+          rating: 4.6,
+          reviews: 3122,
+          state: '/product/mouse',
+        },
+        {
+          id: 'p5',
+          name: 'Laptop Stand',
+          emoji: '💻',
+          price: 39.99,
+          orig: 59.99,
+          rating: 4.4,
+          reviews: 1567,
+          state: '/product/stand',
+        },
+        {
+          id: 'p6',
+          name: 'Webcam HD',
+          emoji: '📷',
+          price: 89.99,
+          orig: 119.99,
+          rating: 4.2,
+          reviews: 987,
+          state: '/product/webcam',
+        },
+      ];
+      return `
+        <div class="demo-header">
+          <h2 class="demo-title">🛒 E-Commerce Intent Playground</h2>
+          <p class="demo-description">
+            Browse products, hesitate on prices, rage-click, go idle, or switch tabs.
+            Watch <strong>real PassiveIntent signals</strong> trigger business-friendly interventions.
+          </p>
+        </div>
+
+        <div class="card">
+          <div class="card-title">Quick Simulate</div>
+          <p style="color:var(--text-muted);font-size:13px;margin-bottom:10px">Trigger specific behaviors to see interventions:</p>
+          <div class="btn-row">
+            <button class="btn btn-secondary" id="btn-browse-back-forth">🔄 Browse Back &amp; Forth</button>
+            <button class="btn btn-danger" id="btn-rage-click">😤 Rage-Click Products</button>
+            <button class="btn btn-secondary" id="btn-jump-payment">💳 Jump to Payment</button>
+            <button class="btn btn-green" id="btn-back-browse">🏠 Back to Browse</button>
+          </div>
+          <p style="color:var(--text-muted);font-size:11px;margin-top:8px">
+            💡 Tip: Switch to another tab and return after 15s to trigger "Welcome Back". Move your mouse above the viewport for "Exit Intent".
+          </p>
+        </div>
+
+        <div id="interventions-area"></div>
+
+        <div class="amazon-hero">
+          <h2>🛍️ Today's Deals</h2>
+          <p>Click products to browse. Hover on prices. Trigger real intent signals.</p>
+        </div>
+
+        <div class="amazon-grid" id="product-grid">
+          ${products
+            .map(
+              (p) => `
+            <div class="product-card" data-product-state="${p.state}" data-product-name="${p.name}" data-product-emoji="${p.emoji}" data-product-price="${p.price}">
+              <div class="product-img">${p.emoji}</div>
+              <div class="product-name">${p.name}</div>
+              <div>
+                <span class="product-price">$${p.price.toFixed(2)}</span>
+                <span class="product-price-original">$${p.orig.toFixed(2)}</span>
+              </div>
+              <div class="product-rating">${'★'.repeat(Math.floor(p.rating))}${'☆'.repeat(5 - Math.floor(p.rating))} (${p.reviews.toLocaleString()})</div>
+              <div style="margin-top:8px">
+                <button class="btn btn-primary btn-sm" data-add-cart="${p.state}">Add to Cart</button>
+              </div>
+            </div>
+          `,
+            )
+            .join('')}
+        </div>
+
+        <div id="product-detail"></div>
+
+        <div class="card" style="margin-top:24px">
+          <div class="card-title">📋 Signal → Business Action Mapping</div>
+          <table class="data-table">
+            <thead><tr><th>User Behavior</th><th>PassiveIntent Signal</th><th>Proposed Action</th></tr></thead>
+            <tbody>
+              <tr><td>Hovers on price, pauses 3s+</td><td><code>dwell_time_anomaly</code></td><td>🚚 Free Shipping tooltip</td></tr>
+              <tr><td>Rage-clicks between products</td><td><code>high_entropy</code></td><td>💬 Open Zendesk chat</td></tr>
+              <tr><td>Unusual navigation path</td><td><code>trajectory_anomaly</code></td><td>⚖️ Compare side-by-side</td></tr>
+              <tr><td>Mouse to browser tabs</td><td><code>exit_intent</code></td><td>🏷️ 10% off overlay</td></tr>
+              <tr><td>Tab away, return after 15s+</td><td><code>attention_return</code></td><td>👋 Welcome back banner</td></tr>
+              <tr><td>Hesitates on checkout form</td><td><code>hesitation_detected</code></td><td>🛡️ Money-back guarantee</td></tr>
+              <tr><td>Goes idle for 30s+</td><td><code>user_idle</code></td><td>⏳ Still shopping? nudge</td></tr>
+            </tbody>
+          </table>
+        </div>
+      `;
+    },
+    setup(el) {
+      intent.track('/amazon/home');
+      const interventionsArea = el.querySelector<HTMLElement>('#interventions-area')!;
+      let interventionCount = 0;
+
+      function pushIntervention(
+        type: string,
+        icon: string,
+        title: string,
+        body: string,
+        trigger: string,
+      ) {
+        interventionCount++;
+        const id = `iv-${interventionCount}`;
+        const existing = interventionsArea.querySelector('.card') as HTMLElement | null;
+        if (!existing) {
+          interventionsArea.innerHTML = `<div class="card"><div class="card-title">🎯 Triggered Interventions</div><div id="iv-list"></div></div>`;
+        }
+        const list = interventionsArea.querySelector('#iv-list')!;
+        const div = document.createElement('div');
+        div.className = `intervention intervention-${type}`;
+        div.id = id;
+        div.innerHTML = `
+          <span class="intervention-icon">${icon}</span>
+          <div class="intervention-body"><h4>${title}</h4><p>${body}</p>
+            <span class="badge badge-purple" style="margin-top:4px;display:inline-block;font-size:10px">Signal: ${trigger}</span>
+          </div>
+          <button class="intervention-dismiss" data-dismiss="${id}">✕</button>
+        `;
+        list.prepend(div);
+        // Cap at 8
+        while (list.children.length > 8 && list.lastChild) list.removeChild(list.lastChild);
+      }
+
+      // Dismiss handler (delegated)
+      interventionsArea.addEventListener('click', (e) => {
+        const btn = (e.target as HTMLElement).closest('[data-dismiss]') as HTMLElement | null;
+        if (btn) {
+          const target = document.getElementById(btn.dataset.dismiss!);
+          target?.remove();
+        }
+      });
+
+      // Wire up signals → interventions
+      const unsubs = [
+        intent.on('dwell_time_anomaly', (p: unknown) => {
+          const payload = p as { state: string; dwellMs: number; zScore: number };
+          pushIntervention(
+            'free-shipping',
+            '🚚',
+            'Free Shipping on orders over $50!',
+            `You paused on "${payload.state}" for ${Math.round(payload.dwellMs)}ms — z-score: ${payload.zScore.toFixed(1)}`,
+            'dwell_time_anomaly',
+          );
+        }),
+        intent.on('high_entropy', (p: unknown) => {
+          const payload = p as { state: string; normalizedEntropy: number };
+          pushIntervention(
+            'zendesk',
+            '💬',
+            'Need help? Chat with us!',
+            `Rapid navigation detected on "${payload.state}" — entropy: ${payload.normalizedEntropy.toFixed(2)}`,
+            'high_entropy',
+          );
+        }),
+        intent.on('trajectory_anomaly', (p: unknown) => {
+          const payload = p as { stateFrom: string; stateTo: string; zScore: number };
+          pushIntervention(
+            'compare',
+            '⚖️',
+            'Compare these products side by side?',
+            `Unusual path ${payload.stateFrom} → ${payload.stateTo} (z-score: ${payload.zScore.toFixed(1)})`,
+            'trajectory_anomaly',
+          );
+        }),
+        intent.on('exit_intent', (p: unknown) => {
+          const payload = p as { state: string; likelyNext: string | null };
+          pushIntervention(
+            'discount',
+            '🏷️',
+            "Wait — here's 10% off your order!",
+            `Exit intent from "${payload.state}" — likely next: ${payload.likelyNext ?? 'unknown'}`,
+            'exit_intent',
+          );
+        }),
+        intent.on('attention_return', (p: unknown) => {
+          const payload = p as { state: string; hiddenDuration: number };
+          const secs = Math.round(payload.hiddenDuration / 1000);
+          pushIntervention(
+            'welcome-back',
+            '👋',
+            'Welcome back! Still interested?',
+            `You were away for ${secs}s from "${payload.state}"`,
+            'attention_return',
+          );
+        }),
+        intent.on('hesitation_detected', (p: unknown) => {
+          const payload = p as { state: string; dwellZScore: number; trajectoryZScore: number };
+          pushIntervention(
+            'guarantee',
+            '🛡️',
+            '100% money-back guarantee',
+            `Hesitation on "${payload.state}" — dwell z: ${payload.dwellZScore.toFixed(1)}, trajectory z: ${payload.trajectoryZScore.toFixed(1)}`,
+            'hesitation_detected',
+          );
+        }),
+        intent.on('user_idle', () => {
+          pushIntervention(
+            'idle',
+            '⏳',
+            'Still shopping?',
+            "You've been idle. We saved your cart!",
+            'user_idle',
+          );
+        }),
+      ];
+
+      // Product clicks → track
+      el.querySelectorAll<HTMLElement>('.product-card').forEach((card) => {
+        card.addEventListener('click', () => {
+          const state = card.dataset.productState!;
+          intent.track(state);
+          el.querySelectorAll<HTMLElement>('.product-card').forEach((c) =>
+            c.classList.remove('active'),
+          );
+          card.classList.add('active');
+          el.querySelector<HTMLElement>('#product-detail')!.innerHTML = `
+            <div class="checkout-section">
+              <h3>${card.dataset.productEmoji} ${card.dataset.productName}</h3>
+              <p style="color:var(--text-muted);margin-bottom:12px">Viewing product — dwell time and navigation being tracked.</p>
+              <div class="metrics-grid" style="margin-bottom:16px">
+                <div class="metric-card"><div class="metric-value" style="color:#ff9900">$${parseFloat(card.dataset.productPrice!).toFixed(2)}</div><div class="metric-label">Price</div></div>
+              </div>
+              <button class="btn btn-primary" data-add-cart="${state}">🛒 Add to Cart</button>
+            </div>
+          `;
+        });
+      });
+
+      // Add to cart → track
+      el.addEventListener('click', (e) => {
+        const btn = (e.target as HTMLElement).closest('[data-add-cart]') as HTMLElement | null;
+        if (btn) {
+          intent.track('/amazon/cart');
+          intent.incrementCounter('cart-items', 1);
+        }
+      });
+
+      // Quick simulate buttons
+      el.querySelector('#btn-browse-back-forth')?.addEventListener('click', () => {
+        intent.track('/amazon/home');
+        intent.track('/amazon/deals');
+        intent.track('/amazon/home');
+        intent.track('/amazon/deals');
+      });
+      el.querySelector('#btn-rage-click')?.addEventListener('click', () => {
+        const states = [
+          '/product/headphones',
+          '/product/keyboard',
+          '/product/monitor',
+          '/product/mouse',
+          '/product/stand',
+          '/product/webcam',
+        ];
+        for (let i = 0; i < 6; i++) {
+          setTimeout(() => intent.track(states[i % states.length]), i * 60);
+        }
+      });
+      el.querySelector('#btn-jump-payment')?.addEventListener('click', () => {
+        intent.track('/amazon/checkout/payment');
+      });
+      el.querySelector('#btn-back-browse')?.addEventListener('click', () => {
+        intent.track('/amazon/home');
+      });
+
+      return () => {
+        unsubs.forEach((u) => u());
+      };
+    },
   },
 };
 
@@ -1341,10 +1813,30 @@ function codeBlock(label: string, code: string): string {
 function buildEcommerceBaseline(): SerializedMarkovGraph {
   const g = new MarkovGraph({ maxStates: 100 });
   const funnels: [string, string][][] = [
-    [['/home','/products'],['/products','/product/item'],['/product/item','/cart'],['/cart','/checkout/payment'],['/checkout/payment','/thank-you']],
-    [['/home','/pricing'],['/pricing','/checkout/payment'],['/checkout/payment','/thank-you']],
-    [['/home','/products'],['/products','/product/item'],['/product/item','/checkout/payment'],['/checkout/payment','/thank-you']],
-    [['/home','/blog'],['/blog','/products'],['/products','/cart'],['/cart','/checkout/payment']],
+    [
+      ['/home', '/products'],
+      ['/products', '/product/item'],
+      ['/product/item', '/cart'],
+      ['/cart', '/checkout/payment'],
+      ['/checkout/payment', '/thank-you'],
+    ],
+    [
+      ['/home', '/pricing'],
+      ['/pricing', '/checkout/payment'],
+      ['/checkout/payment', '/thank-you'],
+    ],
+    [
+      ['/home', '/products'],
+      ['/products', '/product/item'],
+      ['/product/item', '/checkout/payment'],
+      ['/checkout/payment', '/thank-you'],
+    ],
+    [
+      ['/home', '/blog'],
+      ['/blog', '/products'],
+      ['/products', '/cart'],
+      ['/cart', '/checkout/payment'],
+    ],
   ];
   // Build 50 simulated sessions
   for (let i = 0; i < 50; i++) {
@@ -1356,6 +1848,87 @@ function buildEcommerceBaseline(): SerializedMarkovGraph {
   return g.toJSON() as SerializedMarkovGraph;
 }
 
+// ─── Intent Meter ─────────────────────────────────────────────────────────────
+const meterState = { rage: 0, anxiety: 0, hesitation: 0, bot: 0, idle: 0, exit: 0 };
+const METER_DECAY = 0.5;
+
+function updateMeterGauge(name: string, value: number) {
+  const v = Math.max(0, Math.min(100, value));
+  (meterState as Record<string, number>)[name] = v;
+  const fill = document.getElementById(`gauge-${name}`);
+  const valEl = document.getElementById(`gauge-${name}-val`);
+  if (fill) {
+    fill.style.height = `${v}%`;
+    fill.style.background = getGaugeColor(name);
+    fill.style.boxShadow = v > 50 ? `0 0 8px ${getGaugeColor(name)}` : 'none';
+  }
+  if (valEl) valEl.textContent = `${Math.round(v)}%`;
+}
+
+function getGaugeColor(name: string): string {
+  switch (name) {
+    case 'rage':
+      return 'var(--red)';
+    case 'anxiety':
+      return 'var(--yellow)';
+    case 'hesitation':
+      return 'var(--purple)';
+    case 'bot':
+      return 'var(--red)';
+    case 'idle':
+      return 'var(--text-muted)';
+    case 'exit':
+      return 'var(--blue)';
+    default:
+      return 'var(--accent)';
+  }
+}
+
+// Decay meters
+setInterval(() => {
+  for (const key of ['rage', 'anxiety', 'hesitation', 'exit'] as const) {
+    if ((meterState as Record<string, number>)[key] > 0) {
+      updateMeterGauge(key, (meterState as Record<string, number>)[key] - METER_DECAY);
+    }
+  }
+  // Bot from telemetry
+  const t = intent.getTelemetry();
+  updateMeterGauge('bot', t.botStatus === 'suspected_bot' ? 100 : 0);
+}, 200);
+
+// Wire events to meter
+intent.on('high_entropy', (p) => {
+  const payload = p as { normalizedEntropy: number };
+  updateMeterGauge('rage', payload.normalizedEntropy * 100);
+});
+intent.on('dwell_time_anomaly', (p) => {
+  const payload = p as { zScore: number };
+  updateMeterGauge('hesitation', Math.min(payload.zScore * 25, 100));
+});
+intent.on('hesitation_detected', (p) => {
+  const payload = p as { dwellZScore: number; trajectoryZScore: number };
+  const combined = (Math.abs(payload.dwellZScore) + Math.abs(payload.trajectoryZScore)) / 2;
+  updateMeterGauge('hesitation', combined * 25);
+});
+intent.on('trajectory_anomaly', (p) => {
+  const payload = p as { zScore: number };
+  updateMeterGauge('anxiety', Math.abs(payload.zScore) * 25);
+});
+intent.on('exit_intent', () => updateMeterGauge('exit', 100));
+intent.on('user_idle', () => updateMeterGauge('idle', 100));
+intent.on('user_resumed', () => updateMeterGauge('idle', 0));
+
+// Toggle visibility
+document.getElementById('meter-toggle')!.addEventListener('click', () => {
+  const meter = document.getElementById('intent-meter')!;
+  const body = document.getElementById('meter-body')!;
+  const btn = document.getElementById('meter-toggle')!;
+  const isVisible = body.style.display !== 'none';
+  body.style.display = isVisible ? 'none' : '';
+  btn.textContent = isVisible ? '▶' : '◀';
+  meter.classList.toggle('intent-meter--collapsed', isVisible);
+});
+
 // ─── Navigation ───────────────────────────────────────────────────────────────
 let activeDemo = 'overview';
 let activeCleanup: (() => void) | void = undefined;
@@ -1364,7 +1937,7 @@ function navigateTo(demoKey: string): void {
   if (!demos[demoKey]) return;
 
   // Update nav active state
-  document.querySelectorAll<HTMLElement>('.nav-item').forEach(btn => {
+  document.querySelectorAll<HTMLElement>('.nav-item').forEach((btn) => {
     btn.classList.toggle('active', btn.dataset.demo === demoKey);
   });
 
@@ -1379,7 +1952,7 @@ function navigateTo(demoKey: string): void {
 }
 
 // Wire up sidebar
-document.querySelectorAll<HTMLElement>('.nav-item').forEach(btn => {
+document.querySelectorAll<HTMLElement>('.nav-item').forEach((btn) => {
   btn.addEventListener('click', () => navigateTo(btn.dataset.demo!));
 });
 

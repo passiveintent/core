@@ -32,20 +32,20 @@ npm run dev
 
 ## What's covered
 
-| Section | Event / API |
-|---|---|
+| Section              | Event / API                                                 |
+| -------------------- | ----------------------------------------------------------- |
 | Overview & Telemetry | `getTelemetry()`, `getPerformanceReport()`, `exportGraph()` |
-| Basic Tracking | `track()`, `state_change`, auto-normalization |
-| High Entropy | `high_entropy`, `highEntropyThreshold` |
-| Dwell Time Anomaly | `dwell_time_anomaly`, Welford's algorithm |
-| Trajectory Anomaly | `trajectory_anomaly`, baseline graph |
-| Hesitation Detection | `hesitation_detected`, intervention ladder |
-| Attention Return | `attention_return`, comparison-shopper pattern |
-| Idle Detection | `user_idle`, `user_resumed` |
-| Exit Intent | `exit_intent`, `likelyNext` prediction |
-| Bloom Filter | `BloomFilter`, `computeBloomConfig()`, `hasSeen()` |
-| Markov Predictions | `predictNextStates()`, `MarkovGraph`, binary vs JSON |
-| Bot Detection | `bot_detected`, EntropyGuard |
-| Conversion Tracking | `trackConversion()`, `conversion` event |
-| Session Counters | `incrementCounter()`, `getCounter()`, `resetCounter()` |
-| Cross-Tab Sync | `BroadcastSync`, `crossTabSync` config |
+| Basic Tracking       | `track()`, `state_change`, auto-normalization               |
+| High Entropy         | `high_entropy`, `highEntropyThreshold`                      |
+| Dwell Time Anomaly   | `dwell_time_anomaly`, Welford's algorithm                   |
+| Trajectory Anomaly   | `trajectory_anomaly`, baseline graph                        |
+| Hesitation Detection | `hesitation_detected`, intervention ladder                  |
+| Attention Return     | `attention_return`, comparison-shopper pattern              |
+| Idle Detection       | `user_idle`, `user_resumed`                                 |
+| Exit Intent          | `exit_intent`, `likelyNext` prediction                      |
+| Bloom Filter         | `BloomFilter`, `computeBloomConfig()`, `hasSeen()`          |
+| Markov Predictions   | `predictNextStates()`, `MarkovGraph`, binary vs JSON        |
+| Bot Detection        | `bot_detected`, EntropyGuard                                |
+| Conversion Tracking  | `trackConversion()`, `conversion` event                     |
+| Session Counters     | `incrementCounter()`, `getCounter()`, `resetCounter()`      |
+| Cross-Tab Sync       | `BroadcastSync`, `crossTabSync` config                      |

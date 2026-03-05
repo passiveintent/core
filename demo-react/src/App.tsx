@@ -36,30 +36,31 @@ export type DemoKey =
 
 const PAGE_MAP: Record<DemoKey, React.ReactElement> = {
   overview: <Overview />,
-  'basic-tracking': <BasicTracking />,
-  'high-entropy': <HighEntropy />,
-  'dwell-time': <DwellTime />,
-  trajectory: <Trajectory />,
-  hesitation: <Hesitation />,
-  'attention-return': <AttentionReturn />,
-  'idle-detection': <IdleDetection />,
-  'exit-intent': <ExitIntent />,
-  'bloom-filter': <BloomFilterPage />,
-  'markov-graph': <MarkovPredictions />,
-  'bot-detection': <BotDetection />,
-  conversion: <Conversion />,
-  counters: <Counters />,
-  'amazon-playground': <AmazonPlayground />,
+const PAGE_MAP: Record<DemoKey, React.ComponentType> = {
+  'overview':          Overview,
+  'basic-tracking':    BasicTracking,
+  'high-entropy':      HighEntropy,
+  'dwell-time':        DwellTime,
+  'trajectory':        Trajectory,
+  'hesitation':        Hesitation,
+  'attention-return':  AttentionReturn,
+  'idle-detection':    IdleDetection,
+  'exit-intent':       ExitIntent,
+  'bloom-filter':      BloomFilterPage,
+  'markov-graph':      MarkovPredictions,
+  'bot-detection':     BotDetection,
+  'conversion':        Conversion,
+  'counters':          Counters,
 };
 
 export default function App() {
   const [active, setActive] = useState<DemoKey>('overview');
-  const [resetKey, setResetKey] = useState(0);
+  const ActivePage = PAGE_MAP[active];
 
   return (
-    <IntentProvider key={resetKey}>
-      <Shell active={active} onNavigate={setActive} onReset={() => setResetKey((k) => k + 1)}>
-        {PAGE_MAP[active]}
+    <IntentProvider>
+      <Shell active={active} onNavigate={setActive}>
+        <ActivePage />
       </Shell>
     </IntentProvider>
   );

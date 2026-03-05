@@ -55,6 +55,7 @@ export class IntentManager {
   private readonly timer: TimerAdapter;
   private readonly onError?: (error: PassiveIntentError) => void;
   private readonly botProtection: boolean;
+  private readonly stateNormalizer?: (state: string) => string;
 
   /* Pluggable feature policies (deterministic order) */
   private readonly policies: EnginePolicy[];
@@ -86,6 +87,7 @@ export class IntentManager {
     this.timer = config.timer ?? new BrowserTimerAdapter();
     this.onError = config.onError;
     this.botProtection = opts.botProtection;
+    this.stateNormalizer = config.stateNormalizer;
 
     // Session ID — local-only, never transmitted.
     this.sessionId =
@@ -295,8 +297,13 @@ export class IntentManager {
    */
   track(state: string): void {
     // Normalise first: strip query strings, hash fragments, trailing slashes,
-    // and replace dynamic ID segments (UUIDs, MongoDB ObjectIDs) with ':id'.
+    // and replace dynamic ID segments (UUIDs, MongoDB ObjectIDs, numeric IDs) with ':id'.
     state = normalizeRouteState(state);
+
+    // Apply optional custom normalizer (e.g. for SEO slugs).
+    if (this.stateNormalizer) {
+      state = this.stateNormalizer(state);
+    }
 
     // Guard: '' is reserved internally as a tombstone marker.
     // Silently drop and surface a non-fatal error rather than crashing the host.
@@ -364,6 +371,11 @@ export class IntentManager {
   };
 
   private runGraphAndSignalStage = (ctx: TrackContext): void => {
+    // Skip graph updates when the session is flagged as a bot.
+    // This prevents automation / scrapers from poisoning the Markov
+    // transition probabilities that drive real-user predictions.
+    if (this.botProtection && this.signalEngine.suspected) return;
+
     if (ctx.from) {
       const incrementStart = this.benchmark.now();
       this.graph.incrementTransition(ctx.from, ctx.state);
@@ -587,6 +599,15 @@ export class IntentManager {
         });
       }
       return this.counters.get(key) ?? 0;
+    }
+    if (!this.counters.has(key) && this.counters.size >= 50) {
+      if (this.onError) {
+        this.onError({
+          code: 'LIMIT_EXCEEDED',
+          message: 'IntentManager.incrementCounter(): max unique counter keys (50) reached',
+        });
+      }
+      return 0;
     }
     const next = (this.counters.get(key) ?? 0) + by;
     this.counters.set(key, next);

@@ -8,25 +8,6 @@
 import type { MarkovGraphConfig } from '../types/events.js';
 
 /**
- * Map probability [0, 1] to an 8-bit integer [0, 255].
- *
- * Only used by `getQuantizedRow` / `getQuantizedProbability` for
- * memory-compact exports (e.g. sending probability vectors over postMessage).
- * The *canonical* hot-path (`getProbability`) always works with raw floats
- * from live counts to avoid quantization error accumulation.
- */
-function quantizeProbability(probability: number): number {
-  if (probability <= 0) return 0;
-  if (probability >= 1) return 255;
-  return Math.round(probability * 255) & 0xff;
-}
-
-/** Inverse of `quantizeProbability`. */
-function dequantizeProbability(value: number): number {
-  return (value & 0xff) / 255;
-}
-
-/**
  * Outgoing transition counts for a single source state.
  *
  * Using a nested `Map<number, number>` keeps the representation sparse:
@@ -115,6 +96,15 @@ export class MarkovGraph {
     if (state === '') throw new Error('MarkovGraph: state label must not be empty string');
     const existing = this.stateToIndex.get(state);
     if (existing !== undefined) return existing;
+
+    // Hard-cap guard: if the live state count has burst well past maxStates
+    // (1.5× threshold), force a synchronous prune to recycle tombstoned
+    // indices before allocating new array memory.  This prevents unbounded
+    // indexToState growth during rapid-fire unique-URL bursts that occur
+    // between persist() cycles.
+    if (this.stateToIndex.size >= this.maxStates * 1.5) {
+      this.prune();
+    }
 
     let index: number;
     if (this.freedIndices.length > 0) {
@@ -212,11 +202,15 @@ export class MarkovGraph {
 
   /**
    * Normalized entropy in [0..1], dividing by max entropy ln(k)
-   * where k is the support size of the probability distribution.
+   * where k is the **local** branching factor (number of observed outgoing
+   * edges from this state, floored at 2 to avoid division artifacts).
    *
-   * - Frequentist mode (`smoothingAlpha = 0`): k = observed outgoing edges.
-   * - Bayesian mode (`smoothingAlpha > 0`): k = live-state count, because
-   *   unobserved transitions receive non-zero mass.
+   * Using the local fan-out instead of the global state count ensures that
+   * the normalized score correctly reflects *local* decision-space confusion
+   * (rage-clicking between 3–4 links) regardless of how many total pages
+   * exist in the graph.  With the global denominator, ln(N) grows without
+   * bound as users browse more pages, crushing the normalized score and
+   * making high-entropy anomalies undetectable after ~10 unique states.
    */
   normalizedEntropyForState(state: string): number {
     const from = this.stateToIndex.get(state);
@@ -225,7 +219,7 @@ export class MarkovGraph {
     const row = this.rows.get(from);
     if (!row || row.total === 0) return 0;
 
-    const supportSize = this.smoothingAlpha > 0 ? this.stateToIndex.size : row.toCounts.size;
+    const supportSize = Math.max(2, row.toCounts.size);
     if (supportSize <= 1) return 0;
 
     const entropy = this.entropyForState(state);
@@ -257,53 +251,6 @@ export class MarkovGraph {
       sum += Math.log(p > 0 ? p : epsilon);
     }
     return sum;
-  }
-
-  /**
-   * Quantized view of outgoing probabilities for a state as Uint8Array.
-   *
-   * Encoding per edge (3 bytes):
-   *   byte 0: low byte  of toIndex  (toIndex & 0xff)
-   *   byte 1: high byte of toIndex  ((toIndex >> 8) & 0xff)
-   *   byte 2: quantized probability  round(P * 255) & 0xff
-   *
-   * Using 2 bytes for toIndex supports up to 65535 states without overflow.
-   */
-  getQuantizedRow(state: string): Uint8Array {
-    const from = this.stateToIndex.get(state);
-    if (from === undefined) return new Uint8Array(0);
-
-    const row = this.rows.get(from);
-    if (!row || row.total === 0) return new Uint8Array(0);
-
-    // 3 bytes per edge: [lowByte(toIndex), highByte(toIndex), quantizedProbability]
-    const out = new Uint8Array(row.toCounts.size * 3);
-    let offset = 0;
-    row.toCounts.forEach((count, toIndex) => {
-      const probability = count / row.total;
-      out[offset] = toIndex & 0xff; // low byte of toIndex
-      out[offset + 1] = (toIndex >> 8) & 0xff; // high byte of toIndex
-      out[offset + 2] = quantizeProbability(probability); // quantized probability
-      offset += 3;
-    });
-    return out;
-  }
-
-  /**
-   * Return dequantized transition probability by state labels.
-   */
-  getQuantizedProbability(fromState: string, toState: string): number {
-    const from = this.stateToIndex.get(fromState);
-    const to = this.stateToIndex.get(toState);
-    if (from === undefined || to === undefined) return 0;
-
-    const row = this.rows.get(from);
-    if (!row || row.total === 0) return 0;
-
-    const count = row.toCounts.get(to) ?? 0;
-    if (count === 0) return 0;
-
-    return dequantizeProbability(quantizeProbability(count / row.total));
   }
 
   /**

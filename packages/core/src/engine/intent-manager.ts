@@ -286,7 +286,7 @@ export class IntentManager {
    *
    * The `state` argument is automatically normalized via `normalizeRouteState()`
    * before any processing.  This means you can pass raw URL strings directly —
-   * query strings, hash fragments, trailing slashes, UUIDs, and MongoDB
+   * query strings, hash fragments, trailing slashes, UUIDs, numeric IDs and MongoDB
    * ObjectIDs are all stripped or replaced so the engine always receives a
    * stable, canonical state label.
    *

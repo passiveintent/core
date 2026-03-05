@@ -97,15 +97,6 @@ export class MarkovGraph {
     const existing = this.stateToIndex.get(state);
     if (existing !== undefined) return existing;
 
-    // Hard-cap guard: if the live state count has burst well past maxStates
-    // (1.5× threshold), force a synchronous prune to recycle tombstoned
-    // indices before allocating new array memory.  This prevents unbounded
-    // indexToState growth during rapid-fire unique-URL bursts that occur
-    // between persist() cycles.
-    if (this.stateToIndex.size >= this.maxStates * 1.5) {
-      this.prune();
-    }
-
     let index: number;
     if (this.freedIndices.length > 0) {
       index = this.freedIndices.pop()!;
@@ -119,6 +110,15 @@ export class MarkovGraph {
   }
 
   incrementTransition(fromState: string, toState: string): void {
+    // Burst-bloat guard: prune BEFORE resolving any indices so that neither
+    // fromState nor toState can be tombstoned mid-resolution.  Placing this
+    // inside ensureState caused a ghost-row bug: a freshly-allocated fromState
+    // index (total=0) would be evicted by the prune triggered during the
+    // subsequent ensureState(toState) call, leaving a phantom row at a
+    // tombstoned index with no stateToIndex entry.
+    if (this.stateToIndex.size >= this.maxStates * 1.5) {
+      this.prune();
+    }
     const from = this.ensureState(fromState);
     const to = this.ensureState(toState);
 
@@ -211,6 +211,15 @@ export class MarkovGraph {
    * exist in the graph.  With the global denominator, ln(N) grows without
    * bound as users browse more pages, crushing the normalized score and
    * making high-entropy anomalies undetectable after ~10 unique states.
+   *
+   * **Smoothing note:** this method uses raw frequentist counts
+   * (count / row.total) for both the entropy numerator and the ln(supportSize)
+   * denominator so that both are anchored to the same local support.
+   * `entropyForState()` uses Bayesian Laplace smoothing over all k global
+   * states and is intentionally a different (larger) quantity — calling it
+   * here would make the numerator exceed the denominator whenever the graph
+   * has many states, producing raw normalized scores > 1 that the clamp would
+   * silently mask.
    */
   normalizedEntropyForState(state: string): number {
     const from = this.stateToIndex.get(state);
@@ -220,11 +229,19 @@ export class MarkovGraph {
     if (!row || row.total === 0) return 0;
 
     const supportSize = Math.max(2, row.toCounts.size);
-    if (supportSize <= 1) return 0;
-
-    const entropy = this.entropyForState(state);
     const maxEntropy = Math.log(supportSize);
     if (maxEntropy <= 0) return 0;
+
+    // Compute entropy using only the observed local transitions (frequentist).
+    // This keeps the numerator and denominator anchored to the same support
+    // (local fan-out), avoiding the mismatch that would arise from calling
+    // entropyForState() which spreads probability mass over all k global states
+    // in Bayesian mode.
+    let entropy = 0;
+    row.toCounts.forEach((count) => {
+      const p = count / row.total;
+      if (p > 0) entropy -= p * Math.log(p);
+    });
 
     // Bound to [0, 1] to preserve the documented normalized-entropy contract.
     const normalized = entropy / maxEntropy;

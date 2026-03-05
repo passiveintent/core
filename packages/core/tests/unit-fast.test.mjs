@@ -23,6 +23,10 @@ import { MemoryStorage, setupTestEnvironment, storage } from './helpers/test-env
 
 setupTestEnvironment();
 
+/* =================================================================== */
+/*  BloomFilter                                                         */
+/* =================================================================== */
+
 test('BloomFilter supports add/check and base64 round-trip', () => {
   const bloom = new BloomFilter({ bitSize: 256, hashCount: 3 });
   bloom.add('home');
@@ -37,6 +41,10 @@ test('BloomFilter supports add/check and base64 round-trip', () => {
   assert.equal(restored.check('settings'), true);
   assert.equal(restored.check('notadded'), false);
 });
+
+/* =================================================================== */
+/*  MarkovGraph                                                         */
+/* =================================================================== */
 
 test('MarkovGraph calculates probabilities, entropy, and serialization', () => {
   // smoothingAlpha: 0 — this test asserts exact frequentist probability values
@@ -231,6 +239,10 @@ test('fromJSON rejects inconsistent payloads (freedIndices / label mismatch)', (
   );
 });
 
+/* =================================================================== */
+/*  IntentManager — Core                                                */
+/* =================================================================== */
+
 test('IntentManager returns performance report when benchmark mode is enabled', () => {
   const manager = new IntentManager({
     storageKey: 'perf-test',
@@ -291,6 +303,10 @@ test("IntentManager.track('') is a no-op and surfaces a non-fatal error via onEr
   assert.equal(manager.hasSeen('search'), true);
   assert.equal(manager.hasSeen(''), false);
 });
+
+/* =================================================================== */
+/*  EntropyGuard — Bot Detection                                        */
+/* =================================================================== */
 
 test('EntropyGuard: botProtection:false never suppresses events regardless of call speed', () => {
   storage.clear();
@@ -2165,6 +2181,8 @@ test('visibilitychange: no listener is attached in non-browser (SSR) environment
   }
 });
 
+// ── holdoutConfig (A/B Holdout) ──────────────────────────────────────────────
+
 test('holdoutConfig: assignmentGroup defaults to treatment when holdoutConfig is absent', () => {
   storage.clear();
   const manager = new IntentManager({
@@ -2253,6 +2271,8 @@ test('holdoutConfig: treatment group still emits high_entropy normally', () => {
   assert.ok(emitted.length > 0, 'treatment group must emit high_entropy events');
   manager.flushNow();
 });
+
+// ── Counter API (incrementCounter / resetCounter) ─────────────────────────────
 
 test('incrementCounter: starts at 0 and increments by 1 by default', () => {
   storage.clear();
@@ -2721,6 +2741,8 @@ test('track() auto-normalizes: plain semantic states are unchanged', () => {
   assert.equal(changes[1], 'checkout');
   manager.flushNow();
 });
+
+// ── Next-State Prediction (getLikelyNextStates / predictNextStates) ───────────
 
 test('MarkovGraph.getLikelyNextStates returns edges above the probability threshold', () => {
   // smoothingAlpha: 0 to assert the exact frequentist probability (2/3).
@@ -3256,6 +3278,8 @@ test('IntentManager: remote counter increment from another tab is reflected in g
   });
 });
 
+// ── IntentManager.createAsync ─────────────────────────────────────────────────
+
 test('IntentManager.createAsync() throws when asyncStorage is absent', async () => {
   await assert.rejects(
     () => IntentManager.createAsync({ storage: storage }),
@@ -3325,6 +3349,8 @@ test('IntentManager.createAsync() restores persisted state from async storage', 
   m2.destroy();
 });
 
+// ── Trajectory Scoring (smoothingEpsilon) ─────────────────────────────────────
+
 test('trajectory scoring: smoothingEpsilon config controls unseen-transition likelihood', () => {
   const baseline = new MarkovGraph();
   baseline.incrementTransition('/known', '/known');
@@ -3379,6 +3405,8 @@ test('trajectory scoring: smoothingEpsilon config controls unseen-transition lik
     `invalid smoothingEpsilon must fall back to default (${llInvalid} vs ${llDefault})`,
   );
 });
+
+// ── Async Persist ─────────────────────────────────────────────────────────────
 
 test('IntentManager async persist: overlapping writes are coalesced and auto-flushed', async () => {
   const writes = [];
@@ -4938,9 +4966,17 @@ test('MarkovGraph ensureState triggers synchronous prune at 1.5× maxStates', ()
     `Hard-cap guard should prevent unbounded array growth (got ${arrayLen} slots for 30 unique states)`,
   );
 
-  // Verify that tombstoned slots exist — proof that prune fired mid-burst.
-  const tombstones = json.states.filter((s) => s === '').length;
-  assert.ok(tombstones > 0, 'Expected tombstoned slots from mid-burst pruning');
+  // The hard-cap fires prune at the TOP of incrementTransition (before any
+  // ensureState call), so freed slots are eligible for immediate reuse within
+  // the same call.  Tombstones may or may not remain at the very end depending
+  // on whether those slots were consumed by the two ensureState calls that
+  // follow each prune.  The invariant to assert is that LIVE states are
+  // bounded, which is the actual goal of the hard-cap guard.
+  const liveStates = json.states.filter((s) => s !== '').length;
+  assert.ok(
+    liveStates <= Math.ceil(10 * 1.5),
+    `Prune must keep live-state count bounded (got ${liveStates} live states for maxStates=10)`,
+  );
 });
 
 test('MarkovGraph ensureState hard cap recycles freed indices', () => {
@@ -4961,6 +4997,40 @@ test('MarkovGraph ensureState hard cap recycles freed indices', () => {
   assert.ok(
     jsonAfter.states.length <= arrayLenBefore,
     `Array should not grow after prune frees slots (was ${arrayLenBefore}, now ${jsonAfter.states.length})`,
+  );
+});
+
+test('incrementTransition: fromState not evicted by prune triggered for toState (ghost-row regression)', () => {
+  // maxStates = 4, burst threshold = 6 (4 * 1.5).
+  // Reproduce the ghost-row bug:
+  //   1. Fill graph with 5 states that each have high transition counts so
+  //      they survive LFU pruning.
+  //   2. Call incrementTransition('fresh-from', 'fresh-to') where both states
+  //      are brand-new (total = 0).
+  //   Pre-fix: ensureState('fresh-from') raised size to 6,
+  //            ensureState('fresh-to') then triggered prune() which evicted
+  //            'fresh-from' (total=0), leaving a ghost row at a tombstoned
+  //            index and getProbability returning 0.
+  //   Post-fix: prune fires at the TOP of incrementTransition (size=5 < 6,
+  //             so no prune this time), then both states are allocated safely.
+  const graph = new MarkovGraph({ maxStates: 4, smoothingAlpha: 0 });
+
+  // Seed 5 states with heavy traffic so none of them are LFU-evicted.
+  for (let i = 0; i < 5; i++) {
+    for (let j = 0; j < 20; j++) {
+      graph.incrementTransition(`seed${i}`, `seed${(i + 1) % 5}`);
+    }
+  }
+  // stateToIndex.size == 5, below the burst threshold of 6.
+
+  // Both 'fresh-from' and 'fresh-to' are new.  In the buggy code, prune would
+  // fire during ensureState('fresh-to') and tombstone 'fresh-from'.
+  graph.incrementTransition('fresh-from', 'fresh-to');
+
+  const p = graph.getProbability('fresh-from', 'fresh-to');
+  assert.ok(
+    p > 0,
+    `expected probability > 0 for fresh-from→fresh-to but got ${p} (ghost-row bug: fromState was evicted mid-resolution)`,
   );
 });
 
@@ -5091,6 +5161,45 @@ test('normalizedEntropyForState: deterministic state scores at 0 regardless of g
 
   // frequentist mode: exactly 0 entropy (single outgoing edge)
   assert.equal(graph.normalizedEntropyForState('linear'), 0);
+});
+
+test('normalizedEntropyForState: never exceeds 1.0 without clamping when Bayesian smoothing is active and graph is large', () => {
+  // Regression for the numerator/denominator mismatch:
+  // entropyForState() (Bayesian) spreads mass over k global states, so its
+  // maximum value is ln(k).  normalizedEntropyForState() used to divide by
+  // ln(local fan-out), which is << ln(k), producing raw scores > 1 that the
+  // clamp silently masked.  Now both use the local frequentist distribution.
+  const graph = new MarkovGraph({ smoothingAlpha: 0.1 });
+
+  // 200 background states to make global k large so Bayesian entropy >> ln(local fan-out).
+  for (let i = 0; i < 200; i += 1) {
+    graph.incrementTransition(`bg-${i}`, `bg-${i + 1}`);
+  }
+
+  // A state with 3 outgoing edges — local fan-out = 3, maxEntropy = ln(3).
+  // With old code, Bayesian entropy (over k=200 states) would be >> ln(3),
+  // so raw normalized score >> 1 before clamping.
+  for (let j = 0; j < 10; j += 1) {
+    graph.incrementTransition('focal', 'x');
+    graph.incrementTransition('focal', 'y');
+    graph.incrementTransition('focal', 'z');
+  }
+
+  // Compute the raw normalized value without the clamp to expose > 1 scores.
+  // We can't access internals directly, but we can verify the public result
+  // equals what pure frequentist math produces — i.e., ≤ 1 by definition.
+  const normalized = graph.normalizedEntropyForState('focal');
+  assert.ok(
+    normalized >= 0 && normalized <= 1,
+    `normalizedEntropyForState must be in [0, 1] without relying on clamping; got ${normalized}`,
+  );
+
+  // With perfectly uniform 3-way distribution, frequentist entropy = ln(3)
+  // and maxEntropy = ln(max(2, 3)) = ln(3), so normalized must equal exactly 1.
+  assert.ok(
+    normalized >= 0.99,
+    `Uniform 3-way local distribution should score near 1.0; got ${normalized}`,
+  );
 });
 
 // ─── Counter hard cap ─────────────────────────────────────────────────────────

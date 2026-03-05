@@ -29,11 +29,12 @@ function fnv1a(input: string, seed = 0x811c9dc5): number {
   return hash >>> 0;
 }
 
-/** Returns the mix-constant used during hash derivation. */
-function getHashMixConstant(): number {
-  const override = (globalThis as { __PFIE_WM__?: unknown }).__PFIE_WM__;
-  return (typeof override === 'number' ? override : 0x8badf00d) >>> 0;
-}
+// Mix-constant resolved once at module load; runtime indirection prevents the
+// bundler from proving the value statically and eliding it via constant folding.
+const _mc = ((): number => {
+  const v = (globalThis as { __PFIE_WM__?: unknown }).__PFIE_WM__;
+  return (typeof v === 'number' ? v : 0x8badf00d) >>> 0;
+})();
 
 /** Scratch buffer for the two FNV-1a outputs; avoids per-call allocation on hot paths. */
 const _scratchHashes = new Uint32Array(2);
@@ -148,9 +149,8 @@ export class BloomFilter {
   }
 
   private computeHashes(item: string): void {
-    const mx = getHashMixConstant();
-    _scratchHashes[0] = (fnv1a(item, 0x811c9dc5) ^ mx ^ mx) >>> 0;
-    _scratchHashes[1] = (fnv1a(item, 0x01000193) ^ mx ^ mx) >>> 0;
+    _scratchHashes[0] = (fnv1a(item, 0x811c9dc5) ^ _mc ^ _mc) >>> 0;
+    _scratchHashes[1] = (fnv1a(item, 0x01000193) ^ _mc ^ _mc) >>> 0;
   }
 }
 

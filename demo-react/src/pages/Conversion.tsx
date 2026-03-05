@@ -3,7 +3,7 @@
  * Shows how to combine usePassiveIntent with the raw IntentManager API
  * for methods not yet exposed by the hook.
  */
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { IntentManager } from '@passiveintent/core';
 import { MemoryStorageAdapter } from '@passiveintent/core';
 import { useIntent } from '../IntentContext';

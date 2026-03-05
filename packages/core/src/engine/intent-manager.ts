@@ -302,7 +302,22 @@ export class IntentManager {
 
     // Apply optional custom normalizer (e.g. for SEO slugs).
     if (this.stateNormalizer) {
-      state = this.stateNormalizer(state);
+      try {
+        const normalized = this.stateNormalizer(state);
+        const coerced = String(normalized);
+        // Empty string is a deliberate "skip this state" signal from the
+        // normalizer — drop silently without firing a VALIDATION error.
+        if (coerced === '') return;
+        state = coerced;
+      } catch (err) {
+        if (this.onError) {
+          this.onError({
+            code: 'VALIDATION',
+            message: `IntentManager.track(): stateNormalizer threw: ${err instanceof Error ? err.message : String(err)}`,
+          });
+        }
+        return;
+      }
     }
 
     // Guard: '' is reserved internally as a tombstone marker.

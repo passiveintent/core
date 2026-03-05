@@ -5167,3 +5167,77 @@ test('BroadcastSync.applyRemoteCounter: hard cap at 50 unique keys prevents Map 
 
   sync.close();
 });
+
+// ─── stateNormalizer safety: throw, non-string, and empty-string ─────────────
+
+test('stateNormalizer: throwing normalizer drops the track() call and fires onError', () => {
+  storage.clear();
+  const errors = [];
+  const manager = new IntentManager({
+    storageKey: 'normalizer-throw-test',
+    storage,
+    botProtection: false,
+    onError: (err) => errors.push(err),
+    stateNormalizer: () => {
+      throw new Error('boom');
+    },
+  });
+  const changes = [];
+  manager.on('state_change', ({ to }) => changes.push(to));
+
+  manager.track('/home');
+  assert.equal(changes.length, 0, 'track() must be dropped when normalizer throws');
+  assert.equal(errors.length, 1, 'onError must fire once');
+  assert.equal(errors[0].code, 'VALIDATION');
+  assert.ok(
+    errors[0].message.includes('boom'),
+    `Expected "boom" in message, got: ${errors[0].message}`,
+  );
+  manager.flushNow();
+});
+
+test('stateNormalizer: non-string return is coerced to string and tracked normally', () => {
+  storage.clear();
+  const manager = new IntentManager({
+    storageKey: 'normalizer-nonstring-test',
+    storage,
+    botProtection: false,
+    // @ts-ignore — intentional: simulate a JS caller returning a number
+    stateNormalizer: () => 42,
+  });
+  const changes = [];
+  manager.on('state_change', ({ to }) => changes.push(to));
+
+  manager.track('/home');
+  assert.equal(changes.length, 1, 'track() must succeed after string coercion');
+  assert.equal(changes[0], '42', 'state must be the string-coerced return value');
+  manager.flushNow();
+});
+
+test('stateNormalizer: returning empty string silently drops the track() call (no VALIDATION error)', () => {
+  storage.clear();
+  const errors = [];
+  const manager = new IntentManager({
+    storageKey: 'normalizer-empty-test',
+    storage,
+    botProtection: false,
+    onError: (err) => errors.push(err),
+    stateNormalizer: (state) => (state === '/skip-me' ? '' : state),
+  });
+  const changes = [];
+  manager.on('state_change', ({ to }) => changes.push(to));
+
+  manager.track('/skip-me');
+  assert.equal(changes.length, 0, 'track() must be silently dropped when normalizer returns ""');
+  assert.equal(
+    errors.length,
+    0,
+    'no VALIDATION error must fire for normalizer empty-string return',
+  );
+
+  // Other states still tracked normally.
+  manager.track('/home');
+  assert.equal(changes.length, 1);
+  assert.equal(changes[0], '/home');
+  manager.flushNow();
+});

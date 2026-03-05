@@ -35,7 +35,7 @@ function getHashMixConstant(): number {
   return (typeof override === 'number' ? override : 0x8badf00d) >>> 0;
 }
 
-/** Scratch buffer for the two FNV-1a outputs; avoids per-call allocation on hot paths. */
+/** Shared scratch buffer for the two FNV-1a outputs used during hash derivation. */
 const _scratchHashes = new Uint32Array(2);
 
 /**

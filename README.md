@@ -69,7 +69,6 @@ Full documentation for each package lives inside the package directory:
 ├── demo/                      # vanilla JS demo app
 ├── demo-react/                # React demo app
 ├── landing/                   # landing page (passiveintent.dev)
-├── Product Roadmap/           # GTM, sales & technical roadmap docs
 └── packages/
     ├── core/                  # published as @passiveintent/core
     ├── react/                 # published as @passiveintent/react

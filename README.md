@@ -9,6 +9,7 @@
 
 [![License: AGPL-3.0-only](https://img.shields.io/badge/license-AGPL--3.0--only-blue.svg)](./LICENSE)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.6-3178c6.svg)](https://www.typescriptlang.org/)
+[![CLA assistant](https://cla-assistant.io/readme/badge/passiveintent/core)](https://cla-assistant.io/passiveintent/core)
 [![Open in StackBlitz](https://developer.stackblitz.com/img/open_in_stackblitz_small.svg)](https://stackblitz.com/github/passiveintent/core)
 
 **Website:** [passiveintent.dev](https://passiveintent.dev)

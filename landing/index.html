@@ -211,7 +211,7 @@
           </p>
         </div>
         <div class="demo-toolbar">
-          <div class="demo-tabs" role="tablist">
+          <div class="demo-tabs" role="tablist" aria-label="Choose a demo implementation">
             <button
               id="demo-tab-vanilla"
               class="demo-tab active"
@@ -220,6 +220,7 @@
               aria-selected="true"
               aria-controls="demo-vanilla"
               data-target="demo-vanilla"
+              tabindex="0"
             >
               Vanilla JS
             </button>
@@ -231,6 +232,7 @@
               aria-selected="false"
               aria-controls="demo-react"
               data-target="demo-react"
+              tabindex="-1"
             >
               React
             </button>

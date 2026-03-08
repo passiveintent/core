@@ -9,7 +9,7 @@
 
 [![License: AGPL-3.0-only](https://img.shields.io/badge/license-AGPL--3.0--only-blue.svg)](./LICENSE)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.6-3178c6.svg)](https://www.typescriptlang.org/)
-[![Open in StackBlitz](https://developer.stackblitz.com/img/open_in_stackblitz_small.svg)](https://stackblitz.com/github/purushpsm147/PassiveIntent-Privacy-First-Intent-Engine)
+[![Open in StackBlitz](https://developer.stackblitz.com/img/open_in_stackblitz_small.svg)](https://stackblitz.com/github/passiveintent/core)
 
 **Website:** [passiveintent.dev](https://passiveintent.dev)
 
@@ -19,10 +19,10 @@ This repository is structured as an **npm workspaces monorepo** containing all P
 
 ## Packages
 
-| Package                                    | Version                                                                                                                                       | Description                                       |
-| ------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------- |
-| [`@passiveintent/core`](./packages/core)   | [![npm](https://img.shields.io/badge/npm-coming%20soon-lightgrey)](https://github.com/purushpsm147/PassiveIntent-Privacy-First-Intent-Engine) | Privacy-first, on-device behavioral intent engine |
-| [`@passiveintent/react`](./packages/react) | [![npm](https://img.shields.io/badge/npm-coming%20soon-lightgrey)](https://github.com/purushpsm147/PassiveIntent-Privacy-First-Intent-Engine) | React 18+ hook wrapper for `@passiveintent/core`  |
+| Package                                    | Version                                                                                                   | Description                                       |
+| ------------------------------------------ | --------------------------------------------------------------------------------------------------------- | ------------------------------------------------- |
+| [`@passiveintent/core`](./packages/core)   | [![npm](https://img.shields.io/badge/npm-coming%20soon-lightgrey)](https://github.com/passiveintent/core) | Privacy-first, on-device behavioral intent engine |
+| [`@passiveintent/react`](./packages/react) | [![npm](https://img.shields.io/badge/npm-coming%20soon-lightgrey)](https://github.com/passiveintent/core) | React 18+ hook wrapper for `@passiveintent/core`  |
 
 Full documentation for each package lives inside the package directory:
 

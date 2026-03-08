@@ -3,7 +3,7 @@
 A full React 18 demo showcasing every major API in `@passiveintent/core` and `@passiveintent/react`.
 Built with Vite + TypeScript + the `usePassiveIntent` hook.
 
-[![Open in StackBlitz](https://developer.stackblitz.com/img/open_in_stackblitz.svg)](https://stackblitz.com/github/purushpsm147/PassiveIntent-Privacy-First-Intent-Engine/tree/main/demo-react)
+[![Open in StackBlitz](https://developer.stackblitz.com/img/open_in_stackblitz.svg)](https://stackblitz.com/github/passiveintent/core/tree/main/demo-react)
 
 ---
 

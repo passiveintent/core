@@ -341,7 +341,9 @@ nav a:hover {
   font-family: 'Space Grotesk', sans-serif;
   font-size: 0.9rem;
   cursor: pointer;
-  transition: border-color 0.2s, color 0.2s;
+  transition:
+    border-color 0.2s,
+    color 0.2s;
 }
 
 .demo-tab.active {
@@ -356,7 +358,7 @@ nav a:hover {
   border-radius: var(--radius);
 }
 
-
+.coming-link {
   display: inline-block;
   margin-top: 10px;
   color: var(--secondary);

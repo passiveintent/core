@@ -71,7 +71,7 @@ Full documentation for each package lives inside the package directory:
 ├── landing/                   # landing page (passiveintent.dev)
 └── packages/
     ├── core/                  # published as @passiveintent/core
-    ├── react/                 # published as @passiveintent/react
+    └── react/                 # published as @passiveintent/react
 ```
 
 ---

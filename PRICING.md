@@ -81,3 +81,15 @@ Support does **not** include:
 - Writing custom implementation code for the Licensee's application.
 - Debugging the Licensee's host application (e.g., React, Vue, Next.js integration issues unrelated to the SDK).
 - Consulting on third-party integrations (e.g., Google Analytics, Segment, Zendesk configuration).
+
+---
+
+## Frequently Asked Questions
+
+**Can I use the Indie, Startup, or Growth tier to build a Shopify App, SDK, or my own B2B analytics tool?**
+
+No. Our standard commercial tiers (Indie, Startup, Growth) are licensed strictly for **Internal Business Purposes** (e.g., deploying on your own company's website or SaaS application to track your own users). You cannot sub-license, resell, white-label, or "wrap" PassiveIntent into a standalone product or application where the primary value derived by your end-user is PassiveIntent's intent-tracking functionality.
+
+**I run a development agency / I want to build a B2B app using PassiveIntent. What are my options?**
+
+We love partnering with agencies and B2B integrators! For these use cases, you need an **OEM / Agency License**. This custom license grants you the legal right to distribute PassiveIntent inside your own commercial product or deploy it across multiple third-party client sites. Please contact us directly so we can structure a volume or revenue-share agreement that scales smoothly with your success.

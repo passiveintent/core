@@ -49,6 +49,10 @@ const NAV: Array<{ section: string; items: NavItem[] }> = [
     ],
   },
   {
+    section: 'Calibration',
+    items: [{ key: 'byob', label: '🎯 Bring Your Own Baseline' }],
+  },
+  {
     section: 'Playground',
     items: [{ key: 'amazon-playground', label: '🛒 E-commerce Playground' }],
   },

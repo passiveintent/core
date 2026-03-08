@@ -2055,6 +2055,568 @@ intent.<span class="fn">destroy</span>(); <span class="cmt">// closes BroadcastC
       };
     },
   },
+
+  // ── 17. Bring Your Own Baseline (BYOB) ──────────────────────────────────
+  byob: {
+    title: '🎯 Bring Your Own Baseline',
+    render: () => {
+      const archetypes = [
+        {
+          key: 'ecommerce',
+          label: 'E-commerce Checkout',
+          emoji: '🛒',
+          desc: 'Linear converging funnel. Low tolerance for deviation.',
+          states: ['/home', '/products', '/product/item', '/cart', '/checkout', '/thank-you'],
+          perfectPath: ['/home', '/products', '/product/item', '/cart', '/checkout', '/thank-you'],
+          meanLL: '-1.4',
+          stdLL: '0.35',
+          zThreshold: '-1.8',
+          idleMs: '20s',
+          variance: 'moderate',
+        },
+        {
+          key: 'saas',
+          label: 'SaaS Dashboard',
+          emoji: '📊',
+          desc: 'Cyclical hub-and-spoke. Billing visits signal upgrade intent.',
+          states: ['/dashboard', '/reports', '/settings', '/billing', '/upgrade', '/docs'],
+          perfectPath: ['/dashboard', '/billing', '/upgrade'],
+          meanLL: '-2.8',
+          stdLL: '0.52',
+          zThreshold: '-2.0',
+          idleMs: '120s',
+          variance: 'low',
+        },
+        {
+          key: 'media',
+          label: 'Media / Editorial',
+          emoji: '📰',
+          desc: 'High-variance exploration. Predictable next-article transitions enable prefetching.',
+          states: ['/home', '/article/tech', '/article/sports', '/article/politics', '/article/opinion', '/search', '/subscribe'],
+          perfectPath: ['/home', '/article/tech', '/subscribe'],
+          meanLL: '-3.47',
+          stdLL: '2.1',
+          zThreshold: '-1.5',
+          idleMs: '180s',
+          variance: 'high',
+        },
+      ];
+
+      const varianceColor = (v: string) =>
+        v === 'high' ? 'var(--yellow)' : v === 'low' ? 'var(--green)' : 'var(--accent-h)';
+
+      return `
+        <div class="demo-header">
+          <h2 class="demo-title">🎯 Bring Your Own Baseline (BYOB)</h2>
+          <p class="demo-description">
+            Start from zero and let the engine learn in real-time — or inject historical analytics
+            data so anomaly detection is accurate from session one.
+            <strong>This playground lets you explore both approaches.</strong>
+          </p>
+        </div>
+
+        <!-- Deployment Mode toggle -->
+        <div class="card">
+          <div class="card-title">Deployment Mode</div>
+          <div class="btn-row" style="margin-bottom:12px">
+            <button class="btn btn-secondary" id="btn-persona-indie"
+              title="The engine starts with an empty Markov graph. Transition probabilities are learned purely from live user sessions. Anomaly detection becomes reliable after ~50–90 sessions. No configuration required — ideal for MVPs and early-stage products.">
+              🚀 Start from Zero</button>
+            <button class="btn btn-primary" id="btn-persona-enterprise"
+              title="Compile historical session data (Mixpanel, GA4, Amplitude) into a pre-trained Markov graph and inject it at initialization. Anomaly detection is calibrated from day one — no cold-start period. Essential for high-stakes funnels.">
+              📦 Inject Historical Data</button>
+          </div>
+          <div id="persona-desc" style="color:var(--text-muted);font-size:13px;line-height:1.7">
+            <strong>Inject Historical Data:</strong> Compile historical analytics data into a pre-trained baseline graph
+            and inject it at initialization. Anomaly detection is accurate from the very first session.
+          </div>
+        </div>
+
+        <!-- Enterprise controls (hidden in indie mode) -->
+        <div id="byob-enterprise-section">
+          <!-- Archetype selector -->
+          <div class="card">
+            <div class="card-title">Site Archetype</div>
+            <p style="color:var(--text-muted);font-size:13px;margin-bottom:12px">Select your site type to see how calibration parameters change:</p>
+            <div class="btn-row">
+              ${archetypes.map((a) => `<button class="btn ${a.key === 'ecommerce' ? 'btn-primary' : 'btn-secondary'}" data-archetype="${a.key}">${a.emoji} ${a.label}</button>`).join('')}
+            </div>
+            <div id="archetype-detail" style="margin-top:14px;padding:12px 16px;background:var(--bg-3);border-radius:8px;font-size:13px;line-height:1.7">
+              <strong>🛒 E-commerce Checkout</strong><br/>
+              Linear converging funnel. Low tolerance for deviation.<br/>
+              <span style="color:var(--accent-h)">Variance: <strong>moderate</strong></span> · Idle: <strong>20s</strong> ·
+              Path: <code style="font-family:var(--font-mono);font-size:11px">/home → /products → /product/item → /cart → /checkout → /thank-you</code>
+            </div>
+          </div>
+
+          <!-- Calibration sliders -->
+          <div class="card">
+            <div class="card-title" title="These four parameters control the engine's sensitivity. Always extract them from a calibration script run against your real session data — do not guess them manually. Using wrong values is the #1 cause of false positives.">Calibration Parameters ⓘ</div>
+            <p style="color:var(--text-muted);font-size:13px;margin-bottom:14px">
+              Adjust these values to see how the engine adapts. In production, extract them from a calibration script run against real session data.
+            </p>
+            <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:16px">
+              <div>
+                <label style="display:block;font-size:12px;color:var(--text-muted);margin-bottom:4px"
+                  title="Average log-likelihood of a 'normal' session path through your Markov graph. Computed from your most common user journeys. More negative = users follow less-probable paths on average. E-commerce funnels are tight (-1.4); media sites are loose (-3.47).">
+                  baselineMeanLL ⓘ: <strong id="val-meanLL" style="color:var(--accent-h)">-1.4</strong>
+                </label>
+                <input type="range" id="slider-meanLL" min="-6" max="0" step="0.01" value="-1.4" style="width:100%"
+                  title="Average log-likelihood of a normal session. Drag left for strict/tight funnels, right for exploratory sites."/>
+                <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--text-muted)">
+                  <span>-6.0 (strict funnel)</span><span>0.0 (permissive)</span>
+                </div>
+              </div>
+              <div>
+                <label style="display:block;font-size:12px;color:var(--text-muted);margin-bottom:4px"
+                  title="Standard deviation of log-likelihoods across baseline sessions. Low stdLL (e.g. 0.35) means users follow a tight, predictable path — any deviation is significant. High stdLL (e.g. 2.1) means exploration is normal. Used as the denominator in the Z-score formula: Z = (sessionLL - meanLL) / stdLL.">
+                  baselineStdLL ⓘ: <strong id="val-stdLL" style="color:var(--accent-h)">0.35</strong>
+                </label>
+                <input type="range" id="slider-stdLL" min="0.05" max="4" step="0.01" value="0.35" style="width:100%"
+                  title="Standard deviation of session log-likelihoods. Low = tight funnel, high = exploratory site."/>
+                <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--text-muted)">
+                  <span>0.05 (tight funnel)</span><span>4.0 (high variance)</span>
+                </div>
+              </div>
+              <div>
+                <label style="display:block;font-size:12px;color:var(--text-muted);margin-bottom:4px"
+                  title="Z = (sessionLL − baselineMeanLL) / baselineStdLL. When Z drops below this threshold the session is flagged anomalous. -1.8 ≈ bottom 3.6% of sessions. -2.0 ≈ bottom 2.3%. Too close to 0 = alert storm; too far negative = misses real anomalies. Start at your P5 calibration output.">
+                  zScoreThreshold ⓘ: <strong id="val-zThreshold" style="color:var(--yellow)">-1.8</strong>
+                </label>
+                <input type="range" id="slider-zThreshold" min="-4" max="-0.5" step="0.1" value="-1.8" style="width:100%"
+                  title="Anomaly trigger. Fire trajectory_anomaly when Z < this value. Start at your P5 calibration output, then tighten if too noisy."/>
+                <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--text-muted)">
+                  <span>-4.0 (rarely fires)</span><span>-0.5 (hair-trigger)</span>
+                </div>
+              </div>
+              <div>
+                <label style="display:block;font-size:12px;color:var(--text-muted);margin-bottom:4px"
+                  title="How long without any tracked event before the engine fires idle_detected. Short for checkout funnels (20s inactivity = hesitation signal). Long for media/editorial (users read articles for minutes). Set based on your median time-on-page.">
+                  idleThresholdMs ⓘ: <strong id="val-idle" style="color:var(--accent-h)">20s</strong>
+                </label>
+                <input type="range" id="slider-idle" min="5000" max="300000" step="5000" value="20000" style="width:100%"
+                  title="Milliseconds of inactivity before idle_detected fires. Too short = false positives; too long = misses real hesitation."/>
+                <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--text-muted)">
+                  <span>5s (checkout)</span><span>300s (media / docs)</span>
+                </div>
+              </div>
+            </div>
+            <div style="margin-top:16px;display:flex;align-items:center;gap:10px">
+              <button class="btn btn-sm btn-green" id="btn-toggle-baseline"
+                title="Toggle whether the pre-compiled baseline graph is passed to IntentManager. ON = calibrated from session 1; OFF = cold-start, engine must learn from scratch.">✓ Baseline ON</button>
+              <span id="baseline-toggle-label" style="font-size:12px;color:var(--text-muted)">Pre-trained graph injected — anomaly detection active from session 1.</span>
+            </div>
+          </div>
+
+          <!-- Generate baseline -->
+          <div class="card">
+            <div class="card-title">Generate Baseline from Simulated History</div>
+            <p style="color:var(--text-muted);font-size:13px;margin-bottom:12px">
+              Simulates <strong id="gen-session-count">200</strong> sessions and computes calibration.
+              In production, run this against a Mixpanel / GA4 export.
+            </p>
+            <button class="btn btn-primary" id="btn-generate-baseline">⚙️ Generate Baseline</button>
+            <div id="gen-metrics" style="margin-top:14px"></div>
+            <div id="gen-transitions" style="margin-top:12px"></div>
+          </div>
+        </div>
+
+        <!-- Live simulation (both modes) -->
+        <div class="card">
+          <div class="card-title" id="sim-title">Live Simulation — E-commerce Checkout Traffic</div>
+          <p id="sim-desc" style="color:var(--text-muted);font-size:13px;margin-bottom:12px">
+            Walk paths against the pre-trained baseline. The engine knows normal from abnormal instantly.
+          </p>
+          <div class="btn-row">
+            <button class="btn btn-green" id="btn-byob-walk-perfect"
+              title="Tracks the ideal conversion path in order. Should produce a normal (above-threshold) Z-score when a baseline is loaded.‪Should NOT trigger anomaly events.">✅ Walk Perfect Path</button>
+            <button class="btn btn-danger" id="btn-byob-walk-anomalous"
+              title="Tracks a backwards / error path that is statistically improbable given the baseline. Should trigger trajectory_anomaly if your Z-score threshold is correctly calibrated.">🚨 Walk Anomalous Path</button>
+            <button class="btn btn-secondary" id="btn-byob-walk-random"
+              title="Tracks 12 random state transitions. May or may not trigger anomalies — useful for exploring your false-positive rate at the current threshold.">🎲 Random (12 steps)</button>
+          </div>
+          <div class="chip-row" id="byob-state-chips" style="margin-top:12px">
+            ${archetypes[0].states.map((s) => `<span class="state-chip" data-byob-track="${s}">${s}</span>`).join('')}
+          </div>
+          <div id="byob-track-count" style="margin-top:10px;font-size:12px;color:var(--text-muted)"></div>
+        </div>
+
+        <!-- Anomaly feed -->
+        <div class="card" id="byob-anomaly-card" style="display:none">
+          <div class="card-title">Anomaly Feed</div>
+          <div id="byob-anomaly-feed"></div>
+        </div>
+
+        <!-- Comparison table -->
+        <div class="card">
+          <div class="card-title">Archetype Comparison — Why One Threshold Doesn't Fit All</div>
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Dimension</th>
+                ${archetypes.map((a) => `<th>${a.emoji} ${a.label}</th>`).join('')}
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td>Path Structure</td><td>Linear, converging</td><td>Cyclical, hub-and-spoke</td><td>Free exploration</td></tr>
+              <tr><td>baselineMeanLL</td>${archetypes.map((a) => `<td><code style="font-family:var(--font-mono)">${a.meanLL}</code></td>`).join('')}</tr>
+              <tr><td>baselineStdLL</td>${archetypes.map((a) => `<td><code style="font-family:var(--font-mono);color:${varianceColor(a.variance)}">${a.stdLL}</code></td>`).join('')}</tr>
+              <tr><td>Z-score threshold</td>${archetypes.map((a) => `<td><code style="font-family:var(--font-mono)">${a.zThreshold}</code></td>`).join('')}</tr>
+              <tr><td>Idle threshold</td>${archetypes.map((a) => `<td>${a.idleMs}</td>`).join('')}</tr>
+              <tr><td>Variance profile</td>${archetypes.map((a) => `<td><strong style="color:${varianceColor(a.variance)}">${a.variance}</strong></td>`).join('')}</tr>
+              <tr><td>Fixed -2.0 effect</td><td style="color:var(--text-muted)">Works coincidentally</td><td style="color:var(--green)">Almost never fires</td><td style="color:var(--yellow)">Alert storm</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Config code -->
+        <div id="byob-config-code"></div>
+      `;
+    },
+    setup(el) {
+      const archetypes = [
+        {
+          key: 'ecommerce', label: 'E-commerce Checkout', emoji: '🛒',
+          desc: 'Linear converging funnel. Low tolerance for deviation.',
+          states: ['/home', '/products', '/product/item', '/cart', '/checkout', '/thank-you'],
+          perfectPath: ['/home', '/products', '/product/item', '/cart', '/checkout', '/thank-you'],
+          funnels: [
+            ['/home', '/products', '/product/item', '/cart', '/checkout', '/thank-you'],
+            ['/home', '/products', '/cart', '/checkout', '/thank-you'],
+            ['/products', '/product/item', '/cart', '/checkout', '/thank-you'],
+          ],
+          sessions: 200, meanLL: -1.4, stdLL: 0.35, zThreshold: -1.8, idleMs: 20000, variance: 'moderate',
+        },
+        {
+          key: 'saas', label: 'SaaS Dashboard', emoji: '📊',
+          desc: 'Cyclical hub-and-spoke. Billing visits signal upgrade intent.',
+          states: ['/dashboard', '/reports', '/settings', '/billing', '/upgrade', '/docs'],
+          perfectPath: ['/dashboard', '/billing', '/upgrade'],
+          funnels: [
+            ['/dashboard', '/reports', '/settings', '/dashboard', '/billing', '/upgrade'],
+            ['/dashboard', '/reports', '/dashboard', '/reports', '/settings'],
+            ['/dashboard', '/docs', '/dashboard', '/billing', '/upgrade'],
+            ['/dashboard', '/settings', '/billing', '/dashboard'],
+          ],
+          sessions: 300, meanLL: -2.8, stdLL: 0.52, zThreshold: -2.0, idleMs: 120000, variance: 'low',
+        },
+        {
+          key: 'media', label: 'Media / Editorial', emoji: '📰',
+          desc: 'High-variance exploration. Predictable transitions enable prefetching.',
+          states: ['/home', '/article/tech', '/article/sports', '/article/politics', '/article/opinion', '/search', '/subscribe'],
+          perfectPath: ['/home', '/article/tech', '/subscribe'],
+          funnels: [
+            ['/home', '/article/tech', '/article/sports', '/article/opinion', '/home'],
+            ['/home', '/article/politics', '/article/tech', '/search', '/article/sports'],
+            ['/home', '/search', '/article/tech', '/article/opinion', '/subscribe'],
+            ['/article/sports', '/article/tech', '/article/politics', '/home', '/article/opinion'],
+            ['/home', '/article/tech', '/article/sports', '/home', '/subscribe'],
+          ],
+          sessions: 500, meanLL: -3.47, stdLL: 2.1, zThreshold: -1.5, idleMs: 180000, variance: 'high',
+        },
+      ];
+
+      let persona: 'indie' | 'enterprise' = 'enterprise';
+      let activeArch = archetypes[0];
+      let baselineOn = true;
+      let trackCount = 0;
+
+      const varianceColor = (v: string) =>
+        v === 'high' ? 'var(--yellow)' : v === 'low' ? 'var(--green)' : 'var(--accent-h)';
+
+      function updatePersona(p: 'indie' | 'enterprise') {
+        persona = p;
+        const indieBtn = el.querySelector<HTMLElement>('#btn-persona-indie')!;
+        const entBtn = el.querySelector<HTMLElement>('#btn-persona-enterprise')!;
+        const entSection = el.querySelector<HTMLElement>('#byob-enterprise-section')!;
+        const descEl = el.querySelector<HTMLElement>('#persona-desc')!;
+        indieBtn.className = `btn ${p === 'indie' ? 'btn-primary' : 'btn-secondary'}`;
+        entBtn.className = `btn ${p === 'enterprise' ? 'btn-primary' : 'btn-secondary'}`;
+        entSection.style.display = p === 'enterprise' ? '' : 'none';
+        descEl.innerHTML = p === 'indie'
+          ? '<strong>Start from Zero:</strong> No baseline graph is loaded. The engine starts empty and learns from live sessions. Anomaly detection becomes reliable after ~50–90 sessions.'
+          : '<strong>Inject Historical Data:</strong> Compile historical analytics data into a pre-trained baseline. Anomaly detection is accurate from session 1.';
+        el.querySelector<HTMLElement>('#sim-title')!.textContent =
+          p === 'indie' ? 'Live Simulation — Real-Time Learning' : `Live Simulation — ${activeArch.label} Traffic`;
+        el.querySelector<HTMLElement>('#sim-desc')!.textContent =
+          p === 'indie'
+            ? 'Walk paths to build the Markov graph from scratch. Each click is a data point — the engine has no prior knowledge.'
+            : 'Walk paths against the pre-trained baseline. The engine immediately scores each transition against the historical distribution.';
+        updateConfig();
+      }
+
+      function updateArchetype(key: string) {
+        const arch = archetypes.find((a) => a.key === key);
+        if (!arch) return;
+        activeArch = arch;
+        el.querySelectorAll<HTMLElement>('[data-archetype]').forEach((btn) => {
+          btn.className = `btn ${btn.dataset.archetype === key ? 'btn-primary' : 'btn-secondary'}`;
+        });
+        el.querySelector<HTMLElement>('#archetype-detail')!.innerHTML = `
+          <strong>${arch.emoji} ${arch.label}</strong><br/>
+          ${arch.desc}<br/>
+          <span style="color:${varianceColor(arch.variance)}">Variance: <strong>${arch.variance}</strong></span> · Idle: <strong>${arch.idleMs / 1000}s</strong> ·
+          Path: <code style="font-family:var(--font-mono);font-size:11px">${arch.perfectPath.join(' → ')}</code>
+        `;
+        (el.querySelector('#slider-meanLL') as HTMLInputElement).value = String(arch.meanLL);
+        el.querySelector<HTMLElement>('#val-meanLL')!.textContent = String(arch.meanLL);
+        (el.querySelector('#slider-stdLL') as HTMLInputElement).value = String(arch.stdLL);
+        el.querySelector<HTMLElement>('#val-stdLL')!.textContent = String(arch.stdLL);
+        (el.querySelector('#slider-zThreshold') as HTMLInputElement).value = String(arch.zThreshold);
+        el.querySelector<HTMLElement>('#val-zThreshold')!.textContent = String(arch.zThreshold);
+        (el.querySelector('#slider-idle') as HTMLInputElement).value = String(arch.idleMs);
+        el.querySelector<HTMLElement>('#val-idle')!.textContent = `${arch.idleMs / 1000}s`;
+        el.querySelector<HTMLElement>('#gen-session-count')!.textContent = String(arch.sessions);
+        el.querySelector<HTMLElement>('#gen-metrics')!.innerHTML = '';
+        el.querySelector<HTMLElement>('#gen-transitions')!.innerHTML = '';
+        el.querySelector<HTMLElement>('#sim-title')!.textContent = `Live Simulation — ${arch.label} Traffic`;
+
+        // Rebuild state chips
+        const chipsEl = el.querySelector<HTMLElement>('#byob-state-chips')!;
+        chipsEl.innerHTML = arch.states.map((s) => `<span class="state-chip" data-byob-track="${s}">${s}</span>`).join('');
+        chipsEl.querySelectorAll<HTMLElement>('[data-byob-track]').forEach((chip) => {
+          chip.addEventListener('click', () => {
+            intent.track(chip.dataset.byobTrack!);
+            trackCount++;
+            el.querySelector<HTMLElement>('#byob-track-count')!.innerHTML =
+              `Tracked <strong style="color:var(--accent-h)">${trackCount}</strong> transitions this session.`;
+          });
+        });
+        updateConfig();
+      }
+
+      function updateConfig() {
+        const meanVal = (el.querySelector('#slider-meanLL') as HTMLInputElement).value;
+        const stdVal = (el.querySelector('#slider-stdLL') as HTMLInputElement).value;
+        const zVal = (el.querySelector('#slider-zThreshold') as HTMLInputElement).value;
+        const codeEl = el.querySelector<HTMLElement>('#byob-config-code')!;
+        if (persona === 'indie') {
+          codeEl.innerHTML = codeBlock('Config — zero baseline (start from zero)', `<span class="cmt">// Zero-baseline mode: engine learns purely from live traffic</span>
+<span class="kw">const</span> engine = <span class="kw">new</span> <span class="fn">IntentManager</span>({
+  storageKey: <span class="str">'my-app'</span>,
+  <span class="cmt">// No baseline — engine learns from live sessions</span>
+  graph: {
+    highEntropyThreshold: <span class="num">0.72</span>,
+    divergenceThreshold: <span class="num">2.5</span>,
+  },
+  dwellTime: { enabled: <span class="kw">true</span>, minSamples: <span class="num">3</span> },
+});`);
+        } else {
+          codeEl.innerHTML = codeBlock('Config — pre-trained baseline (inject historical data)', `<span class="cmt">// Inject-baseline mode: pre-trained graph loaded at initialization</span>
+<span class="kw">import</span> baseline <span class="kw">from</span> <span class="str">'./baseline.json'</span>;
+
+<span class="kw">const</span> engine = <span class="kw">new</span> <span class="fn">IntentManager</span>({
+  storageKey: <span class="str">'my-app'</span>,
+  baseline,${baselineOn ? '' : '  <span class="cmt">// ← disabled</span>'}
+  baselineMeanLL: <span class="num">${meanVal}</span>,
+  baselineStdLL:  <span class="num">${stdVal}</span>,
+  graph: {
+    highEntropyThreshold: <span class="num">0.72</span>,
+    divergenceThreshold:  <span class="num">${Math.abs(parseFloat(zVal)).toFixed(1)}</span>,
+  },
+  dwellTime: { enabled: <span class="kw">true</span>, minSamples: <span class="num">3</span>, zScoreThreshold: <span class="num">2.0</span> },
+});`);
+        }
+      }
+
+      // Persona buttons
+      el.querySelector('#btn-persona-indie')!.addEventListener('click', () => updatePersona('indie'));
+      el.querySelector('#btn-persona-enterprise')!.addEventListener('click', () => updatePersona('enterprise'));
+
+      // Archetype buttons
+      el.querySelectorAll<HTMLElement>('[data-archetype]').forEach((btn) => {
+        btn.addEventListener('click', () => updateArchetype(btn.dataset.archetype!));
+      });
+
+      // Sliders
+      for (const [sliderId, valId] of [
+        ['slider-meanLL', 'val-meanLL'],
+        ['slider-stdLL', 'val-stdLL'],
+        ['slider-zThreshold', 'val-zThreshold'],
+      ] as const) {
+        el.querySelector(`#${sliderId}`)!.addEventListener('input', (e) => {
+          el.querySelector<HTMLElement>(`#${valId}`)!.textContent = (e.target as HTMLInputElement).value;
+          updateConfig();
+        });
+      }
+      el.querySelector('#slider-idle')!.addEventListener('input', (e) => {
+        el.querySelector<HTMLElement>('#val-idle')!.textContent = `${parseInt((e.target as HTMLInputElement).value) / 1000}s`;
+      });
+
+      // Baseline toggle
+      el.querySelector('#btn-toggle-baseline')!.addEventListener('click', () => {
+        baselineOn = !baselineOn;
+        el.querySelector<HTMLElement>('#btn-toggle-baseline')!.textContent = baselineOn ? '✓ Baseline ON' : '✗ Baseline OFF';
+        el.querySelector<HTMLElement>('#btn-toggle-baseline')!.className = `btn btn-sm ${baselineOn ? 'btn-green' : 'btn-ghost'}`;
+        el.querySelector<HTMLElement>('#baseline-toggle-label')!.textContent = baselineOn
+          ? 'Pre-trained graph injected — anomaly detection active from session 1.'
+          : 'No baseline — engine must learn from scratch (cold-start).';
+        updateConfig();
+      });
+
+      // Generate baseline
+      el.querySelector('#btn-generate-baseline')!.addEventListener('click', () => {
+        const g = new MarkovGraph({ maxStates: 100 });
+        for (let i = 0; i < activeArch.sessions; i++) {
+          const funnel = activeArch.funnels[i % activeArch.funnels.length];
+          for (let j = 0; j < funnel.length - 1; j++) {
+            g.incrementTransition(funnel[j], funnel[j + 1]);
+          }
+        }
+        const graph = g.toJSON() as SerializedMarkovGraph;
+
+        // Compute calibration
+        const totalByState: Record<number, number> = {};
+        for (const row of graph.rows) {
+          let total = 0;
+          for (const [, count] of row[2]) total += count;
+          totalByState[row[0]] = total;
+        }
+        const lls: number[] = [];
+        for (let s = 0; s < activeArch.sessions; s++) {
+          const funnel = activeArch.funnels[s % activeArch.funnels.length];
+          let sessionLL = 0, steps = 0;
+          for (let j = 0; j < funnel.length - 1; j++) {
+            const fromIdx = graph.states.indexOf(funnel[j]);
+            const toIdx = graph.states.indexOf(funnel[j + 1]);
+            if (fromIdx === -1 || toIdx === -1) continue;
+            const row = graph.rows.find((r) => r[0] === fromIdx);
+            if (!row) continue;
+            const trans = row[2].find(([ti]) => ti === toIdx);
+            const count = trans ? trans[1] : 0;
+            const total = totalByState[fromIdx] || 1;
+            const p = count / total;
+            sessionLL += p > 0 ? Math.log(p) : -10;
+            steps++;
+          }
+          if (steps > 0) lls.push(sessionLL / steps);
+        }
+        const mean = lls.reduce((a, b) => a + b, 0) / lls.length;
+        const variance = lls.reduce((a, b) => a + (b - mean) ** 2, 0) / lls.length;
+        const std = Math.sqrt(variance) || 0.01;
+        const sorted = [...lls].sort((a, b) => a - b);
+        const p5 = sorted[Math.floor(sorted.length * 0.05)] ?? mean - 2 * std;
+        const p95 = sorted[Math.floor(sorted.length * 0.95)] ?? mean + 2 * std;
+
+        // Update slider values
+        (el.querySelector('#slider-meanLL') as HTMLInputElement).value = mean.toFixed(2);
+        el.querySelector<HTMLElement>('#val-meanLL')!.textContent = mean.toFixed(2);
+        (el.querySelector('#slider-stdLL') as HTMLInputElement).value = std.toFixed(2);
+        el.querySelector<HTMLElement>('#val-stdLL')!.textContent = std.toFixed(2);
+
+        // Show metrics
+        el.querySelector<HTMLElement>('#gen-metrics')!.innerHTML = `
+          <div class="metrics-grid">
+            <div class="metric-card"><div class="metric-value">${mean.toFixed(3)}</div><div class="metric-label">baselineMeanLL</div></div>
+            <div class="metric-card"><div class="metric-value">${std.toFixed(3)}</div><div class="metric-label">baselineStdLL</div></div>
+            <div class="metric-card"><div class="metric-value">${lls.length}</div><div class="metric-label">Sample Sessions</div></div>
+            <div class="metric-card"><div class="metric-value">${p5.toFixed(3)}</div><div class="metric-label">P5 (floor)</div></div>
+            <div class="metric-card"><div class="metric-value">${p95.toFixed(3)}</div><div class="metric-label">P95 (ceiling)</div></div>
+            <div class="metric-card"><div class="metric-value">${graph.states.length} / ${graph.rows.length}</div><div class="metric-label">States / Edges</div></div>
+          </div>`;
+
+        // Show top transitions
+        const transHtml = graph.rows.slice(0, 6).map(([fromIdx, , transitions]) => {
+          const from = graph.states[fromIdx];
+          if (!from) return '';
+          const top = [...transitions].sort(([, a], [, b]) => b - a).slice(0, 3);
+          const total = transitions.reduce((sum, [, c]) => sum + c, 0);
+          const labels = top.map(([toIdx, c]) => {
+            const pct = total > 0 ? ((c / total) * 100).toFixed(0) : '0';
+            return `${graph.states[toIdx]}(${pct}%)`;
+          }).join(', ');
+          return `<div class="progress-row">
+            <span class="progress-label" style="font-family:var(--font-mono);font-size:11px">${from}</span>
+            <span style="font-size:11px;color:var(--text-muted)">→ ${labels}</span>
+          </div>`;
+        }).join('');
+        el.querySelector<HTMLElement>('#gen-transitions')!.innerHTML = transHtml
+          ? `<div class="card-title" style="font-size:13px">Top transitions</div>${transHtml}`
+          : '';
+
+        updateConfig();
+      });
+
+      // Live simulation buttons
+      el.querySelector('#btn-byob-walk-perfect')!.addEventListener('click', () => {
+        activeArch.perfectPath.forEach((s) => intent.track(s));
+        trackCount += activeArch.perfectPath.length;
+        el.querySelector<HTMLElement>('#byob-track-count')!.innerHTML =
+          `Tracked <strong style="color:var(--accent-h)">${trackCount}</strong> transitions this session.`;
+      });
+      el.querySelector('#btn-byob-walk-anomalous')!.addEventListener('click', () => {
+        const anomPath = [
+          activeArch.states[activeArch.states.length - 1],
+          activeArch.states[0], '/404', '/error',
+          activeArch.states[2] ?? activeArch.states[0], '/support',
+          activeArch.states[0], '/404',
+        ];
+        anomPath.forEach((s) => intent.track(s));
+        trackCount += anomPath.length;
+        el.querySelector<HTMLElement>('#byob-track-count')!.innerHTML =
+          `Tracked <strong style="color:var(--accent-h)">${trackCount}</strong> transitions this session.`;
+      });
+      el.querySelector('#btn-byob-walk-random')!.addEventListener('click', () => {
+        const allStates = [...activeArch.states, '/random-1', '/random-2', '/unknown'];
+        for (let i = 0; i < 12; i++) {
+          intent.track(allStates[Math.floor(Math.random() * allStates.length)]);
+        }
+        trackCount += 12;
+        el.querySelector<HTMLElement>('#byob-track-count')!.innerHTML =
+          `Tracked <strong style="color:var(--accent-h)">${trackCount}</strong> transitions this session.`;
+      });
+
+      // State chip click handlers (already wired for default archetype)
+      el.querySelectorAll<HTMLElement>('[data-byob-track]').forEach((chip) => {
+        chip.addEventListener('click', () => {
+          intent.track(chip.dataset.byobTrack!);
+          trackCount++;
+          el.querySelector<HTMLElement>('#byob-track-count')!.innerHTML =
+            `Tracked <strong style="color:var(--accent-h)">${trackCount}</strong> transitions this session.`;
+        });
+      });
+
+      // Subscribe to anomaly feed
+      const anomalyFeed: string[] = [];
+      const unsubs = [
+        intent.on('trajectory_anomaly', (p) => {
+          const payload = p as { stateTo?: string; zScore?: number };
+          anomalyFeed.unshift(`🚨 Trajectory anomaly → ${payload.stateTo} (z=${payload.zScore?.toFixed(2)})`);
+          renderAnomalies();
+        }),
+        intent.on('high_entropy', (p) => {
+          const payload = p as { state?: string; normalizedEntropy?: number };
+          anomalyFeed.unshift(`⚡ High entropy at ${payload.state} (H=${payload.normalizedEntropy?.toFixed(3)})`);
+          renderAnomalies();
+        }),
+        intent.on('dwell_time_anomaly', (p) => {
+          const payload = p as { state?: string; zScore?: number };
+          anomalyFeed.unshift(`⏱ Dwell anomaly at ${payload.state} (z=${payload.zScore?.toFixed(2)})`);
+          renderAnomalies();
+        }),
+      ];
+
+      function renderAnomalies() {
+        const card = el.querySelector<HTMLElement>('#byob-anomaly-card')!;
+        const feed = el.querySelector<HTMLElement>('#byob-anomaly-feed')!;
+        const items = anomalyFeed.slice(0, 10);
+        if (items.length) {
+          card.style.display = '';
+          feed.innerHTML = items
+            .map((msg) => {
+              const cls = msg.startsWith('🚨') ? 'alert-error' : msg.startsWith('⚡') ? 'alert-warning' : 'alert-info';
+              return `<div class="alert ${cls}" style="margin-bottom:6px;font-size:13px">${msg}</div>`;
+            })
+            .join('');
+        }
+      }
+
+      // Initial config render
+      updateConfig();
+
+      return () => unsubs.forEach((u) => u());
+    },
+  },
 };
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────

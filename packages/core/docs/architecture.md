@@ -2852,6 +2852,41 @@ This pattern does not require a consent banner, does not require a Data Processi
 
 ---
 
+## 🛡️ Threat Model & Security Boundary
+
+Because UI Telepathy operates 100% locally on the client-side, the traditional cloud security model (API keys, SSL/TLS transit, database encryption) does not apply. Instead, we secure the data mathematically.
+
+### 1. The Network Threat (MitM)
+
+Traditional behavioral analytics stream payloads to servers (`POST /events`), vulnerable to interception or ad-blocker disruption.
+
+**Our Mitigation:** **Zero Egress.** The engine performs all collection, mathematical modeling (Markov Chains), and intervention dispatch locally. There is no network transit to intercept.
+
+### 2. The Rogue Script Threat (XSS)
+
+If the host website suffers a Cross-Site Scripting (XSS) attack, the rogue script shares the execution context and can read `localStorage`.
+
+**Our Mitigation:** **Cryptographic Anonymization.**
+
+If a rogue script steals the UI Telepathy `localStorage` payload, it acquires two things:
+
+1. **A Binary Bloom Filter:** A bitset of FNV-1a hashes. It is mathematically impossible to un-hash this bitset to determine which pages the user visited.
+2. **A Sparse Markov Matrix:** A map of `Uint16` integers representing generalized transition probabilities. The engine aggressively strips PII (UUIDs, ObjectIDs, query parameters) via the `RouteNormalizer` before indexing.
+
+The attacker receives mathematical noise, not user identities or behavioral history.
+
+### 3. Cross-Tab Injection
+
+The engine synchronizes counters and events across multiple open tabs.
+
+**Our Mitigation:** Tab synchronization leverages the native Web `BroadcastChannel` API. This API is strictly governed by the browser's **Same-Origin Policy**. Scripts running on other domains (or malicious IFrames) cannot intercept or inject events into the telepathy channel.
+
+### 4. Host Responsibility (CSP)
+
+UI Telepathy provides data-structure immunity, but it cannot prevent a compromised DOM. It is the responsibility of the host enterprise to implement a strict **Content Security Policy (CSP)** and serve the SDK via HTTPS with Subresource Integrity (SRI) tags to prevent the execution of malicious scripts.
+
+---
+
 ## License
 
 This project is licensed under **AGPL-3.0-only**.

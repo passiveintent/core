@@ -16,6 +16,7 @@ import BotDetection from './pages/BotDetection';
 import Conversion from './pages/Conversion';
 import Counters from './pages/Counters';
 import AmazonPlayground from './pages/AmazonPlayground';
+import BYOBaseline from './pages/BYOBaseline';
 
 export type DemoKey =
   | 'overview'
@@ -32,10 +33,9 @@ export type DemoKey =
   | 'bot-detection'
   | 'conversion'
   | 'counters'
-  | 'amazon-playground';
+  | 'amazon-playground'
+  | 'byob';
 
-const PAGE_MAP: Record<DemoKey, React.ReactElement> = {
-  overview: <Overview />,
 const PAGE_MAP: Record<DemoKey, React.ComponentType> = {
   'overview':          Overview,
   'basic-tracking':    BasicTracking,
@@ -51,15 +51,18 @@ const PAGE_MAP: Record<DemoKey, React.ComponentType> = {
   'bot-detection':     BotDetection,
   'conversion':        Conversion,
   'counters':          Counters,
+  'amazon-playground': AmazonPlayground,
+  'byob':              BYOBaseline,
 };
 
 export default function App() {
   const [active, setActive] = useState<DemoKey>('overview');
+  const [sessionKey, setSessionKey] = useState(0);
   const ActivePage = PAGE_MAP[active];
 
   return (
-    <IntentProvider>
-      <Shell active={active} onNavigate={setActive}>
+    <IntentProvider key={sessionKey}>
+      <Shell active={active} onNavigate={setActive} onReset={() => setSessionKey((k) => k + 1)}>
         <ActivePage />
       </Shell>
     </IntentProvider>

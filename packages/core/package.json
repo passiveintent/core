@@ -18,10 +18,10 @@
   "license": "AGPL-3.0-only",
   "repository": {
     "type": "git",
-    "url": "https://github.com/purushpsm147/PassiveIntent-Privacy-First-Intent-Engine.git",
+    "url": "https://github.com/passiveintent/core.git",
     "directory": "packages/core"
   },
-  "homepage": "https://github.com/purushpsm147/PassiveIntent-Privacy-First-Intent-Engine#readme",
+  "homepage": "https://github.com/passiveintent/core#readme",
   "engines": {
     "node": ">=20"
   },

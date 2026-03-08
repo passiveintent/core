@@ -1,4 +1,4 @@
-﻿<!--
+<!--
   Copyright (c) 2026 Purushottam <purushottam@passiveintent.dev>
 
   This source code is licensed under the AGPL-3.0-only license found in the
@@ -9,11 +9,11 @@
 
 > **PassiveIntent** — the privacy-first, on-device behavioral intent engine built for B2B SaaS retention. Detect frustrated navigation in **< 2 milliseconds** — locally, with zero data egress, no server round-trips, and no GDPR exposure.
 
-[![npm version](https://img.shields.io/badge/npm-coming%20soon-lightgrey)](https://github.com/purushpsm147/PassiveIntent-Privacy-First-Intent-Engine)
+[![npm version](https://img.shields.io/badge/npm-coming%20soon-lightgrey)](https://github.com/passiveintent/core)
 [![License: AGPL-3.0-only](https://img.shields.io/badge/license-AGPL--3.0--only-blue.svg)](../LICENSE)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.6-3178c6.svg)](https://www.typescriptlang.org/)
-[![Privacy: Zero Egress](https://img.shields.io/badge/privacy-zero--egress-brightgreen)](https://github.com/purushpsm147/PassiveIntent-Privacy-First-Intent-Engine#privacy--gdpr-compliance)
-[![GDPR: No Personal Data](https://img.shields.io/badge/GDPR-no%20personal%20data-brightgreen)](https://github.com/purushpsm147/PassiveIntent-Privacy-First-Intent-Engine#privacy--gdpr-compliance)
+[![Privacy: Zero Egress](https://img.shields.io/badge/privacy-zero--egress-brightgreen)](#privacy--gdpr-compliance)
+[![GDPR: No Personal Data](https://img.shields.io/badge/GDPR-no%20personal%20data-brightgreen)](#privacy--gdpr-compliance)
 
 Traditional behavioral analytics platforms funnel every click, scroll, and rage-click to a remote server — introducing latency, compliance overhead, and a permanently growing data liability. By the time a heatmap vendor has processed a user's frustrated navigation on your `/billing` page, that user has already churned.
 

@@ -164,7 +164,7 @@ git push origin main
 The StackBlitz URL is already embedded in the README badge:
 
 ```
-https://stackblitz.com/github/purushpsm147/PassiveIntent-Privacy-First-Intent-Engine/tree/main/demo
+https://stackblitz.com/github/passiveintent/core/tree/main/demo
 ```
 
 Click it (or share it) — StackBlitz will:

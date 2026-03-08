@@ -93,7 +93,7 @@ export default function Shell({ active, onNavigate, onReset, children }: Props) 
             🔄 Reset Session
           </button>
           <a
-            href="https://github.com/purushpsm147/PassiveIntent-Privacy-First-Intent-Engine"
+            href="https://github.com/passiveintent/core"
             target="_blank"
             rel="noopener noreferrer"
             className="gh-link"

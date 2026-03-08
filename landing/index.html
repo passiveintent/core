@@ -245,11 +245,26 @@
           role="tabpanel"
           aria-labelledby="demo-tab-vanilla"
         >
+          <!--
+            sandbox rationale (Vanilla JS embed):
+              allow-scripts    – required: WebContainer boots a Node.js runtime in the browser via
+                                 a Service Worker; the iframe cannot function without script execution.
+              allow-same-origin – required: SharedArrayBuffer (used by WebContainer for multi-threaded
+                                 builds) only works under Cross-Origin Isolation. The iframe must be
+                                 able to read its own COEP/COOP response headers, which requires
+                                 same-origin access to its own origin.
+              allow-popups     – omitted: this is a preview-only embed (view=preview); the demo app
+                                 does not call window.open(). The "↗ Open in StackBlitz" affordance
+                                 is an <a> element outside the iframe and needs no iframe permission.
+              allow-popups-to-escape-sandbox – omitted: would allow any popup opened by iframe
+                                 content to run fully outside the sandbox with no restrictions.
+                                 Unnecessary here and significantly increases attack surface.
+          -->
           <iframe
             src="https://stackblitz.com/github/passiveintent/core/tree/main/demo?embed=1&hideNavigation=1&view=preview"
             title="PassiveIntent Vanilla JS demo"
             loading="lazy"
-            sandbox="allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox"
+            sandbox="allow-scripts allow-same-origin"
             allow="cross-origin-isolated"
           ></iframe>
           <a
@@ -267,11 +282,18 @@
           aria-labelledby="demo-tab-react"
           hidden
         >
+          <!--
+            sandbox rationale (React embed):
+              allow-scripts    – required: same as Vanilla embed; WebContainer needs script execution.
+              allow-same-origin – required: same as Vanilla embed; SharedArrayBuffer / COOP/COEP.
+              allow-popups     – omitted: preview-only embed; no window.open() in the demo app.
+              allow-popups-to-escape-sandbox – omitted: unnecessary and dangerous (see Vanilla note).
+          -->
           <iframe
             src="https://stackblitz.com/github/passiveintent/core/tree/main/demo-react?embed=1&hideNavigation=1&view=preview"
             title="PassiveIntent React demo"
             loading="lazy"
-            sandbox="allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox"
+            sandbox="allow-scripts allow-same-origin"
             allow="cross-origin-isolated"
           ></iframe>
           <a

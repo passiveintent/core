@@ -118,7 +118,7 @@ let _interventionSeq = 0;
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export default function AmazonPlayground() {
-  const { track, on, timer, lifecycle, incrementCounter } = useIntent();
+  const { track, on, timer, lifecycle, incrementCounter, resetCounter } = useIntent();
 
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [cartItems, setCartItems] = useState<Product[]>([]);
@@ -257,7 +257,7 @@ export default function AmazonPlayground() {
     (product: Product) => {
       track('/amazon/cart');
       setCartItems((prev) => [...prev, product]);
-      incrementCounter('cart-items-ever-added', 1);
+      incrementCounter('cart-items', 1);
       setCheckoutStep(1);
     },
     [incrementCounter, track],
@@ -720,6 +720,7 @@ export default function AmazonPlayground() {
               className="btn btn-green"
               onClick={() => {
                 track('/amazon/thank-you');
+                resetCounter('cart-items');
                 setCheckoutStep(0);
                 setCartItems([]);
                 setSelectedProduct(null);

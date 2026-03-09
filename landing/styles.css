@@ -1094,11 +1094,14 @@ details p {
 }
 
 .reveal {
-  opacity: 0;
-  transform: translateY(18px);
   transition:
     opacity 0.44s ease,
     transform 0.44s ease;
+}
+
+.reveal-hidden {
+  opacity: 0;
+  transform: translateY(18px);
 }
 
 .reveal.visible {

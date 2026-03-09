@@ -1906,10 +1906,11 @@ intent.<span class="fn">destroy</span>(); <span class="cmt">// closes BroadcastC
         }),
       ];
 
-      // Reset the session-wide cart counter to match the fresh UI state.
+      // Reset the playground-scoped cart counter to match the fresh UI state.
       // cartItems is recreated on each mount, so the counter must be synced to avoid drift
       // between UI state (fresh empty array) and telemetry (potentially non-zero counter).
-      intent.resetCounter('cart-items');
+      // Use 'amazon-cart-items' to isolate playground state from other demos using 'cart-items'.
+      intent.resetCounter('amazon-cart-items');
 
       type PlaygroundProduct = {
         id: string;
@@ -2037,7 +2038,7 @@ intent.<span class="fn">destroy</span>(); <span class="cmt">// closes BroadcastC
           }
           cartItems.push(product);
           intent.track('/amazon/cart');
-          intent.incrementCounter('cart-items', 1);
+          intent.incrementCounter('amazon-cart-items', 1);
           checkoutStep = 1;
           renderStoreState();
           return;
@@ -2070,7 +2071,7 @@ intent.<span class="fn">destroy</span>(); <span class="cmt">// closes BroadcastC
           selectedProduct = null;
           const removedItems = cartItems.length;
           if (removedItems > 0) {
-            intent.incrementCounter('cart-items', -removedItems);
+            intent.incrementCounter('amazon-cart-items', -removedItems);
           }
           cartItems = [];
           el.querySelectorAll<HTMLElement>('.product-card').forEach((c) =>

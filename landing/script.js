@@ -139,7 +139,7 @@ const ARTICLES = [
 
 function renderNav() {
   const nav = document.getElementById('site-nav');
-  if (!nav) return;
+  if (!nav || nav.children.length > 0) return; // Skip if nav already has pre-rendered content
   nav.innerHTML = NAV_ITEMS.map((item) => `<a href="${item.href}">${item.label}</a>`).join('');
 }
 
@@ -149,7 +149,7 @@ function getLinkAttributes(href) {
 
 function renderProducts() {
   const container = document.getElementById('products-grid');
-  if (!container) return;
+  if (!container || container.children.length > 0) return; // Skip if products already pre-rendered
 
   container.innerHTML = PRODUCTS.map(
     (product, index) => `
@@ -168,7 +168,7 @@ function renderProducts() {
 
 function renderStartHere() {
   const container = document.getElementById('start-grid');
-  if (!container) return;
+  if (!container || container.children.length > 0) return; // Skip if start here already pre-rendered
 
   container.innerHTML = START_HERE.map(
     (item) => `
@@ -184,7 +184,7 @@ function renderStartHere() {
 
 function renderIntegrations() {
   const available = document.getElementById('integrations-available');
-  if (!available) return;
+  if (!available || available.children.length > 0) return; // Skip if integrations already pre-rendered
 
   available.innerHTML = INTEGRATIONS.available
     .map(
@@ -204,7 +204,7 @@ function renderIntegrations() {
 
 function renderArticles() {
   const container = document.getElementById('articles-grid');
-  if (!container) return;
+  if (!container || container.children.length > 0) return; // Skip if articles already pre-rendered
 
   container.innerHTML = ARTICLES.map((article) => {
     const linkMarkup = article.live
@@ -228,10 +228,14 @@ function setupReveal() {
   const revealItems = document.querySelectorAll('.reveal');
   if (!revealItems.length) return;
 
+  // Progressive enhancement: hide elements after JS loads so page is readable if JS fails.
+  revealItems.forEach((item) => item.classList.add('reveal-hidden'));
+
   const observer = new IntersectionObserver(
     (entries) => {
       for (const entry of entries) {
         if (entry.isIntersecting) {
+          entry.target.classList.remove('reveal-hidden');
           entry.target.classList.add('visible');
           observer.unobserve(entry.target);
         }
@@ -261,6 +265,14 @@ function setupDemoTabs() {
       const active = panel.id === targetId;
       panel.hidden = !active;
       panel.setAttribute('aria-hidden', active ? 'false' : 'true');
+
+      // Lazy-load iframe on first tab activation
+      if (active) {
+        const iframe = panel.querySelector('iframe');
+        if (iframe && !iframe.src && iframe.dataset.src) {
+          iframe.src = iframe.dataset.src;
+        }
+      }
     });
   };
 

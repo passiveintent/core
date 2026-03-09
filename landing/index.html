@@ -38,7 +38,13 @@
             <span>Privacy-first intent engine</span>
           </span>
         </a>
-        <nav class="site-nav" id="site-nav" aria-label="Primary"></nav>
+        <nav class="site-nav" id="site-nav" aria-label="Primary">
+          <a href="#why-different">Why</a>
+          <a href="#how">How</a>
+          <a href="#demo">Demo</a>
+          <a href="#pricing">Pricing</a>
+          <a href="#articles">Articles</a>
+        </nav>
         <a class="header-cta" href="#demo">Try the live demo</a>
       </div>
     </header>
@@ -231,7 +237,53 @@
             and understand the license.
           </p>
         </div>
-        <div class="start-grid" id="start-grid"></div>
+        <div class="start-grid" id="start-grid">
+          <article class="start-card start-card-compact">
+            <span class="article-source">Docs</span>
+            <h3>Documentation</h3>
+            <p>Installation, APIs, and calibration guidance for teams moving toward production.</p>
+            <a
+              class="start-link"
+              href="https://github.com/passiveintent/core/tree/main/packages/core"
+              target="_blank"
+              rel="noopener noreferrer"
+              >Open docs</a
+            >
+          </article>
+          <article class="start-card start-card-compact">
+            <span class="article-source">Demo</span>
+            <h3>Live demo</h3>
+            <p>
+              Run the guided lab and see hesitation, entropy, exit intent, and trajectory signals in
+              motion.
+            </p>
+            <a class="start-link" href="#demo">Open demo</a>
+          </article>
+          <article class="start-card start-card-compact">
+            <span class="article-source">GitHub</span>
+            <h3>Source code</h3>
+            <p>
+              Review the core package, React package, demo apps, and calibration guide in the public
+              repo.
+            </p>
+            <a
+              class="start-link"
+              href="https://github.com/passiveintent/core"
+              target="_blank"
+              rel="noopener noreferrer"
+              >View GitHub</a
+            >
+          </article>
+          <article class="start-card start-card-compact">
+            <span class="article-source">Pricing</span>
+            <h3>Pricing and licensing</h3>
+            <p>
+              See the AGPL path, commercial tiers, and the brief used for legal and procurement
+              review.
+            </p>
+            <a class="start-link" href="#pricing">See pricing</a>
+          </article>
+        </div>
       </section>
 
       <section id="demo" class="section section-demo reveal">
@@ -329,7 +381,7 @@
               hidden
             >
               <iframe
-                src="https://stackblitz.com/github/passiveintent/core/tree/main/demo-react?embed=1&hideNavigation=1&view=preview"
+                data-src="https://stackblitz.com/github/passiveintent/core/tree/main/demo-react?embed=1&hideNavigation=1&view=preview"
                 title="PassiveIntent React demo"
                 loading="lazy"
                 sandbox="allow-scripts allow-same-origin"
@@ -407,7 +459,48 @@
             part of the broader direction, but the focus right now is the core product.
           </p>
         </div>
-        <div class="product-grid" id="products-grid"></div>
+        <div class="product-grid" id="products-grid">
+          <article class="product-card product-card-featured-main">
+            <span class="product-status">Shipping now</span>
+            <h3>PassiveIntent Core Library</h3>
+            <p>
+              The shipping library for in-session intent detection across checkout, pricing,
+              billing, and support-sensitive flows.
+            </p>
+            <div class="product-card-foot">
+              <span class="product-chip">JavaScript</span>
+              <span class="product-chip">React</span>
+              <span class="product-chip">Guided demo</span>
+            </div>
+          </article>
+          <article class="product-card">
+            <span class="product-status product-status-warm">Planned</span>
+            <h3>Sentinel</h3>
+            <p>
+              A future SDK for higher-sensitivity behavioral signals and insider-risk use cases. It
+              is mentioned here only so the product family has shape.
+            </p>
+            <div class="product-card-foot">
+              <span class="product-chip">Future SDK</span>
+              <span class="product-chip warm">Insider-risk focus</span>
+            </div>
+          </article>
+          <article class="product-card">
+            <span class="product-status product-status-warm">Planned</span>
+            <h3>Integration Layer</h3>
+            <p>
+              Packaged integrations for commerce, CRM, and SaaS surfaces so teams can bring the core
+              library into real environments faster.
+            </p>
+            <div class="product-card-foot">
+              <span class="product-chip">Commerce</span>
+              <span class="product-chip">CRM</span>
+              <span class="product-chip warm">Shopify</span>
+              <span class="product-chip warm">BigCommerce</span>
+              <span class="product-chip warm">Salesforce</span>
+            </div>
+          </article>
+        </div>
       </section>
 
       <section id="integrations" class="section reveal">
@@ -422,7 +515,52 @@
               <span class="column-tag">Available now</span>
               <h3>Immediate adoption paths</h3>
             </div>
-            <div class="integration-stack" id="integrations-available"></div>
+            <div class="integration-stack" id="integrations-available">
+              <article class="integration-item">
+                <div class="integration-head">
+                  <h4>Core SDK + React Package</h4>
+                  <span class="integration-pill">Available</span>
+                </div>
+                <p>
+                  Shipping packages for browser apps and React teams adopting the library directly.
+                </p>
+                <a
+                  class="integration-link"
+                  href="https://www.npmjs.com/package/@passiveintent/core"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  >Open packages</a
+                >
+              </article>
+              <article class="integration-item">
+                <div class="integration-head">
+                  <h4>Guided demos</h4>
+                  <span class="integration-pill">Live</span>
+                </div>
+                <p>
+                  Two public demos with matching UI shells so teams can evaluate the product quickly
+                  in either implementation style.
+                </p>
+                <a class="integration-link" href="#demo">Launch demo</a>
+              </article>
+              <article class="integration-item">
+                <div class="integration-head">
+                  <h4>Docs + calibration</h4>
+                  <span class="integration-pill">Available</span>
+                </div>
+                <p>
+                  Implementation docs and tuning guidance for teams moving from evaluation into
+                  production logic.
+                </p>
+                <a
+                  class="integration-link"
+                  href="https://github.com/passiveintent/core/blob/main/CALIBRATION_GUIDE.md"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  >Open guide</a
+                >
+              </article>
+            </div>
           </div>
         </div>
       </section>
@@ -436,7 +574,52 @@
             without interrupting the main path.
           </p>
         </div>
-        <div class="article-grid" id="articles-grid"></div>
+        <div class="article-grid" id="articles-grid">
+          <article class="article-card article-card-row">
+            <div>
+              <span class="article-source">Medium</span>
+              <h3>Why zero-egress intent detection belongs in the browser</h3>
+              <p>
+                A category piece on why privacy-first intent modeling should happen close to the
+                session.
+              </p>
+            </div>
+            <span class="article-link article-link-disabled">Medium post coming soon</span>
+          </article>
+          <article class="article-card article-card-row">
+            <div>
+              <span class="article-source">dev.to</span>
+              <h3>Implementation notes from the guided lab</h3>
+              <p>
+                A developer walkthrough of the core package, signal model, and intervention patterns
+                shown in the lab.
+              </p>
+            </div>
+            <span class="article-link article-link-disabled">dev.to post coming soon</span>
+          </article>
+          <article class="article-card article-card-row">
+            <div>
+              <span class="article-source">Substack</span>
+              <h3>A note on product direction</h3>
+              <p>
+                Product thinking, launch context, and occasional notes on where the platform is
+                heading.
+              </p>
+            </div>
+            <span class="article-link article-link-disabled">Substack post coming soon</span>
+          </article>
+          <article class="article-card article-card-row">
+            <div>
+              <span class="article-source">Hacker News</span>
+              <h3>Launch thread or technical discussion</h3>
+              <p>
+                A Show HN, launch post, or public technical thread worth sending curious visitors
+                to.
+              </p>
+            </div>
+            <span class="article-link article-link-disabled">HN thread coming soon</span>
+          </article>
+        </div>
       </section>
 
       <section class="section reveal">

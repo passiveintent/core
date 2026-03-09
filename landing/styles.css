@@ -1131,15 +1131,15 @@ select {
   color: #8d4f17;
 }
 
-.disclaimer {
-  font-size: 0.86rem !important;
+.legal-page p.disclaimer {
+  font-size: 0.86rem;
   font-family: 'IBM Plex Mono', monospace;
   background: rgba(17, 20, 29, 0.03);
   border: 1px solid rgba(19, 22, 31, 0.08);
   border-radius: 22px;
   padding: 18px 20px;
-  line-height: 1.75 !important;
-  color: var(--muted) !important;
+  line-height: 1.75;
+  color: var(--muted);
 }
 
 .legal-back-nav {

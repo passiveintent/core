@@ -257,7 +257,7 @@ export default function AmazonPlayground() {
     (product: Product) => {
       track('/amazon/cart');
       setCartItems((prev) => [...prev, product]);
-      incrementCounter('cart-items', 1);
+      incrementCounter('cart-items-ever-added', 1);
       setCheckoutStep(1);
     },
     [incrementCounter, track],

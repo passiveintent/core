@@ -60,11 +60,16 @@ const NAV: Array<{ section: string; items: NavItem[] }> = [
 ];
 
 const QUICK_JUMPS: Array<{ key: DemoKey; label: string }> = [
-  { key: 'overview', label: 'Start with Overview' },
-  { key: 'amazon-playground', label: 'Open Playground' },
-  { key: 'high-entropy', label: 'Trigger Entropy' },
-  { key: 'exit-intent', label: 'Test Exit Intent' },
-  { key: 'byob', label: 'Calibrate Baselines' },
+  { key: 'overview', label: 'Overview' },
+  { key: 'basic-tracking', label: 'Tracking' },
+  { key: 'high-entropy', label: 'Entropy' },
+  { key: 'dwell-time', label: 'Dwell Time' },
+  { key: 'trajectory', label: 'Trajectory' },
+  { key: 'hesitation', label: 'Hesitation' },
+  { key: 'exit-intent', label: 'Exit Intent' },
+  { key: 'bot-detection', label: 'Bot Detection' },
+  { key: 'amazon-playground', label: 'Playground' },
+  { key: 'byob', label: 'BYOB' },
 ];
 
 interface Props {
@@ -165,13 +170,12 @@ export default function Shell({ active, onNavigate, onReset, children }: Props) 
               <div className="lab-intro-copy">
                 <p className="section-eyebrow">Guided lab</p>
                 <h2 className="shell-title">
-                  Explore the shipping core library, with future layers hinted but not
-                  over-explained.
+                  Explore the shipping core library through the scenarios that matter most.
                 </h2>
                 <p className="shell-copy">
                   The React experience keeps the full feature surface, but improves first-run flow
-                  with clearer entry points, more breathable spacing, and the same visual shell as
-                  the Vanilla demo.
+                  with clearer entry points, more breathable spacing, and the same shell, scenario
+                  map, and quick-entry flow as the Vanilla demo.
                 </p>
                 <div className="quick-jump-bar">
                   {QUICK_JUMPS.map((jump) => (
@@ -194,23 +198,18 @@ export default function Shell({ active, onNavigate, onReset, children }: Props) 
                     <p>Telemetry, anomalies, lifecycle, business logic, and calibration.</p>
                   </article>
                   <article className="shell-stat">
-                    <span className="shell-stat-label">Current offer</span>
-                    <strong>Core library</strong>
-                    <p>PassiveIntent is the fully described product in this experience.</p>
+                    <span className="shell-stat-label">Best entry points</span>
+                    <strong>Overview, Exit, Playground</strong>
+                    <p>
+                      Start with the quick jumps, then use the sidebar for full scenario coverage.
+                    </p>
                   </article>
                   <article className="shell-stat">
-                    <span className="shell-stat-label">Next layers</span>
-                    <strong>Teased only</strong>
-                    <p>Sentinel and integration lanes are visible, but intentionally restrained.</p>
+                    <span className="shell-stat-label">Shell parity</span>
+                    <strong>Vanilla + React</strong>
+                    <p>Both demos share the same layout, spacing, and guided-lab structure.</p>
                   </article>
                 </div>
-                <article className="roadmap-card">
-                  <span className="roadmap-label">Roadmap signal</span>
-                  <p>
-                    Sentinel stays lightly teased. Planned integrations remain conservative:
-                    Salesforce, Adobe Commerce, Shopify, BigCommerce, and Wix.
-                  </p>
-                </article>
               </div>
             </section>
 
@@ -220,7 +219,7 @@ export default function Shell({ active, onNavigate, onReset, children }: Props) 
                 <h2 className="page-heading">{activeLabel}</h2>
               </div>
               <p className="page-heading-copy">
-                Use the sidebar for full coverage or jump directly into the most persuasive flows.
+                Use the sidebar for full coverage or jump directly into the core scenarios.
               </p>
             </div>
 

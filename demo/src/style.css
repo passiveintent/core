@@ -368,6 +368,8 @@ body {
   border: 1px solid var(--border);
   background: rgba(255, 255, 255, 0.04);
   color: var(--text);
+  font-size: 12px;
+  font-weight: 700;
   cursor: pointer;
   transition: 0.16s;
 }
@@ -385,15 +387,13 @@ body {
   display: grid;
   gap: 12px;
 }
-.shell-stat,
-.roadmap-card {
+.shell-stat {
   border-radius: 22px;
   border: 1px solid var(--border);
   background: rgba(255, 255, 255, 0.04);
   padding: 18px;
 }
 .shell-stat-label,
-.roadmap-label,
 .event-log-kicker {
   display: inline-block;
   margin-bottom: 8px;
@@ -410,7 +410,6 @@ body {
   letter-spacing: -0.04em;
 }
 .shell-stat p,
-.roadmap-card p,
 .page-heading-copy {
   color: var(--text-muted);
 }
@@ -1085,101 +1084,151 @@ label {
   }
 }
 
-/* ─── Intent Meter (draggable) ─────────────────────────────────────────────── */
+/* ─── Intent Meter (docked utility) ───────────────────────────────────────── */
 .intent-meter {
   position: fixed;
-  right: calc(var(--log-w) + var(--layout-gap) + 14px);
-  top: calc(var(--header-h) + var(--layout-gap) + 6px);
+  right: 22px;
+  bottom: 22px;
   z-index: 90;
-  will-change: transform;
+  display: grid;
+  justify-items: end;
+  gap: 10px;
 }
-.intent-meter-drag-handle {
+.intent-meter-toggle {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  cursor: grab;
-  user-select: none;
-  padding: 4px 6px;
-  border-bottom: 1px solid var(--border);
-  border-radius: var(--radius) var(--radius) 0 0;
-  background: var(--bg-3);
+  gap: 12px;
+  min-height: 42px;
+  padding: 0 14px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: rgba(17, 23, 34, 0.94);
+  color: var(--text);
+  cursor: pointer;
+  box-shadow: var(--shadow-soft);
+  backdrop-filter: blur(14px);
 }
-.intent-meter-drag-handle:active {
-  cursor: grabbing;
+.intent-meter-toggle:hover {
+  border-color: rgba(121, 168, 255, 0.24);
 }
-.drag-grip {
-  font-size: 12px;
+.intent-meter-toggle-label {
+  font-size: 10px;
+  font-family: var(--font-mono);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
   color: var(--text-muted);
-  line-height: 1;
+}
+.intent-meter-toggle-value {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--accent-h);
+}
+.intent-meter--open .intent-meter-toggle {
+  display: none;
 }
 .intent-meter-body {
   background: rgba(17, 23, 34, 0.88);
   border: 1px solid var(--border);
-  border-radius: 18px;
-  padding: 0 10px 12px;
-  width: 88px;
+  border-radius: 24px;
+  padding: 14px;
+  width: min(336px, calc(100vw - 56px));
   box-shadow: var(--shadow-soft);
   backdrop-filter: blur(14px);
 }
+.intent-meter-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
 .intent-meter-title {
-  font-size: 9px;
+  font-size: 10px;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.08em;
   color: var(--text-muted);
 }
-.gauge-row {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  margin-bottom: 8px;
+.intent-meter-close {
+  width: 26px;
+  height: 26px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--text-muted);
+  cursor: pointer;
 }
-.gauge-row:last-child {
-  margin-bottom: 0;
+.intent-meter-close:hover {
+  color: var(--text);
+  border-color: var(--border-strong);
+}
+.intent-meter-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+.gauge-row {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  grid-template-areas:
+    'emoji label sim'
+    'track track value';
+  align-items: center;
+  gap: 6px 8px;
+  padding: 10px;
+  border-radius: 16px;
+  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.04);
 }
 .gauge-emoji {
+  grid-area: emoji;
   font-size: 14px;
-  margin-bottom: 2px;
 }
 .gauge-track {
-  width: 16px;
-  height: 50px;
+  grid-area: track;
+  width: 100%;
+  height: 8px;
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid var(--border);
-  border-radius: 3px;
+  border-radius: 999px;
   position: relative;
   overflow: hidden;
 }
 .gauge-fill {
-  position: absolute;
-  bottom: 0;
+  position: static;
+  top: 0;
   left: 0;
-  right: 0;
-  border-radius: 2px;
+  height: 100%;
+  width: 0;
+  border-radius: 999px;
   transition:
-    height 0.3s ease,
+    width 0.3s ease,
     box-shadow 0.3s ease;
 }
 .gauge-label {
-  font-size: 8px;
+  grid-area: label;
+  font-size: 9px;
   text-transform: uppercase;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.08em;
   color: var(--text-muted);
-  margin-top: 2px;
 }
 .gauge-value {
-  font-size: 9px;
+  grid-area: value;
+  justify-self: end;
+  font-size: 10px;
   font-family: var(--font-mono);
   color: var(--text);
 }
 .gauge-sim-btn {
+  grid-area: sim;
   font-size: 10px;
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid var(--border);
   color: var(--text-muted);
   border-radius: 999px;
-  width: 20px;
-  height: 20px;
+  width: 22px;
+  height: 22px;
   cursor: pointer;
   display: flex;
   align-items: center;

@@ -1,44 +1,41 @@
 const NAV_ITEMS = [
   { href: '#why-different', label: 'Why' },
   { href: '#how', label: 'How' },
-  { href: '#use-cases', label: 'Use Cases' },
   { href: '#demo', label: 'Demo' },
   { href: '#pricing', label: 'Pricing' },
   { href: '#articles', label: 'Articles' },
-  { href: '#faq', label: 'FAQ' },
 ];
 
 const START_HERE = [
   {
     label: 'Docs',
-    title: 'Read the package docs',
-    description:
-      'Start with installation, APIs, event models, and calibration guidance for production use.',
-    linkLabel: 'Open documentation',
+    title: 'Documentation',
+    description: 'Installation, APIs, and calibration guidance for teams moving toward production.',
+    linkLabel: 'Open docs',
     href: 'https://github.com/passiveintent/core/tree/main/packages/core',
   },
   {
     label: 'Demo',
-    title: 'Try the guided lab',
+    title: 'Live demo',
     description:
-      'Test hesitation, entropy, exit intent, and trajectory signals in the browser before integrating.',
-    linkLabel: 'Jump to the live demo',
+      'Run the guided lab and see hesitation, entropy, exit intent, and trajectory signals in motion.',
+    linkLabel: 'Open demo',
     href: '#demo',
   },
   {
     label: 'GitHub',
-    title: 'Inspect the source',
+    title: 'Source code',
     description:
       'Review the core package, React package, demo apps, and calibration guide in the public repo.',
-    linkLabel: 'View GitHub repository',
+    linkLabel: 'View GitHub',
     href: 'https://github.com/passiveintent/core',
   },
   {
     label: 'Pricing',
-    title: 'Check pricing and licensing',
+    title: 'Pricing and licensing',
     description:
-      'See the AGPL path, commercial tiers, and the license brief used for legal and procurement review.',
-    linkLabel: 'Go to pricing',
+      'See the AGPL path, commercial tiers, and the brief used for legal and procurement review.',
+    linkLabel: 'See pricing',
     href: '#pricing',
   },
 ];
@@ -49,8 +46,8 @@ const PRODUCTS = [
     statusClass: '',
     title: 'PassiveIntent Core Library',
     description:
-      'The current offering: on-device intent detection for checkout, pricing, billing, and support-sensitive flows.',
-    chips: ['Core JS package', 'React package', 'Live guided lab'],
+      'The shipping library for in-session intent detection across checkout, pricing, billing, and support-sensitive flows.',
+    chips: ['JavaScript', 'React', 'Guided demo'],
     warmChips: [],
   },
   {
@@ -58,18 +55,18 @@ const PRODUCTS = [
     statusClass: 'product-status-warm',
     title: 'Sentinel',
     description:
-      'A future SDK for higher-sensitivity behavioral signals and insider-risk use cases. The direction is public, but the product is not being fully unveiled yet.',
-    chips: ['Insider-risk focus'],
-    warmChips: ['Details later'],
+      'A future SDK for higher-sensitivity behavioral signals and insider-risk use cases. It is mentioned here only so the product family has shape.',
+    chips: ['Future SDK'],
+    warmChips: ['Insider-risk focus'],
   },
   {
     status: 'Planned',
     statusClass: 'product-status-warm',
     title: 'Integration Layer',
     description:
-      'Packaged integrations for commerce, CRM, and SaaS surfaces so teams can deploy the core library faster in real environments.',
-    chips: ['Salesforce', 'Adobe Commerce'],
-    warmChips: ['Shopify', 'BigCommerce', 'Wix'],
+      'Packaged integrations for commerce, CRM, and SaaS surfaces so teams can bring the core library into real environments faster.',
+    chips: ['Commerce', 'CRM'],
+    warmChips: ['Shopify', 'BigCommerce', 'Salesforce'],
   },
 ];
 
@@ -80,64 +77,27 @@ const INTEGRATIONS = {
       status: 'Available',
       warm: false,
       description:
-        'Production-ready npm packages for browser apps and React teams adopting the engine directly.',
-      linkLabel: 'Open npm and package docs',
+        'Shipping packages for browser apps and React teams adopting the library directly.',
+      linkLabel: 'Open packages',
       href: 'https://www.npmjs.com/package/@passiveintent/core',
     },
     {
-      title: 'Guided StackBlitz Demos',
+      title: 'Guided demos',
       status: 'Live',
       warm: false,
       description:
-        'Two public demos with matching UI shells so teams can evaluate the engine quickly in either implementation style.',
-      linkLabel: 'Launch the demo theater',
+        'Two public demos with matching UI shells so teams can evaluate the product quickly in either implementation style.',
+      linkLabel: 'Launch demo',
       href: '#demo',
     },
     {
-      title: 'Docs + Calibration Guide',
+      title: 'Docs + calibration',
       status: 'Available',
       warm: false,
       description:
-        'Implementation docs and tuning guidance for teams moving from evaluation into real intervention logic.',
-      linkLabel: 'Open the calibration guide',
+        'Implementation docs and tuning guidance for teams moving from evaluation into production logic.',
+      linkLabel: 'Open guide',
       href: 'https://github.com/passiveintent/core/blob/main/CALIBRATION_GUIDE.md',
-    },
-  ],
-  planned: [
-    {
-      title: 'Salesforce',
-      status: 'Planned',
-      warm: true,
-      description:
-        'CRM-oriented workflows for account context, customer journeys, and recovery playbooks.',
-    },
-    {
-      title: 'Adobe Commerce',
-      status: 'Planned',
-      warm: true,
-      description:
-        'A packaged path for checkout and storefront signals in more complex commerce environments.',
-    },
-    {
-      title: 'Shopify',
-      status: 'Planned',
-      warm: true,
-      description:
-        'A simpler deployment path for merchant storefronts that want faster time to value.',
-    },
-    {
-      title: 'BigCommerce',
-      status: 'Planned',
-      warm: true,
-      description:
-        'Another packaged commerce surface for teams standardizing on hosted storefront platforms.',
-    },
-    {
-      title: 'Wix',
-      status: 'Planned',
-      warm: true,
-      description:
-        'A lightweight integration path for sites that need easier deployment without custom frontend work.',
     },
   ],
 };
@@ -145,25 +105,25 @@ const INTEGRATIONS = {
 const ARTICLES = [
   {
     source: 'Medium',
-    title: 'Why privacy-first intent detection belongs in the browser',
+    title: 'Why zero-egress intent detection belongs in the browser',
     description:
-      'A category-level essay on zero-egress intent modeling and why it matters for teams that care about privacy.',
+      'A category piece on why privacy-first intent modeling should happen close to the session.',
     live: false,
     linkLabel: 'Medium post coming soon',
   },
   {
     source: 'dev.to',
-    title: 'Implementation notes from the guided demo',
+    title: 'Implementation notes from the guided lab',
     description:
-      'A developer walkthrough of the core package, signal model, and intervention patterns shown in the demo.',
+      'A developer walkthrough of the core package, signal model, and intervention patterns shown in the lab.',
     live: false,
     linkLabel: 'dev.to post coming soon',
   },
   {
     source: 'Substack',
-    title: 'Founder note on product direction',
+    title: 'A note on product direction',
     description:
-      'Product thinking, launch context, and occasional updates on where the platform is heading.',
+      'Product thinking, launch context, and occasional notes on where the platform is heading.',
     live: false,
     linkLabel: 'Substack post coming soon',
   },
@@ -192,8 +152,8 @@ function renderProducts() {
   if (!container) return;
 
   container.innerHTML = PRODUCTS.map(
-    (product) => `
-      <article class="product-card">
+    (product, index) => `
+      <article class="product-card ${index === 0 ? 'product-card-featured-main' : ''}">
         <span class="product-status ${product.statusClass}">${product.status}</span>
         <h3>${product.title}</h3>
         <p>${product.description}</p>
@@ -212,7 +172,7 @@ function renderStartHere() {
 
   container.innerHTML = START_HERE.map(
     (item) => `
-      <article class="start-card">
+      <article class="start-card start-card-compact">
         <span class="article-source">${item.label}</span>
         <h3>${item.title}</h3>
         <p>${item.description}</p>
@@ -224,8 +184,7 @@ function renderStartHere() {
 
 function renderIntegrations() {
   const available = document.getElementById('integrations-available');
-  const planned = document.getElementById('integrations-planned');
-  if (!available || !planned) return;
+  if (!available) return;
 
   available.innerHTML = INTEGRATIONS.available
     .map(
@@ -237,20 +196,6 @@ function renderIntegrations() {
         </div>
         <p>${item.description}</p>
         <a class="integration-link" href="${item.href}"${getLinkAttributes(item.href)}>${item.linkLabel}</a>
-      </article>
-    `,
-    )
-    .join('');
-
-  planned.innerHTML = INTEGRATIONS.planned
-    .map(
-      (item) => `
-      <article class="integration-item">
-        <div class="integration-head">
-          <h4>${item.title}</h4>
-          <span class="integration-pill ${item.warm ? 'warm' : ''}">${item.status}</span>
-        </div>
-        <p>${item.description}</p>
       </article>
     `,
     )
@@ -267,7 +212,7 @@ function renderArticles() {
       : `<span class="article-link article-link-disabled">${article.linkLabel}</span>`;
 
     return `
-      <article class="article-card">
+      <article class="article-card article-card-row">
         <div>
           <span class="article-source">${article.source}</span>
           <h3>${article.title}</h3>

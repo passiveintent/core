@@ -20,7 +20,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Manrope:wght@400;500;600;700;800&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap"
       rel="stylesheet"
     />
     <link rel="stylesheet" href="./styles.css" />
@@ -45,13 +45,13 @@
 
     <main id="top">
       <section class="hero section reveal">
-        <div class="hero-copy">
-          <p class="eyebrow">Privacy-first intent detection for web apps</p>
-          <h1>A JavaScript library that detects hesitation before users leave.</h1>
+        <div class="hero-copy hero-copy-centered">
+          <p class="eyebrow">PassiveIntent Core</p>
+          <h1>Detect hesitation while the session is still alive.</h1>
           <p class="hero-text">
-            PassiveIntent helps product, growth, and CX teams spot checkout friction, pricing
-            hesitation, and exit intent while the session is still active, without shipping
-            behavioral data to another vendor.
+            PassiveIntent is a privacy-first JavaScript library for product, growth, and CX teams
+            that want to catch checkout friction, pricing doubt, and exit intent before the user
+            disappears, without exporting behavioral data to another vendor.
           </p>
           <div class="hero-actions">
             <a class="btn btn-primary" href="#demo">Try the live demo</a>
@@ -63,117 +63,136 @@
               >Read the docs</a
             >
           </div>
-          <div class="hero-metrics">
-            <article>
-              <span class="metric-kicker">For</span>
-              <strong>Product, growth, CX</strong>
-              <p>Built for teams responsible for conversion, activation, and recovery.</p>
-            </article>
-            <article>
-              <span class="metric-kicker">Footprint</span>
-              <strong>~11 kB gzip</strong>
-              <p>Lightweight enough for production storefronts and SaaS flows.</p>
-            </article>
-            <article>
-              <span class="metric-kicker">Privacy</span>
-              <strong>0 data egress</strong>
-              <p>Intent modeling stays in-browser by default.</p>
-            </article>
+          <div class="hero-proof-strip">
+            <span>For product, growth, and CX teams</span>
+            <span>~11 kB gzip</span>
+            <span>Runs in the browser</span>
+            <span>No behavioral export by default</span>
           </div>
         </div>
-        <aside class="hero-panel">
-          <div class="hero-panel-top">
-            <p class="eyebrow eyebrow-muted">Available today</p>
-            <h2>Start with the core library. Expand from there.</h2>
+      </section>
+
+      <section class="section section-bridge reveal">
+        <div class="bridge-panel">
+          <div>
+            <p class="eyebrow">What it is</p>
+            <h2>A small client-side library for teams that need to act before abandonment.</h2>
           </div>
-          <div class="hero-panel-grid">
-            <article class="spotlight-card">
-              <span class="spotlight-label">Shipping now</span>
-              <h3>PassiveIntent Core Library</h3>
-              <p>
-                Production-ready JavaScript and React packages for real-time friction detection.
-              </p>
-            </article>
-            <article class="spotlight-card spotlight-card-muted">
-              <span class="spotlight-label">Next product line</span>
-              <h3>Sentinel</h3>
-              <p>Planned as the next layer, focused on higher-sensitivity behavioral signals.</p>
-            </article>
+          <div class="bridge-copy">
+            <p>
+              Use it in checkout, pricing, billing, onboarding, and support-sensitive journeys where
+              hesitation matters more than hindsight.
+            </p>
+            <p>
+              The shipping product is PassiveIntent Core. JavaScript and React packages are
+              available now.
+            </p>
           </div>
-          <div class="hero-panel-foot">
-            <span class="inline-chip">Core + React available</span>
-            <span class="inline-chip"
-              >Salesforce, Adobe Commerce, Shopify, BigCommerce, Wix planned</span
-            >
-          </div>
-        </aside>
+        </div>
       </section>
 
       <section id="why-different" class="section reveal">
-        <div class="section-head">
-          <p class="eyebrow">Why this is different</p>
-          <h2>
-            Privacy-first by design, small on the page, and grounded in math instead of black-box
-            profiling.
-          </h2>
+        <div class="section-head section-head-wide">
+          <p class="eyebrow">Why PassiveIntent</p>
+          <h2>Built for intervention logic, not surveillance plumbing.</h2>
+          <p class="section-copy">
+            Most teams discover friction after the drop-off. PassiveIntent keeps the model close to
+            the session so you can respond while the decision is still in motion.
+          </p>
         </div>
-        <div class="difference-grid">
-          <article class="difference-card">
-            <span class="story-tag">Privacy</span>
-            <h3>No behavioral export by default</h3>
-            <p>
-              The core library runs in the browser and keeps intent evaluation close to the session.
+        <div class="why-frame">
+          <div class="why-lead">
+            <p class="why-lead-copy">
+              It is lightweight enough to ship broadly, private enough for sensitive flows, and
+              specific enough to support real product decisions instead of another dashboard.
             </p>
-          </article>
-          <article class="difference-card">
-            <span class="story-tag">Zero-egress</span>
-            <h3>No external inference vendor required</h3>
-            <p>
-              You do not need to wire another clickstream processor into your stack just to detect
-              friction.
+            <p class="why-proof-link">
+              <a
+                href="./PassiveIntent_Zero_Egress_Attestation.pdf"
+                target="_blank"
+                rel="noopener noreferrer"
+                >Download the Zero Egress Attestation (PDF)</a
+              >
             </p>
-          </article>
-          <article class="difference-card">
-            <span class="story-tag">Size</span>
-            <h3>Small enough to ship broadly</h3>
-            <p>
-              At roughly 11 kB gzip, it is light enough for storefronts, onboarding flows, and SaaS
-              apps.
-            </p>
-          </article>
-          <article class="difference-card">
-            <span class="story-tag">Math-based</span>
-            <h3>Markov, entropy, and dwell-time signals</h3>
-            <p>
-              The library leans on interpretable session math instead of opaque behavioral scoring.
-            </p>
-          </article>
+          </div>
+          <div class="why-list">
+            <article class="why-item">
+              <span class="story-tag">Privacy-first</span>
+              <div>
+                <h3>No behavioral export by default</h3>
+                <p>
+                  Intent evaluation stays close to the session instead of feeding a remote
+                  clickstream.
+                </p>
+              </div>
+            </article>
+            <article class="why-item">
+              <span class="story-tag">Zero-egress</span>
+              <div>
+                <h3>No external inference vendor required</h3>
+                <p>
+                  You can detect hesitation without adding another behavioral processor to your
+                  stack.
+                </p>
+              </div>
+            </article>
+            <article class="why-item">
+              <span class="story-tag">Lightweight</span>
+              <div>
+                <h3>Small enough to ship broadly</h3>
+                <p>
+                  At roughly 11 kB gzip, the library fits storefronts, onboarding flows, and SaaS
+                  apps.
+                </p>
+              </div>
+            </article>
+            <article class="why-item">
+              <span class="story-tag">Interpretable</span>
+              <div>
+                <h3>Grounded in session math</h3>
+                <p>
+                  Markov, entropy, and dwell-time signals make the model legible to product teams.
+                </p>
+              </div>
+            </article>
+          </div>
         </div>
       </section>
 
       <section id="how" class="section reveal">
         <div class="section-head">
           <p class="eyebrow">How it works</p>
-          <h2>A simple three-step flow from observation to intervention.</h2>
+          <h2>A small client-side loop: observe, infer, intervene.</h2>
+          <p class="section-copy">
+            Route changes and lifecycle events feed the model. The model scores hesitation locally.
+            Your product decides how to respond.
+          </p>
         </div>
-        <div class="step-grid">
-          <article class="step-card">
-            <span class="step-number">1</span>
-            <h3>Observe</h3>
-            <p>Track anonymous route and lifecycle transitions locally in the session.</p>
-          </article>
-          <article class="step-card">
-            <span class="step-number">2</span>
-            <h3>Infer</h3>
-            <p>Measure hesitation, entropy, exit intent, and path drift in real time.</p>
-          </article>
-          <article class="step-card">
-            <span class="step-number">3</span>
-            <h3>Intervene</h3>
-            <p>
-              Trigger support, reassurance, or offers while conversion intent is still recoverable.
-            </p>
-          </article>
+        <div class="architecture-band">
+          <div class="architecture-flow">
+            <article class="architecture-node">
+              <span class="architecture-step">01</span>
+              <h3>Observe</h3>
+              <p>Routes, dwell time, lifecycle events, and path changes.</p>
+            </article>
+            <span class="architecture-arrow" aria-hidden="true">→</span>
+            <article class="architecture-node architecture-node-strong">
+              <span class="architecture-step">02</span>
+              <h3>Infer</h3>
+              <p>Hesitation, entropy, exit intent, and trajectory drift in-session.</p>
+            </article>
+            <span class="architecture-arrow" aria-hidden="true">→</span>
+            <article class="architecture-node">
+              <span class="architecture-step">03</span>
+              <h3>Intervene</h3>
+              <p>Support, reassurance, offers, or the next best step.</p>
+            </article>
+          </div>
+          <div class="architecture-notes">
+            <span class="architecture-note">Runs in the browser by default</span>
+            <span class="architecture-note">Keeps the model close to the moment</span>
+            <span class="architecture-note">Lets your product own the response</span>
+          </div>
         </div>
       </section>
 
@@ -206,9 +225,10 @@
       <section id="start" class="section reveal">
         <div class="section-head">
           <p class="eyebrow">Start here</p>
-          <h2>Docs, live demo, source, and licensing in one place.</h2>
+          <h2>Documentation, demo, source, and licensing in one place.</h2>
           <p class="section-copy">
-            If you want to evaluate PassiveIntent quickly, these are the four places to start.
+            The shortest path to trust is simple: read the docs, inspect the source, run the demo,
+            and understand the license.
           </p>
         </div>
         <div class="start-grid" id="start-grid"></div>
@@ -330,7 +350,7 @@
       <section id="pricing" class="section reveal">
         <div class="section-head">
           <p class="eyebrow">Pricing / licensing</p>
-          <h2>Clear pricing and licensing, even at an early stage.</h2>
+          <h2>Clear pricing and licensing from the start.</h2>
         </div>
         <div class="pricing-grid">
           <article class="price-card">
@@ -381,13 +401,10 @@
       <section id="products" class="section reveal">
         <div class="section-head">
           <p class="eyebrow">Products</p>
-          <h2>
-            The core library is available now. The wider product family stays understated until it
-            is ready.
-          </h2>
+          <h2>Start with PassiveIntent Core. More products will follow.</h2>
           <p class="section-copy">
-            PassiveIntent Core is the product you can adopt today. Sentinel and future platform work
-            are visible only at a high level for now.
+            PassiveIntent Core is the library available today. Sentinel and future integrations are
+            part of the broader direction, but the focus right now is the core product.
           </p>
         </div>
         <div class="product-grid" id="products-grid"></div>
@@ -396,14 +413,10 @@
       <section id="integrations" class="section reveal">
         <div class="section-head">
           <p class="eyebrow">Integrations</p>
-          <h2>
-            Adopt the library directly now. Add platform coverage where it removes setup work.
-          </h2>
-          <p class="section-copy">
-            What exists today is listed clearly. Future platform work stays labeled as planned.
-          </p>
+          <h2>What you can use right now.</h2>
+          <p class="section-copy">These are the current ways to adopt PassiveIntent today.</p>
         </div>
-        <div class="integration-columns">
+        <div class="integration-columns integration-columns-single">
           <div class="integration-column">
             <div class="column-head">
               <span class="column-tag">Available now</span>
@@ -411,22 +424,16 @@
             </div>
             <div class="integration-stack" id="integrations-available"></div>
           </div>
-          <div class="integration-column">
-            <div class="column-head">
-              <span class="column-tag column-tag-warm">Planned</span>
-              <h3>Planned next</h3>
-            </div>
-            <div class="integration-stack" id="integrations-planned"></div>
-          </div>
         </div>
       </section>
 
       <section id="articles" class="section reveal">
         <div class="section-head">
           <p class="eyebrow">Articles</p>
-          <h2>Longer-form writing, launch notes, and technical explainers live here.</h2>
+          <h2>Writing, launch notes, and technical explainers live here.</h2>
           <p class="section-copy">
-            Add Medium, dev.to, Substack, and Hacker News links here as they go live.
+            Long-form writing belongs below the core product story, where it can deepen trust
+            without interrupting the main path.
           </p>
         </div>
         <div class="article-grid" id="articles-grid"></div>

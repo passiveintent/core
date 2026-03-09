@@ -121,13 +121,12 @@
               <div class="lab-intro-copy">
                 <p class="section-eyebrow">Guided lab</p>
                 <h2 class="shell-title">
-                  Explore the shipping core library, with future layers hinted but not
-                  over-explained.
+                  Explore the shipping core library through the scenarios that matter most.
                 </h2>
                 <p class="shell-copy">
                   This lab keeps the full feature surface available, but gives visitors a cleaner
-                  way to jump into the strongest flows first. The React demo uses the same shell and
-                  flow order so both experiences stay visually aligned.
+                  way to jump into the strongest flows first. The React demo uses the same shell,
+                  scenario map, and quick-entry flow so both experiences stay visually aligned.
                 </p>
                 <div class="quick-jump-bar" id="quick-jump-bar"></div>
               </div>
@@ -139,23 +138,18 @@
                     <p>Telemetry, anomalies, lifecycle, business logic, and calibration.</p>
                   </article>
                   <article class="shell-stat">
-                    <span class="shell-stat-label">Current offer</span>
-                    <strong>Core library</strong>
-                    <p>PassiveIntent is the fully described product in this experience.</p>
+                    <span class="shell-stat-label">Best entry points</span>
+                    <strong>Overview, Exit, Playground</strong>
+                    <p>
+                      Start with the quick jumps, then use the sidebar for full scenario coverage.
+                    </p>
                   </article>
                   <article class="shell-stat">
-                    <span class="shell-stat-label">Next layers</span>
-                    <strong>Teased only</strong>
-                    <p>Sentinel and integration lanes are visible, but intentionally restrained.</p>
+                    <span class="shell-stat-label">Shell parity</span>
+                    <strong>Vanilla + React</strong>
+                    <p>Both demos share the same layout, spacing, and guided-lab structure.</p>
                   </article>
                 </div>
-                <article class="roadmap-card">
-                  <span class="roadmap-label">Roadmap signal</span>
-                  <p>
-                    Sentinel stays lightly teased. Planned integrations remain conservative:
-                    Salesforce, Adobe Commerce, Shopify, BigCommerce, and Wix.
-                  </p>
-                </article>
               </div>
             </section>
 
@@ -165,7 +159,7 @@
                 <h2 class="page-heading" id="active-demo-label">📊 Overview &amp; Telemetry</h2>
               </div>
               <p class="page-heading-copy">
-                Use the sidebar for full coverage or jump directly into the most persuasive flows.
+                Use the sidebar for full coverage or jump directly into the core scenarios.
               </p>
             </div>
 
@@ -174,154 +168,173 @@
         </main>
 
         <div id="intent-meter" class="intent-meter">
-          <div id="meter-body" class="intent-meter-body">
-            <div id="meter-drag-handle" class="intent-meter-drag-handle" title="Drag to reposition">
-              <span class="intent-meter-title">Intent Meter</span>
-              <span class="drag-grip">⠿</span>
-            </div>
-            <div class="gauge-row">
-              <span class="gauge-emoji">😤</span>
-              <div
-                class="gauge-track"
-                role="meter"
-                aria-label="Rage level"
-                aria-valuemin="0"
-                aria-valuemax="100"
-                aria-valuenow="0"
-                id="meter-rage"
-              >
-                <div class="gauge-fill" id="gauge-rage"></div>
-              </div>
-              <span class="gauge-label">Rage</span>
-              <span class="gauge-value" id="gauge-rage-val">0%</span>
+          <button
+            id="intent-meter-toggle"
+            class="intent-meter-toggle"
+            type="button"
+            aria-controls="meter-body"
+            aria-expanded="false"
+          >
+            <span class="intent-meter-toggle-label">Intent Meter</span>
+            <span class="intent-meter-toggle-value" id="intent-meter-summary">Quiet</span>
+          </button>
+          <div id="meter-body" class="intent-meter-body" hidden>
+            <div class="intent-meter-head">
+              <span class="intent-meter-title">Live signal monitor</span>
               <button
-                class="gauge-sim-btn"
-                id="sim-rage"
-                title="Simulate Rage"
-                aria-label="Simulate Rage"
+                id="intent-meter-close"
+                class="intent-meter-close"
+                type="button"
+                aria-label="Collapse intent meter"
               >
-                ⚡
+                ×
               </button>
             </div>
-            <div class="gauge-row">
-              <span class="gauge-emoji">😰</span>
-              <div
-                class="gauge-track"
-                role="meter"
-                aria-label="Anxiety level"
-                aria-valuemin="0"
-                aria-valuemax="100"
-                aria-valuenow="0"
-                id="meter-anxiety"
-              >
-                <div class="gauge-fill" id="gauge-anxiety"></div>
+            <div class="intent-meter-grid">
+              <div class="gauge-row">
+                <span class="gauge-emoji">😤</span>
+                <span class="gauge-label">Rage</span>
+                <button
+                  class="gauge-sim-btn"
+                  id="sim-rage"
+                  title="Simulate Rage"
+                  aria-label="Simulate Rage"
+                >
+                  ⚡
+                </button>
+                <div
+                  class="gauge-track"
+                  role="meter"
+                  aria-label="Rage level"
+                  aria-valuemin="0"
+                  aria-valuemax="100"
+                  aria-valuenow="0"
+                  id="meter-rage"
+                >
+                  <div class="gauge-fill" id="gauge-rage"></div>
+                </div>
+                <span class="gauge-value" id="gauge-rage-val">0%</span>
               </div>
-              <span class="gauge-label">Anxiety</span>
-              <span class="gauge-value" id="gauge-anxiety-val">0%</span>
-              <button
-                class="gauge-sim-btn"
-                id="sim-anxiety"
-                title="Simulate Anxiety"
-                aria-label="Simulate Anxiety"
-              >
-                ⚡
-              </button>
-            </div>
-            <div class="gauge-row">
-              <span class="gauge-emoji">🤔</span>
-              <div
-                class="gauge-track"
-                role="meter"
-                aria-label="Hesitation level"
-                aria-valuemin="0"
-                aria-valuemax="100"
-                aria-valuenow="0"
-                id="meter-hesitation"
-              >
-                <div class="gauge-fill" id="gauge-hesitation"></div>
+              <div class="gauge-row">
+                <span class="gauge-emoji">😰</span>
+                <span class="gauge-label">Anxiety</span>
+                <button
+                  class="gauge-sim-btn"
+                  id="sim-anxiety"
+                  title="Simulate Anxiety"
+                  aria-label="Simulate Anxiety"
+                >
+                  ⚡
+                </button>
+                <div
+                  class="gauge-track"
+                  role="meter"
+                  aria-label="Anxiety level"
+                  aria-valuemin="0"
+                  aria-valuemax="100"
+                  aria-valuenow="0"
+                  id="meter-anxiety"
+                >
+                  <div class="gauge-fill" id="gauge-anxiety"></div>
+                </div>
+                <span class="gauge-value" id="gauge-anxiety-val">0%</span>
               </div>
-              <span class="gauge-label">Hesitation</span>
-              <span class="gauge-value" id="gauge-hesitation-val">0%</span>
-              <button
-                class="gauge-sim-btn"
-                id="sim-hesitation"
-                title="Simulate Hesitation"
-                aria-label="Simulate Hesitation"
-              >
-                ⚡
-              </button>
-            </div>
-            <div class="gauge-row">
-              <span class="gauge-emoji">🤖</span>
-              <div
-                class="gauge-track"
-                role="meter"
-                aria-label="Bot likelihood"
-                aria-valuemin="0"
-                aria-valuemax="100"
-                aria-valuenow="0"
-                id="meter-bot"
-              >
-                <div class="gauge-fill" id="gauge-bot"></div>
+              <div class="gauge-row">
+                <span class="gauge-emoji">🤔</span>
+                <span class="gauge-label">Hesitation</span>
+                <button
+                  class="gauge-sim-btn"
+                  id="sim-hesitation"
+                  title="Simulate Hesitation"
+                  aria-label="Simulate Hesitation"
+                >
+                  ⚡
+                </button>
+                <div
+                  class="gauge-track"
+                  role="meter"
+                  aria-label="Hesitation level"
+                  aria-valuemin="0"
+                  aria-valuemax="100"
+                  aria-valuenow="0"
+                  id="meter-hesitation"
+                >
+                  <div class="gauge-fill" id="gauge-hesitation"></div>
+                </div>
+                <span class="gauge-value" id="gauge-hesitation-val">0%</span>
               </div>
-              <span class="gauge-label">Bot</span>
-              <span class="gauge-value" id="gauge-bot-val">0%</span>
-              <button
-                class="gauge-sim-btn"
-                id="sim-bot"
-                title="Simulate Bot"
-                aria-label="Simulate Bot"
-              >
-                ⚡
-              </button>
-            </div>
-            <div class="gauge-row">
-              <span class="gauge-emoji">💤</span>
-              <div
-                class="gauge-track"
-                role="meter"
-                aria-label="Idle level"
-                aria-valuemin="0"
-                aria-valuemax="100"
-                aria-valuenow="0"
-                id="meter-idle"
-              >
-                <div class="gauge-fill" id="gauge-idle"></div>
+              <div class="gauge-row">
+                <span class="gauge-emoji">🤖</span>
+                <span class="gauge-label">Bot</span>
+                <button
+                  class="gauge-sim-btn"
+                  id="sim-bot"
+                  title="Simulate Bot"
+                  aria-label="Simulate Bot"
+                >
+                  ⚡
+                </button>
+                <div
+                  class="gauge-track"
+                  role="meter"
+                  aria-label="Bot likelihood"
+                  aria-valuemin="0"
+                  aria-valuemax="100"
+                  aria-valuenow="0"
+                  id="meter-bot"
+                >
+                  <div class="gauge-fill" id="gauge-bot"></div>
+                </div>
+                <span class="gauge-value" id="gauge-bot-val">0%</span>
               </div>
-              <span class="gauge-label">Idle</span>
-              <span class="gauge-value" id="gauge-idle-val">0%</span>
-              <button
-                class="gauge-sim-btn"
-                id="sim-idle"
-                title="Simulate Idle"
-                aria-label="Simulate Idle"
-              >
-                ⚡
-              </button>
-            </div>
-            <div class="gauge-row">
-              <span class="gauge-emoji">🚪</span>
-              <div
-                class="gauge-track"
-                role="meter"
-                aria-label="Exit intent level"
-                aria-valuemin="0"
-                aria-valuemax="100"
-                aria-valuenow="0"
-                id="meter-exit"
-              >
-                <div class="gauge-fill" id="gauge-exit"></div>
+              <div class="gauge-row">
+                <span class="gauge-emoji">💤</span>
+                <span class="gauge-label">Idle</span>
+                <button
+                  class="gauge-sim-btn"
+                  id="sim-idle"
+                  title="Simulate Idle"
+                  aria-label="Simulate Idle"
+                >
+                  ⚡
+                </button>
+                <div
+                  class="gauge-track"
+                  role="meter"
+                  aria-label="Idle level"
+                  aria-valuemin="0"
+                  aria-valuemax="100"
+                  aria-valuenow="0"
+                  id="meter-idle"
+                >
+                  <div class="gauge-fill" id="gauge-idle"></div>
+                </div>
+                <span class="gauge-value" id="gauge-idle-val">0%</span>
               </div>
-              <span class="gauge-label">Exit</span>
-              <span class="gauge-value" id="gauge-exit-val">0%</span>
-              <button
-                class="gauge-sim-btn"
-                id="sim-exit"
-                title="Simulate Exit"
-                aria-label="Simulate Exit"
-              >
-                ⚡
-              </button>
+              <div class="gauge-row">
+                <span class="gauge-emoji">🚪</span>
+                <span class="gauge-label">Exit</span>
+                <button
+                  class="gauge-sim-btn"
+                  id="sim-exit"
+                  title="Simulate Exit"
+                  aria-label="Simulate Exit"
+                >
+                  ⚡
+                </button>
+                <div
+                  class="gauge-track"
+                  role="meter"
+                  aria-label="Exit intent level"
+                  aria-valuemin="0"
+                  aria-valuemax="100"
+                  aria-valuenow="0"
+                  id="meter-exit"
+                >
+                  <div class="gauge-fill" id="gauge-exit"></div>
+                </div>
+                <span class="gauge-value" id="gauge-exit-val">0%</span>
+              </div>
             </div>
           </div>
         </div>

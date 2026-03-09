@@ -2057,6 +2057,10 @@ intent.<span class="fn">destroy</span>(); <span class="cmt">// closes BroadcastC
           intent.track('/amazon/thank-you');
           checkoutStep = 0;
           selectedProduct = null;
+          const removedItems = cartItems.length;
+          if (removedItems > 0) {
+            intent.incrementCounter('cart-items', -removedItems);
+          }
           cartItems = [];
           el.querySelectorAll<HTMLElement>('.product-card').forEach((c) => c.classList.remove('active'));
           renderStoreState();

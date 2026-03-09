@@ -1,8 +1,7 @@
 /**
- * IntentMeter — A persistent, **draggable** vertical gauge bar that visualises
- * live intent signals (rage, anxiety, hesitation, bot likelihood, idle, exit
- * intent) in real-time.  Designed for non-technical stakeholders to "feel" the
- * library.
+ * IntentMeter — A compact docked utility that visualises live intent signals
+ * (rage, anxiety, hesitation, bot likelihood, idle, exit intent) in real-time.
+ * It stays out of the main canvas until opened.
  *
  * Each gauge has a small ⚡ button that fires a targeted simulation through
  * the real engine so stakeholders can verify every signal path end-to-end.
@@ -56,37 +55,12 @@ export default function IntentMeter() {
   const [idle, setIdle] = useState(0);
   const [exitIntent, setExitIntent] = useState(0);
   const [simulating, setSimulating] = useState(false);
+  const [open, setOpen] = useState(false);
   const simRef = useRef(false); // mutable guard for async loops
 
   // Cooldown: faster decay after simulation ends
   const cooldownRef = useRef(false);
   const cooldownTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  // ─── Drag state (direct DOM updates — no re-renders during drag) ───────
-  const meterRef = useRef<HTMLDivElement>(null);
-  const translateRef = useRef({ x: 0, y: 0 });
-
-  const handleDragStart = useCallback((e: React.MouseEvent) => {
-    e.preventDefault();
-    const startX = e.clientX;
-    const startY = e.clientY;
-    const { x: origX, y: origY } = translateRef.current;
-
-    const onMove = (ev: MouseEvent) => {
-      const newX = origX + ev.clientX - startX;
-      const newY = origY + ev.clientY - startY;
-      translateRef.current = { x: newX, y: newY };
-      if (meterRef.current) {
-        meterRef.current.style.transform = `translate(${newX}px, ${newY}px)`;
-      }
-    };
-    const onUp = () => {
-      window.removeEventListener('mousemove', onMove);
-      window.removeEventListener('mouseup', onUp);
-    };
-    window.addEventListener('mousemove', onMove);
-    window.addEventListener('mouseup', onUp);
-  }, []);
 
   // ─── Decay — normal or cooldown (accelerated) ─────────────────────────
   useEffect(() => {
@@ -295,43 +269,65 @@ export default function IntentMeter() {
     { label: 'Exit', emoji: '🚪', value: exitIntent, color: 'var(--blue)', onSimulate: simExit },
   ];
 
+  const topGauge = gauges.reduce(
+    (best, gauge) => (gauge.value > best.value ? gauge : best),
+    gauges[0],
+  );
+  const summary =
+    topGauge.value < 12 ? 'Quiet' : `${topGauge.label} ${Math.round(topGauge.value)}%`;
+
   return (
-    <div className="intent-meter" ref={meterRef}>
-      <div className="intent-meter-body">
-        <div
-          className="intent-meter-drag-handle"
-          onMouseDown={handleDragStart}
-          title="Drag to reposition"
-        >
-          <span className="intent-meter-title">Intent Meter</span>
-          <span className="drag-grip">⠿</span>
+    <div className={`intent-meter${open ? ' intent-meter--open' : ''}`}>
+      <button
+        className="intent-meter-toggle"
+        type="button"
+        aria-controls="intent-meter-body"
+        aria-expanded={open}
+        onClick={() => setOpen(true)}
+      >
+        <span className="intent-meter-toggle-label">Intent Meter</span>
+        <span className="intent-meter-toggle-value">{summary}</span>
+      </button>
+      <div className="intent-meter-body" id="intent-meter-body" hidden={!open}>
+        <div className="intent-meter-head">
+          <span className="intent-meter-title">Live signal monitor</span>
+          <button
+            className="intent-meter-close"
+            type="button"
+            aria-label="Collapse intent meter"
+            onClick={() => setOpen(false)}
+          >
+            ×
+          </button>
         </div>
-        {gauges.map((g) => (
-          <div key={g.label} className="gauge-row">
-            <span className="gauge-emoji">{g.emoji}</span>
-            <div className="gauge-track">
-              <div
-                className="gauge-fill"
-                style={{
-                  height: `${g.value}%`,
-                  background: g.color,
-                  boxShadow: g.value > 50 ? `0 0 8px ${g.color}` : 'none',
-                }}
-              />
+        <div className="intent-meter-grid">
+          {gauges.map((g) => (
+            <div key={g.label} className="gauge-row">
+              <span className="gauge-emoji">{g.emoji}</span>
+              <span className="gauge-label">{g.label}</span>
+              <button
+                className="gauge-sim-btn"
+                onClick={g.onSimulate}
+                disabled={simulating}
+                aria-label={`Simulate ${g.label}`}
+                title={simulating ? 'Simulation running…' : `Simulate ${g.label}`}
+              >
+                ⚡
+              </button>
+              <div className="gauge-track">
+                <div
+                  className="gauge-fill"
+                  style={{
+                    width: `${g.value}%`,
+                    background: g.color,
+                    boxShadow: g.value > 50 ? `0 0 8px ${g.color}` : 'none',
+                  }}
+                />
+              </div>
+              <span className="gauge-value">{Math.round(g.value)}%</span>
             </div>
-            <span className="gauge-label">{g.label}</span>
-            <span className="gauge-value">{Math.round(g.value)}%</span>
-            <button
-              className="gauge-sim-btn"
-              onClick={g.onSimulate}
-              disabled={simulating}
-              aria-label={`Simulate ${g.label}`}
-              title={simulating ? 'Simulation running…' : `Simulate ${g.label}`}
-            >
-              ⚡
-            </button>
-          </div>
-        ))}
+          ))}
+        </div>
       </div>
     </div>
   );

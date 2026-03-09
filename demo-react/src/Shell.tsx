@@ -1,4 +1,4 @@
-import React, { useState, type ReactNode } from 'react';
+import React, { useMemo, useState, type ReactNode } from 'react';
 import { useIntent } from './IntentContext';
 import IntentMeter from './components/IntentMeter';
 import type { DemoKey } from './App';
@@ -10,7 +10,7 @@ interface NavItem {
 
 const NAV: Array<{ section: string; items: NavItem[] }> = [
   {
-    section: 'Getting Started',
+    section: 'Start Here',
     items: [
       { key: 'overview', label: '📊 Overview & Telemetry' },
       { key: 'basic-tracking', label: '📍 Basic Tracking' },
@@ -59,6 +59,19 @@ const NAV: Array<{ section: string; items: NavItem[] }> = [
   },
 ];
 
+const QUICK_JUMPS: Array<{ key: DemoKey; label: string }> = [
+  { key: 'overview', label: 'Overview' },
+  { key: 'basic-tracking', label: 'Tracking' },
+  { key: 'high-entropy', label: 'Entropy' },
+  { key: 'dwell-time', label: 'Dwell Time' },
+  { key: 'trajectory', label: 'Trajectory' },
+  { key: 'hesitation', label: 'Hesitation' },
+  { key: 'exit-intent', label: 'Exit Intent' },
+  { key: 'bot-detection', label: 'Bot Detection' },
+  { key: 'amazon-playground', label: 'Playground' },
+  { key: 'byob', label: 'BYOB' },
+];
+
 interface Props {
   active: DemoKey;
   onNavigate: (key: DemoKey) => void;
@@ -71,14 +84,20 @@ export default function Shell({ active, onNavigate, onReset, children }: Props) 
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [logOpen, setLogOpen] = useState(true);
 
+  const activeLabel = useMemo(
+    () => NAV.flatMap((group) => group.items).find((item) => item.key === active)?.label ?? active,
+    [active],
+  );
+
   return (
     <div id="app">
       <header className="header">
         <div className="header-left">
           <span className="logo">⚛️</span>
           <div>
+            <span className="header-kicker">Core library guided lab</span>
             <h1 className="header-title">PassiveIntent</h1>
-            <span className="header-sub">React Demo — usePassiveIntent hook</span>
+            <span className="header-sub">React demo with feature-parity shell</span>
           </div>
         </div>
         <div className="header-right">
@@ -90,7 +109,7 @@ export default function Shell({ active, onNavigate, onReset, children }: Props) 
             onClick={onReset}
             title="Destroy the current IntentManager and start a completely fresh session — clears all learned transitions, bot state, trajectory, and gauges."
           >
-            🔄 Reset Session
+            Reset Session
           </button>
           <a
             href="https://github.com/passiveintent/core"
@@ -109,7 +128,6 @@ export default function Shell({ active, onNavigate, onReset, children }: Props) 
       <div
         className={`layout${sidebarOpen ? '' : ' sidebar-collapsed'}${logOpen ? '' : ' log-collapsed'}`}
       >
-        {/* Sidebar */}
         <nav className={`sidebar${sidebarOpen ? '' : ' sidebar--hidden'}`}>
           <button
             className="sidebar-toggle"
@@ -118,20 +136,22 @@ export default function Shell({ active, onNavigate, onReset, children }: Props) 
           >
             ◀
           </button>
-          {NAV.map(({ section, items }) => (
-            <React.Fragment key={section}>
-              <div className="nav-section-label">{section}</div>
-              {items.map(({ key, label }) => (
-                <button
-                  key={key}
-                  className={`nav-item${active === key ? ' active' : ''}`}
-                  onClick={() => onNavigate(key)}
-                >
-                  {label}
-                </button>
-              ))}
-            </React.Fragment>
-          ))}
+          <div className="sidebar-inner">
+            {NAV.map(({ section, items }) => (
+              <React.Fragment key={section}>
+                <div className="nav-section-label">{section}</div>
+                {items.map(({ key, label }) => (
+                  <button
+                    key={key}
+                    className={`nav-item${active === key ? ' active' : ''}`}
+                    onClick={() => onNavigate(key)}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </React.Fragment>
+            ))}
+          </div>
         </nav>
 
         {!sidebarOpen && (
@@ -144,17 +164,78 @@ export default function Shell({ active, onNavigate, onReset, children }: Props) 
           </button>
         )}
 
-        {/* Main content */}
-        <main className="content">{children}</main>
+        <main className="content">
+          <div className="content-shell">
+            <section className="lab-intro">
+              <div className="lab-intro-copy">
+                <p className="section-eyebrow">Guided lab</p>
+                <h2 className="shell-title">
+                  Explore the shipping core library through the scenarios that matter most.
+                </h2>
+                <p className="shell-copy">
+                  The React experience keeps the full feature surface, but improves first-run flow
+                  with clearer entry points, more breathable spacing, and the same shell, scenario
+                  map, and quick-entry flow as the Vanilla demo.
+                </p>
+                <div className="quick-jump-bar">
+                  {QUICK_JUMPS.map((jump) => (
+                    <button
+                      key={jump.key}
+                      type="button"
+                      className={`quick-jump${active === jump.key ? ' active' : ''}`}
+                      onClick={() => onNavigate(jump.key)}
+                    >
+                      {jump.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div className="lab-intro-aside">
+                <div className="shell-stat-grid">
+                  <article className="shell-stat">
+                    <span className="shell-stat-label">Coverage</span>
+                    <strong>Full lab</strong>
+                    <p>Telemetry, anomalies, lifecycle, business logic, and calibration.</p>
+                  </article>
+                  <article className="shell-stat">
+                    <span className="shell-stat-label">Best entry points</span>
+                    <strong>Overview, Exit, Playground</strong>
+                    <p>
+                      Start with the quick jumps, then use the sidebar for full scenario coverage.
+                    </p>
+                  </article>
+                  <article className="shell-stat">
+                    <span className="shell-stat-label">Shell parity</span>
+                    <strong>Vanilla + React</strong>
+                    <p>Both demos share the same layout, spacing, and guided-lab structure.</p>
+                  </article>
+                </div>
+              </div>
+            </section>
 
-        {/* Intent Meter */}
+            <div className="page-heading-row">
+              <div>
+                <p className="section-eyebrow section-eyebrow-muted">Current module</p>
+                <h2 className="page-heading">{activeLabel}</h2>
+              </div>
+              <p className="page-heading-copy">
+                Use the sidebar for full coverage or jump directly into the core scenarios.
+              </p>
+            </div>
+
+            <section className="page-surface">{children}</section>
+          </div>
+        </main>
+
         <IntentMeter />
 
-        {/* Live event log */}
         <aside className={`event-log${logOpen ? '' : ' event-log--hidden'}`}>
           <div className="event-log-header">
-            <span>📡 Live Event Log</span>
-            <div style={{ display: 'flex', gap: 4 }}>
+            <div>
+              <span className="event-log-kicker">Background telemetry</span>
+              <span>Live Event Log</span>
+            </div>
+            <div className="event-log-actions">
               <button className="btn btn-ghost btn-sm" onClick={clearLog}>
                 Clear
               </button>

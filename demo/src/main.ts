@@ -1906,36 +1906,182 @@ intent.<span class="fn">destroy</span>(); <span class="cmt">// closes BroadcastC
         }),
       ];
 
+      // Reset the playground-scoped cart counter to match the fresh UI state.
+      // cartItems is recreated on each mount, so the counter must be synced to avoid drift
+      // between UI state (fresh empty array) and telemetry (potentially non-zero counter).
+      // Use 'amazon-cart-items' to isolate playground state from other demos using 'cart-items'.
+      intent.resetCounter('amazon-cart-items');
+
+      type PlaygroundProduct = {
+        id: string;
+        name: string;
+        emoji: string;
+        price: number;
+        state: string;
+      };
+
+      let selectedProduct: PlaygroundProduct | null = null;
+      let cartItems: PlaygroundProduct[] = [];
+      let checkoutStep = 0; // 0=browse, 1=cart, 2=payment
+
+      const heroEl = el.querySelector<HTMLElement>('.amazon-hero')!;
+      const gridEl = el.querySelector<HTMLElement>('#product-grid')!;
+      const detailEl = el.querySelector<HTMLElement>('#product-detail')!;
+
+      const productFromCard = (card: HTMLElement): PlaygroundProduct => ({
+        id: card.dataset.productState ?? card.dataset.productName ?? 'unknown',
+        state: card.dataset.productState!,
+        name: card.dataset.productName!,
+        emoji: card.dataset.productEmoji!,
+        price: parseFloat(card.dataset.productPrice ?? '0'),
+      });
+
+      function renderStoreState() {
+        heroEl.style.display = checkoutStep === 0 ? '' : 'none';
+        gridEl.style.display = checkoutStep === 0 ? '' : 'none';
+
+        if (checkoutStep === 1) {
+          detailEl.innerHTML = `
+            <div class="checkout-section">
+              <h3>🛒 Your Cart (${cartItems.length} items)</h3>
+              ${
+                cartItems.length === 0
+                  ? '<p style="color:var(--text-muted)">Cart is empty.</p>'
+                  : `${cartItems
+                      .map(
+                        (item) => `
+                      <div style="display:flex;align-items:center;gap:12px;padding:8px 0;border-bottom:1px solid var(--border)">
+                        <span style="font-size:24px">${item.emoji}</span>
+                        <span style="flex:1">${item.name}</span>
+                        <span style="font-weight:700;color:#ff9900">$${item.price.toFixed(2)}</span>
+                      </div>
+                    `,
+                      )
+                      .join('')}
+                    <div style="margin-top:12px;display:flex;justify-content:space-between;align-items:center">
+                      <span style="font-size:16px;font-weight:700">Total: $${cartItems
+                        .reduce((sum, item) => sum + item.price, 0)
+                        .toFixed(2)}</span>
+                      <button class="btn btn-primary" data-proceed-payment>Proceed to Payment →</button>
+                    </div>`
+              }
+              <button class="btn btn-secondary" style="margin-top:12px" data-back-browse-inline>← Continue Shopping</button>
+            </div>
+          `;
+          return;
+        }
+
+        if (checkoutStep === 2) {
+          detailEl.innerHTML = `
+            <div class="checkout-section">
+              <h3>💳 Payment</h3>
+              <p style="color:var(--text-muted);margin-bottom:16px">Simulated checkout form — hover and pause here to trigger hesitation and dwell-time signals.</p>
+              <div style="display:flex;flex-direction:column;gap:12px;max-width:400px">
+                <div>
+                  <label style="display:block;margin-bottom:4px;font-size:12px">Card Number</label>
+                  <input type="text" placeholder="4242 4242 4242 4242" style="width:100%" readonly />
+                </div>
+                <div style="display:flex;gap:12px">
+                  <div style="flex:1"><label style="display:block;margin-bottom:4px;font-size:12px">Expiry</label><input type="text" placeholder="12/28" readonly /></div>
+                  <div style="flex:1"><label style="display:block;margin-bottom:4px;font-size:12px">CVC</label><input type="text" placeholder="123" readonly /></div>
+                </div>
+                <button class="btn btn-green" data-place-order>✅ Place Order (Simulated)</button>
+              </div>
+              <button class="btn btn-secondary" style="margin-top:12px" data-back-cart>← Back to Cart</button>
+            </div>
+          `;
+          return;
+        }
+
+        detailEl.innerHTML = selectedProduct
+          ? `
+            <div class="checkout-section">
+              <h3>${selectedProduct.emoji} ${selectedProduct.name}</h3>
+              <p style="color:var(--text-muted);margin-bottom:12px">Viewing product detail page — your dwell time and navigation patterns are being tracked.</p>
+              <div class="metrics-grid" style="margin-bottom:16px">
+                <div class="metric-card"><div class="metric-value" style="color:#ff9900">$${selectedProduct.price.toFixed(2)}</div><div class="metric-label">Current Price</div></div>
+              </div>
+              <button class="btn btn-primary" data-add-cart="${selectedProduct.state}">🛒 Add to Cart</button>
+            </div>
+          `
+          : '';
+      }
+
       // Product clicks → track
       el.querySelectorAll<HTMLElement>('.product-card').forEach((card) => {
-        card.addEventListener('click', () => {
-          const state = card.dataset.productState!;
-          intent.track(state);
+        card.addEventListener('click', (event) => {
+          if ((event.target as HTMLElement).closest('[data-add-cart]')) return;
+          if (checkoutStep !== 0) return;
+          selectedProduct = productFromCard(card);
+          intent.track(selectedProduct.state);
           el.querySelectorAll<HTMLElement>('.product-card').forEach((c) =>
             c.classList.remove('active'),
           );
           card.classList.add('active');
-          el.querySelector<HTMLElement>('#product-detail')!.innerHTML = `
-            <div class="checkout-section">
-              <h3>${card.dataset.productEmoji} ${card.dataset.productName}</h3>
-              <p style="color:var(--text-muted);margin-bottom:12px">Viewing product — dwell time and navigation being tracked.</p>
-              <div class="metrics-grid" style="margin-bottom:16px">
-                <div class="metric-card"><div class="metric-value" style="color:#ff9900">$${parseFloat(card.dataset.productPrice!).toFixed(2)}</div><div class="metric-label">Price</div></div>
-              </div>
-              <button class="btn btn-primary" data-add-cart="${state}">🛒 Add to Cart</button>
-            </div>
-          `;
+          renderStoreState();
         });
       });
 
-      // Add to cart → track
+      // Store actions
       el.addEventListener('click', (e) => {
-        const btn = (e.target as HTMLElement).closest('[data-add-cart]') as HTMLElement | null;
-        if (btn) {
+        const target = e.target as HTMLElement;
+        const addCartBtn = target.closest('[data-add-cart]') as HTMLElement | null;
+        if (addCartBtn) {
+          const state = addCartBtn.dataset.addCart!;
+          const card = el.querySelector<HTMLElement>(
+            `.product-card[data-product-state="${state}"]`,
+          );
+          let product = card ? productFromCard(card) : selectedProduct;
+          if (!product) {
+            // If we can't resolve a product, don't modify cart or telemetry.
+            return;
+          }
+          cartItems.push(product);
           intent.track('/amazon/cart');
-          intent.incrementCounter('cart-items', 1);
+          intent.incrementCounter('amazon-cart-items', 1);
+          checkoutStep = 1;
+          renderStoreState();
+          return;
+        }
+
+        if (target.closest('[data-proceed-payment]')) {
+          intent.track('/amazon/checkout/payment');
+          checkoutStep = 2;
+          renderStoreState();
+          return;
+        }
+
+        if (target.closest('[data-back-cart]')) {
+          intent.track('/amazon/cart');
+          checkoutStep = 1;
+          renderStoreState();
+          return;
+        }
+
+        if (target.closest('[data-back-browse-inline]')) {
+          intent.track('/amazon/home');
+          checkoutStep = 0;
+          renderStoreState();
+          return;
+        }
+
+        if (target.closest('[data-place-order]')) {
+          intent.track('/amazon/thank-you');
+          checkoutStep = 0;
+          selectedProduct = null;
+          const removedItems = cartItems.length;
+          if (removedItems > 0) {
+            intent.incrementCounter('amazon-cart-items', -removedItems);
+          }
+          cartItems = [];
+          el.querySelectorAll<HTMLElement>('.product-card').forEach((c) =>
+            c.classList.remove('active'),
+          );
+          renderStoreState();
         }
       });
+
+      renderStoreState();
 
       // Quick simulate buttons — async with frame yields for reactivity
       const simBtns = el.querySelectorAll<HTMLButtonElement>(
@@ -2035,6 +2181,8 @@ intent.<span class="fn">destroy</span>(); <span class="cmt">// closes BroadcastC
       });
       el.querySelector('#btn-jump-payment')?.addEventListener('click', () => {
         intent.track('/amazon/checkout/payment');
+        checkoutStep = 2;
+        renderStoreState();
       });
       el.querySelector('#btn-bot-activity')?.addEventListener('click', () => {
         runPlaygroundSim(async () => {
@@ -2059,6 +2207,8 @@ intent.<span class="fn">destroy</span>(); <span class="cmt">// closes BroadcastC
       });
       el.querySelector('#btn-back-browse')?.addEventListener('click', () => {
         intent.track('/amazon/home');
+        checkoutStep = 0;
+        renderStoreState();
       });
 
       return () => {
@@ -2769,12 +2919,13 @@ function updateMeterGauge(name: string, value: number) {
   const valEl = document.getElementById(`gauge-${name}-val`);
   const meterEl = document.getElementById(`meter-${name}`);
   if (fill) {
-    fill.style.height = `${v}%`;
+    fill.style.width = `${v}%`;
     fill.style.background = getGaugeColor(name);
     fill.style.boxShadow = v > 50 ? `0 0 8px ${getGaugeColor(name)}` : 'none';
   }
   if (valEl) valEl.textContent = `${Math.round(v)}%`;
   if (meterEl) meterEl.setAttribute('aria-valuenow', String(Math.round(v)));
+  updateMeterSummary();
 }
 
 function getGaugeColor(name: string): string {
@@ -2831,31 +2982,39 @@ intent.on('exit_intent', () => updateMeterGauge('exit', 100));
 intent.on('user_idle', () => updateMeterGauge('idle', 100));
 intent.on('user_resumed', () => updateMeterGauge('idle', 0));
 
-// Drag handle for meter repositioning
+function updateMeterSummary() {
+  const summaryEl = document.getElementById('intent-meter-summary');
+  if (!summaryEl) return;
+
+  const entries: Array<[string, number]> = [
+    ['Rage', meterState.rage],
+    ['Anxiety', meterState.anxiety],
+    ['Hesitation', meterState.hesitation],
+    ['Bot', meterState.bot],
+    ['Idle', meterState.idle],
+    ['Exit', meterState.exit],
+  ];
+  const top = entries.reduce((best, entry) => (entry[1] > best[1] ? entry : best), entries[0]);
+  summaryEl.textContent = top[1] < 12 ? 'Quiet' : `${top[0]} ${Math.round(top[1])}%`;
+}
+
+// Compact docked meter toggle
 {
   const meter = document.getElementById('intent-meter')!;
-  const handle = document.getElementById('meter-drag-handle')!;
-  const translate = { x: 0, y: 0 };
+  const body = document.getElementById('meter-body')!;
+  const toggle = document.getElementById('intent-meter-toggle')!;
+  const close = document.getElementById('intent-meter-close')!;
 
-  handle.addEventListener('mousedown', (e) => {
-    e.preventDefault();
-    const startX = e.clientX;
-    const startY = e.clientY;
-    const origX = translate.x;
-    const origY = translate.y;
+  const setOpen = (open: boolean) => {
+    meter.classList.toggle('intent-meter--open', open);
+    body.hidden = !open;
+    toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+  };
 
-    const onMove = (ev: MouseEvent) => {
-      translate.x = origX + ev.clientX - startX;
-      translate.y = origY + ev.clientY - startY;
-      meter.style.transform = `translate(${translate.x}px, ${translate.y}px)`;
-    };
-    const onUp = () => {
-      window.removeEventListener('mousemove', onMove);
-      window.removeEventListener('mouseup', onUp);
-    };
-    window.addEventListener('mousemove', onMove);
-    window.addEventListener('mouseup', onUp);
-  });
+  toggle.addEventListener('click', () => setOpen(true));
+  close.addEventListener('click', () => setOpen(false));
+  updateMeterSummary();
+  setOpen(false);
 }
 
 // Per-gauge Quick Simulate buttons
@@ -2999,6 +3158,30 @@ document.getElementById('sim-exit')!.addEventListener('click', () => {
 // ─── Navigation ───────────────────────────────────────────────────────────────
 let activeDemo = 'overview';
 let activeCleanup: (() => void) | void = undefined;
+const QUICK_JUMPS: Array<{ key: string; label: string }> = [
+  { key: 'overview', label: 'Overview' },
+  { key: 'basic-tracking', label: 'Tracking' },
+  { key: 'high-entropy', label: 'Entropy' },
+  { key: 'dwell-time', label: 'Dwell Time' },
+  { key: 'trajectory', label: 'Trajectory' },
+  { key: 'hesitation', label: 'Hesitation' },
+  { key: 'exit-intent', label: 'Exit Intent' },
+  { key: 'bot-detection', label: 'Bot Detection' },
+  { key: 'amazon-playground', label: 'Playground' },
+  { key: 'byob', label: 'BYOB' },
+];
+
+const quickJumpEl = document.getElementById('quick-jump-bar');
+if (quickJumpEl) {
+  quickJumpEl.innerHTML = QUICK_JUMPS.map(
+    (jump) =>
+      `<button class="quick-jump" type="button" data-quick-demo="${jump.key}">${jump.label}</button>`,
+  ).join('');
+
+  quickJumpEl.querySelectorAll<HTMLElement>('[data-quick-demo]').forEach((btn) => {
+    btn.addEventListener('click', () => navigateTo(btn.dataset.quickDemo!));
+  });
+}
 
 function navigateTo(demoKey: string): void {
   if (!demos[demoKey]) return;
@@ -3013,6 +3196,11 @@ function navigateTo(demoKey: string): void {
 
   activeDemo = demoKey;
   const demo = demos[demoKey];
+  const headingEl = document.getElementById('active-demo-label');
+  if (headingEl) headingEl.textContent = demo.title;
+  document.querySelectorAll<HTMLElement>('.quick-jump').forEach((btn) => {
+    btn.classList.toggle('active', btn.dataset.quickDemo === demoKey);
+  });
   const contentEl = document.getElementById('content')!;
   contentEl.innerHTML = demo.render();
   activeCleanup = demo.setup(contentEl);

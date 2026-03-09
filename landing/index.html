@@ -3,512 +3,429 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>PassiveIntent | Turn Hesitation Into Conversions</title>
+    <title>PassiveIntent | Privacy-First Intent Intelligence</title>
     <meta
       name="description"
-      content="PassiveIntent helps teams recover users in the final seconds before drop-off with on-device intent signals, zero behavioral data egress, and no cookie-banner dependency for PassiveIntent itself."
+      content="PassiveIntent helps product, growth, and CX teams detect hesitation in-session with zero behavioral data egress and fast, on-device intent signals."
     />
-    <meta property="og:title" content="PassiveIntent | Turn Hesitation Into Conversions" />
+    <meta property="og:title" content="PassiveIntent | Privacy-First Intent Intelligence" />
     <meta
       property="og:description"
-      content="Detect friction, trigger help in-session, and recover conversions without shipping behavioral data to external analytics pipelines."
+      content="Explore the core library, a live guided demo, privacy-first architecture, and the next layer of PassiveIntent products and integrations."
     />
     <meta property="og:type" content="website" />
     <meta property="og:url" content="https://passiveintent.dev" />
-    <meta name="theme-color" content="#0f172a" />
+    <meta name="theme-color" content="#f6f3ee" />
     <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap"
       rel="stylesheet"
     />
     <link rel="stylesheet" href="./styles.css" />
   </head>
   <body>
-    <div class="bg-glow bg-glow-1"></div>
-    <div class="bg-glow bg-glow-2"></div>
+    <div class="page-orb page-orb-a" aria-hidden="true"></div>
+    <div class="page-orb page-orb-b" aria-hidden="true"></div>
 
-    <header class="site-header">
-      <a class="brand" href="#top">
-        <span class="brand-mark"></span>
-        <span>PassiveIntent</span>
-      </a>
-      <nav>
-        <a href="#demo">Demo</a>
-        <a href="#why">Why</a>
-        <a href="#how">How</a>
-        <a href="#gdpr">GDPR</a>
-        <a href="#integrations">Integrations</a>
-        <a href="#calibration">Calibration</a>
-        <a href="#pricing">Pricing</a>
-        <a
-          class="pill"
-          href="https://github.com/passiveintent/core"
-          target="_blank"
-          rel="noopener noreferrer"
-          >GitHub</a
-        >
-      </nav>
+    <header class="site-header" id="site-header">
+      <div class="header-inner">
+        <a class="brand" href="#top" aria-label="PassiveIntent home">
+          <span class="brand-mark" aria-hidden="true"></span>
+          <span class="brand-copy">
+            <strong>PassiveIntent</strong>
+            <span>Privacy-first intent engine</span>
+          </span>
+        </a>
+        <nav class="site-nav" id="site-nav" aria-label="Primary">
+          <a href="#why-different">Why</a>
+          <a href="#how">How</a>
+          <a href="#demo">Demo</a>
+          <a href="#pricing">Pricing</a>
+          <a href="#articles">Articles</a>
+        </nav>
+        <a class="header-cta" href="#demo">Try the live demo</a>
+      </div>
     </header>
 
     <main id="top">
       <section class="hero section reveal">
-        <p class="eyebrow">The last 30 seconds decide conversion</p>
-        <h1>When users hesitate, <span>you intervene before they leave</span>.</h1>
-        <p class="subhead">
-          PassiveIntent detects high-friction moments in-session and lets you trigger support,
-          reassurance, or offers while intent is still alive.
-        </p>
-        <div class="hero-cta">
-          <a
-            class="btn btn-primary"
-            href="https://github.com/passiveintent/core/tree/main/packages/core"
-            target="_blank"
-            rel="noopener noreferrer"
-            >Start Free</a
-          >
-          <a
-            class="btn btn-ghost"
-            href="mailto:support@passiveintent.dev?subject=PassiveIntent%20Fit%20Call"
-            >Book 20-min Fit Call</a
-          >
-        </div>
-        <div class="hero-grid">
-          <article>
-            <h3>&lt; 2ms</h3>
-            <p>Signal latency to react in real time.</p>
-          </article>
-          <article>
-            <h3>~11kB gzip</h3>
-            <p>Tiny SDK footprint and fast adoption.</p>
-          </article>
-          <article>
-            <h3>0 data egress</h3>
-            <p>Behavioral inference stays on-device.</p>
-          </article>
+        <div class="hero-copy hero-copy-centered">
+          <p class="eyebrow">PassiveIntent Core</p>
+          <h1>Detect hesitation while the session is still alive.</h1>
+          <p class="hero-text">
+            PassiveIntent is a privacy-first JavaScript library for product, growth, and CX teams
+            that want to catch checkout friction, pricing doubt, and exit intent before the user
+            disappears, without exporting behavioral data to another vendor.
+          </p>
+          <div class="hero-actions">
+            <a class="btn btn-primary" href="#demo">Try the live demo</a>
+            <a
+              class="btn btn-secondary"
+              href="https://github.com/passiveintent/core/tree/main/packages/core"
+              target="_blank"
+              rel="noopener noreferrer"
+              >Read the docs</a
+            >
+          </div>
+          <div class="hero-proof-strip">
+            <span>For product, growth, and CX teams</span>
+            <span>~11 kB gzip</span>
+            <span>Runs in the browser</span>
+            <span>No behavioral export by default</span>
+          </div>
         </div>
       </section>
 
-      <section id="why" class="section reveal">
-        <div class="section-head">
-          <p class="eyebrow">Most critical problem solved</p>
-          <h2>Invisible pre-churn behavior that legacy analytics catch too late</h2>
+      <section class="section section-bridge reveal">
+        <div class="bridge-panel">
+          <div>
+            <p class="eyebrow">What it is</p>
+            <h2>A small client-side library for teams that need to act before abandonment.</h2>
+          </div>
+          <div class="bridge-copy">
+            <p>
+              Use it in checkout, pricing, billing, onboarding, and support-sensitive journeys where
+              hesitation matters more than hindsight.
+            </p>
+            <p>
+              The shipping product is PassiveIntent Core. JavaScript and React packages are
+              available now.
+            </p>
+          </div>
         </div>
-        <div class="story-grid">
-          <article class="story-card">
-            <h3>Before</h3>
-            <p>
-              Users stall on checkout or billing, bounce, and your team discovers it later in a
-              dashboard.
+      </section>
+
+      <section id="why-different" class="section reveal">
+        <div class="section-head section-head-wide">
+          <p class="eyebrow">Why PassiveIntent</p>
+          <h2>Built for intervention logic, not surveillance plumbing.</h2>
+          <p class="section-copy">
+            Most teams discover friction after the drop-off. PassiveIntent keeps the model close to
+            the session so you can respond while the decision is still in motion.
+          </p>
+        </div>
+        <div class="why-frame">
+          <div class="why-lead">
+            <p class="why-lead-copy">
+              It is lightweight enough to ship broadly, private enough for sensitive flows, and
+              specific enough to support real product decisions instead of another dashboard.
             </p>
-          </article>
-          <article class="story-card highlighted">
-            <h3>With PassiveIntent</h3>
-            <p>
-              Friction signals fire while the session is active, so you can recover users in the
-              exact moment they need reassurance.
+            <p class="why-proof-link">
+              <a
+                href="./PassiveIntent_Zero_Egress_Attestation.pdf"
+                target="_blank"
+                rel="noopener noreferrer"
+                >Download the Zero Egress Attestation (PDF)</a
+              >
             </p>
-          </article>
-          <article class="story-card">
-            <h3>Business Impact</h3>
-            <p>
-              Better checkout completion, fewer avoidable support tickets, and faster
-              experimentation loops.
-            </p>
-          </article>
+          </div>
+          <div class="why-list">
+            <article class="why-item">
+              <span class="story-tag">Privacy-first</span>
+              <div>
+                <h3>No behavioral export by default</h3>
+                <p>
+                  Intent evaluation stays close to the session instead of feeding a remote
+                  clickstream.
+                </p>
+              </div>
+            </article>
+            <article class="why-item">
+              <span class="story-tag">Zero-egress</span>
+              <div>
+                <h3>No external inference vendor required</h3>
+                <p>
+                  You can detect hesitation without adding another behavioral processor to your
+                  stack.
+                </p>
+              </div>
+            </article>
+            <article class="why-item">
+              <span class="story-tag">Lightweight</span>
+              <div>
+                <h3>Small enough to ship broadly</h3>
+                <p>
+                  At roughly 11 kB gzip, the library fits storefronts, onboarding flows, and SaaS
+                  apps.
+                </p>
+              </div>
+            </article>
+            <article class="why-item">
+              <span class="story-tag">Interpretable</span>
+              <div>
+                <h3>Grounded in session math</h3>
+                <p>
+                  Markov, entropy, and dwell-time signals make the model legible to product teams.
+                </p>
+              </div>
+            </article>
+          </div>
         </div>
       </section>
 
       <section id="how" class="section reveal">
         <div class="section-head">
           <p class="eyebrow">How it works</p>
-          <h2>Three-step conversion recovery loop</h2>
-        </div>
-        <div class="step-grid">
-          <article class="step-card">
-            <span class="step-number">1</span>
-            <h3>Detect Friction</h3>
-            <p>Identify hesitation, erratic navigation, and path deviation in real time.</p>
-          </article>
-          <article class="step-card">
-            <span class="step-number">2</span>
-            <h3>Trigger Action</h3>
-            <p>Show contextual help, offer reassurance, or escalate support before drop-off.</p>
-          </article>
-          <article class="step-card">
-            <span class="step-number">3</span>
-            <h3>Measure Lift</h3>
-            <p>Track downstream conversion changes and iterate intervention logic quickly.</p>
-          </article>
-        </div>
-      </section>
-
-      <section id="gdpr" class="section reveal">
-        <div class="section-head">
-          <p class="eyebrow">GDPR compliance advantage</p>
-          <h2>Built to reduce compliance friction, not add to it</h2>
-        </div>
-        <div class="metric-grid">
-          <article class="metric-card">
-            <h3>Zero Behavioral Data Egress</h3>
-            <p>No clickstream export to third-party servers for intent inference.</p>
-          </article>
-          <article class="metric-card">
-            <h3>No Cookie Banner Dependency</h3>
-            <p>PassiveIntent itself works without analytics cookies or consent popups.</p>
-          </article>
-          <article class="metric-card">
-            <h3>No External Inference Vendor</h3>
-            <p>Lower legal and operational overhead from third-party data processors.</p>
-          </article>
-        </div>
-        <p class="pricing-note">
-          Important: these claims apply when your tracked states remain anonymous and you do not
-          send personal data in custom events.
-          <a
-            href="./PassiveIntent_Zero_Egress_Attestation.pdf"
-            target="_blank"
-            rel="noopener noreferrer"
-            >Download our Zero Egress Attestation (PDF)</a
-          >
-          for your AppSec team.
-        </p>
-      </section>
-
-      <section id="features" class="section reveal">
-        <div class="section-head">
-          <p class="eyebrow">Core capabilities</p>
-          <h2>What product and growth teams can act on immediately</h2>
-        </div>
-        <div class="cards">
-          <article class="card">
-            <h3>Hesitation Detection</h3>
-            <p>Recognize abnormal dwell-time and intervene before users disappear.</p>
-          </article>
-          <article class="card">
-            <h3>Path Deviation Alerts</h3>
-            <p>Spot when users wander off successful conversion journeys.</p>
-          </article>
-          <article class="card">
-            <h3>Bot Noise Suppression</h3>
-            <p>Reduce robotic false positives so interventions target real users.</p>
-          </article>
-          <article class="card">
-            <h3>Privacy-First Defaults</h3>
-            <p>No PII capture and no third-party clickstream shipping by default.</p>
-          </article>
-        </div>
-      </section>
-
-      <section id="demo" class="section reveal demo-section">
-        <div class="section-head">
-          <p class="eyebrow">Try it live</p>
-          <h2>Zero setup — runs entirely in your browser</h2>
-          <p class="demo-subhead">
-            No install. No sign-up. Click a tab and interact with a real PassiveIntent engine
-            tracking navigation, detecting hesitation, and firing intent signals in real time.
+          <h2>A small client-side loop: observe, infer, intervene.</h2>
+          <p class="section-copy">
+            Route changes and lifecycle events feed the model. The model scores hesitation locally.
+            Your product decides how to respond.
           </p>
         </div>
-        <div class="demo-toolbar">
-          <div class="demo-tabs" role="tablist" aria-label="Choose a demo implementation">
-            <button
-              id="demo-tab-vanilla"
-              class="demo-tab active"
-              type="button"
-              role="tab"
-              aria-selected="true"
-              aria-controls="demo-vanilla"
-              data-target="demo-vanilla"
-              tabindex="0"
-            >
-              Vanilla JS
-            </button>
-            <button
-              id="demo-tab-react"
-              class="demo-tab"
-              type="button"
-              role="tab"
-              aria-selected="false"
-              aria-controls="demo-react"
-              data-target="demo-react"
-              tabindex="-1"
-            >
-              React
-            </button>
+        <div class="architecture-band">
+          <div class="architecture-flow">
+            <article class="architecture-node">
+              <span class="architecture-step">01</span>
+              <h3>Observe</h3>
+              <p>Routes, dwell time, lifecycle events, and path changes.</p>
+            </article>
+            <span class="architecture-arrow" aria-hidden="true">→</span>
+            <article class="architecture-node architecture-node-strong">
+              <span class="architecture-step">02</span>
+              <h3>Infer</h3>
+              <p>Hesitation, entropy, exit intent, and trajectory drift in-session.</p>
+            </article>
+            <span class="architecture-arrow" aria-hidden="true">→</span>
+            <article class="architecture-node">
+              <span class="architecture-step">03</span>
+              <h3>Intervene</h3>
+              <p>Support, reassurance, offers, or the next best step.</p>
+            </article>
           </div>
-          <span class="demo-live-badge">&#9679; Live</span>
-        </div>
-        <div
-          id="demo-vanilla"
-          class="demo-embed"
-          role="tabpanel"
-          aria-labelledby="demo-tab-vanilla"
-        >
-          <!--
-            sandbox rationale (Vanilla JS embed):
-              allow-scripts    – required: WebContainer boots a Node.js runtime in the browser via
-                                 a Service Worker; the iframe cannot function without script execution.
-              allow-same-origin – required: SharedArrayBuffer (used by WebContainer for multi-threaded
-                                 builds) only works under Cross-Origin Isolation. The iframe must be
-                                 able to read its own COEP/COOP response headers, which requires
-                                 same-origin access to its own origin.
-              allow-popups     – omitted: this is a preview-only embed (view=preview); the demo app
-                                 does not call window.open(). The "↗ Open in StackBlitz" affordance
-                                 is an <a> element outside the iframe and needs no iframe permission.
-              allow-popups-to-escape-sandbox – omitted: would allow any popup opened by iframe
-                                 content to run fully outside the sandbox with no restrictions.
-                                 Unnecessary here and significantly increases attack surface.
-          -->
-          <iframe
-            src="https://stackblitz.com/github/passiveintent/core/tree/main/demo?embed=1&hideNavigation=1&view=preview"
-            title="PassiveIntent Vanilla JS demo"
-            loading="lazy"
-            sandbox="allow-scripts allow-same-origin"
-            allow="cross-origin-isolated"
-          ></iframe>
-          <a
-            class="demo-open-link"
-            href="https://stackblitz.com/github/passiveintent/core/tree/main/demo"
-            target="_blank"
-            rel="noopener noreferrer"
-            >↗ Open in StackBlitz</a
-          >
-        </div>
-        <div
-          id="demo-react"
-          class="demo-embed"
-          role="tabpanel"
-          aria-labelledby="demo-tab-react"
-          hidden
-        >
-          <!--
-            sandbox rationale (React embed):
-              allow-scripts    – required: same as Vanilla embed; WebContainer needs script execution.
-              allow-same-origin – required: same as Vanilla embed; SharedArrayBuffer / COOP/COEP.
-              allow-popups     – omitted: preview-only embed; no window.open() in the demo app.
-              allow-popups-to-escape-sandbox – omitted: unnecessary and dangerous (see Vanilla note).
-          -->
-          <iframe
-            src="https://stackblitz.com/github/passiveintent/core/tree/main/demo-react?embed=1&hideNavigation=1&view=preview"
-            title="PassiveIntent React demo"
-            loading="lazy"
-            sandbox="allow-scripts allow-same-origin"
-            allow="cross-origin-isolated"
-          ></iframe>
-          <a
-            class="demo-open-link"
-            href="https://stackblitz.com/github/passiveintent/core/tree/main/demo-react"
-            target="_blank"
-            rel="noopener noreferrer"
-            >↗ Open in StackBlitz</a
-          >
+          <div class="architecture-notes">
+            <span class="architecture-note">Runs in the browser by default</span>
+            <span class="architecture-note">Keeps the model close to the moment</span>
+            <span class="architecture-note">Lets your product own the response</span>
+          </div>
         </div>
       </section>
 
-      <section id="calibration" class="section reveal">
+      <section id="use-cases" class="section reveal">
         <div class="section-head">
-          <p class="eyebrow">Bring Your Own Baseline</p>
-          <h2>Calibrated to Your Topography, Not a Global Average.</h2>
+          <p class="eyebrow">Use cases</p>
+          <h2>Three concrete buyer problems the library helps solve right away.</h2>
         </div>
-        <p class="byob-intro">
-          Every website has a unique &ldquo;Perfect Buyer&rdquo; path. PassiveIntent doesn&rsquo;t
-          use hardcoded thresholds. You inject your own historical analytics data to pre-train the
-          engine&rsquo;s Markov baseline — and the statistical model adapts its Z-score variance to
-          match your traffic profile automatically.
-        </p>
-        <div class="cards byob-grid">
-          <article class="card byob-card byob-card--media">
-            <div class="card-top">
-              <h3>High-Variance Sites</h3>
-              <span class="chip chip-media">Media &amp; Editorial</span>
-            </div>
-            <p>
-              Exploratory browsing is the norm, not an anomaly. The engine mathematically
-              <strong>relaxes its Z-score thresholds</strong> to accommodate natural content
-              discovery — so you only fire interventions when a session is a genuine statistical
-              outlier against your own traffic, not a generic industry benchmark.
-            </p>
+        <div class="story-grid">
+          <article class="story-card">
+            <span class="story-tag">Checkout</span>
+            <h3>Recover users who stall before payment.</h3>
+            <p>Detect hesitation and path drift before the buyer abandons the funnel.</p>
           </article>
-          <article class="card byob-card byob-card--strict">
-            <div class="card-top">
-              <h3>Strict-Funnel Sites</h3>
-              <span class="chip chip-strict">SaaS &amp; Checkout</span>
-            </div>
+          <article class="story-card story-card-emphasis">
+            <span class="story-tag">Pricing and billing</span>
+            <h3>Spot friction while high-intent visitors are still comparing options.</h3>
+            <p>Use in-session signals to trigger reassurance, support, or a better next step.</p>
+          </article>
+          <article class="story-card">
+            <span class="story-tag">Customer support</span>
+            <h3>Surface help when confusion shows up in navigation behavior.</h3>
             <p>
-              Every navigation step is intentional. The engine
-              <strong>tightens its variance model</strong>, detecting hesitation the millisecond a
-              user drifts from the critical path — whether that&rsquo;s stalling on the billing page
-              or back-navigating from checkout.
+              Catch the session before it turns into a lost conversion or avoidable support ticket.
             </p>
           </article>
         </div>
-        <p class="pricing-note">
-          See the
-          <a
-            href="https://github.com/passiveintent/core/blob/main/CALIBRATION_GUIDE.md"
-            target="_blank"
-            rel="noopener noreferrer"
-            >Calibration Guide</a
-          >
-          for the full Z-score model, calibration scripts, and recalibration cadence.
-        </p>
       </section>
 
-      <section id="integrations" class="section reveal">
+      <section id="start" class="section reveal">
         <div class="section-head">
-          <p class="eyebrow">Adoption paths</p>
-          <h2>Start now, scale with upcoming integrations</h2>
+          <p class="eyebrow">Start here</p>
+          <h2>Documentation, demo, source, and licensing in one place.</h2>
+          <p class="section-copy">
+            The shortest path to trust is simple: read the docs, inspect the source, run the demo,
+            and understand the license.
+          </p>
         </div>
-        <div class="integration-grid">
-          <article class="integration-card">
-            <div class="card-top">
-              <h3>Core SDK + React</h3>
-              <span class="chip">Available</span>
-            </div>
-            <p>Production-ready npm packages for browser apps and React teams.</p>
-            <div
-              class="card-badges"
-              style="display: flex; flex-wrap: wrap; gap: 0.4rem; margin: 0.5rem 0"
-            >
-              <a
-                href="https://www.npmjs.com/package/@passiveintent/core"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                <img
-                  src="https://img.shields.io/npm/v/@passiveintent/core.svg"
-                  alt="npm @passiveintent/core"
-                />
-              </a>
-              <a
-                href="https://bundlephobia.com/package/@passiveintent/core"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                <img
-                  src="https://img.shields.io/bundlephobia/minzip/@passiveintent/core"
-                  alt="bundle size @passiveintent/core"
-                />
-              </a>
-              <a
-                href="https://www.npmjs.com/package/@passiveintent/react"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                <img
-                  src="https://img.shields.io/npm/v/@passiveintent/react.svg"
-                  alt="npm @passiveintent/react"
-                />
-              </a>
-              <a
-                href="https://bundlephobia.com/package/@passiveintent/react"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                <img
-                  src="https://img.shields.io/bundlephobia/minzip/@passiveintent/react"
-                  alt="bundle size @passiveintent/react"
-                />
-              </a>
-            </div>
-            <div class="card-actions" style="display: flex; gap: 0.75rem; flex-wrap: wrap">
-              <a
-                href="https://www.npmjs.com/package/@passiveintent/core"
-                target="_blank"
-                rel="noopener noreferrer"
-                >Core on npm</a
-              >
-              <a
-                href="https://www.npmjs.com/package/@passiveintent/react"
-                target="_blank"
-                rel="noopener noreferrer"
-                >React on npm</a
-              >
-            </div>
-          </article>
-          <article class="integration-card">
-            <div class="card-top">
-              <h3>Live StackBlitz Sandbox</h3>
-              <span class="chip">Live</span>
-            </div>
-            <p>Try end-to-end intervention flows in-browser with zero setup.</p>
-            <div class="card-actions" style="display: flex; gap: 0.75rem; flex-wrap: wrap">
-              <a
-                href="https://stackblitz.com/github/passiveintent/core/tree/main/demo"
-                target="_blank"
-                rel="noopener noreferrer"
-                >Vanilla demo</a
-              >
-              <a
-                href="https://stackblitz.com/github/passiveintent/core/tree/main/demo-react"
-                target="_blank"
-                rel="noopener noreferrer"
-                >React demo</a
-              >
-            </div>
-          </article>
-          <article class="integration-card">
-            <div class="card-top">
-              <h3>Shopify Integration</h3>
-              <span class="chip chip-soon">Coming Soon</span>
-            </div>
-            <p>Apply intent signals in storefront UX and checkout recovery journeys.</p>
-            <span class="coming-link">Roadmap item for merchant onboarding</span>
-          </article>
-        </div>
-      </section>
-
-      <section class="section reveal">
-        <div class="cta-band">
-          <div>
-            <p class="eyebrow">Ready to test fit?</p>
-            <h2>Bring one high-dropoff flow. We will map interventions together.</h2>
-          </div>
-          <div class="cta-actions">
+        <div class="start-grid" id="start-grid">
+          <article class="start-card start-card-compact">
+            <span class="article-source">Docs</span>
+            <h3>Documentation</h3>
+            <p>Installation, APIs, and calibration guidance for teams moving toward production.</p>
             <a
-              class="btn btn-primary"
-              href="mailto:support@passiveintent.dev?subject=PassiveIntent%20Pilot%20Request"
-              >Request Pilot</a
+              class="start-link"
+              href="https://github.com/passiveintent/core/tree/main/packages/core"
+              target="_blank"
+              rel="noopener noreferrer"
+              >Open docs</a
             >
+          </article>
+          <article class="start-card start-card-compact">
+            <span class="article-source">Demo</span>
+            <h3>Live demo</h3>
+            <p>
+              Run the guided lab and see hesitation, entropy, exit intent, and trajectory signals in
+              motion.
+            </p>
+            <a class="start-link" href="#demo">Open demo</a>
+          </article>
+          <article class="start-card start-card-compact">
+            <span class="article-source">GitHub</span>
+            <h3>Source code</h3>
+            <p>
+              Review the core package, React package, demo apps, and calibration guide in the public
+              repo.
+            </p>
             <a
-              class="btn btn-ghost"
+              class="start-link"
               href="https://github.com/passiveintent/core"
               target="_blank"
               rel="noopener noreferrer"
               >View GitHub</a
             >
+          </article>
+          <article class="start-card start-card-compact">
+            <span class="article-source">Pricing</span>
+            <h3>Pricing and licensing</h3>
+            <p>
+              See the AGPL path, commercial tiers, and the brief used for legal and procurement
+              review.
+            </p>
+            <a class="start-link" href="#pricing">See pricing</a>
+          </article>
+        </div>
+      </section>
+
+      <section id="demo" class="section section-demo reveal">
+        <div class="demo-shell">
+          <div class="demo-copy">
+            <p class="eyebrow eyebrow-demo">Live guided demo</p>
+            <h2>The fastest way to understand the library is to touch the signals.</h2>
+            <p class="section-copy section-copy-demo">
+              Switch between the Vanilla and React implementations, run the same feature lab in
+              both, and inspect how hesitation, entropy, exit intent, conversion, and trajectory
+              signals behave in real time.
+            </p>
+            <ul class="demo-points">
+              <li>Large embedded lab with full feature coverage.</li>
+              <li>
+                Guided quick-entry paths for overview, checkout, anomaly detection, and calibration.
+              </li>
+              <li>Standalone StackBlitz links if you want the demos in their own tab.</li>
+            </ul>
+            <div class="demo-meta">
+              <span class="live-pill">&#9679; Live in browser</span>
+              <a
+                href="https://github.com/passiveintent/core/tree/main/demo"
+                target="_blank"
+                rel="noopener noreferrer"
+                >See vanilla source</a
+              >
+              <a
+                href="https://github.com/passiveintent/core/tree/main/demo-react"
+                target="_blank"
+                rel="noopener noreferrer"
+                >See React source</a
+              >
+            </div>
+          </div>
+
+          <div class="demo-theater">
+            <div class="demo-toolbar">
+              <div class="demo-tabs" role="tablist" aria-label="Choose a demo implementation">
+                <button
+                  id="demo-tab-vanilla"
+                  class="demo-tab active"
+                  type="button"
+                  role="tab"
+                  aria-selected="true"
+                  aria-controls="demo-vanilla"
+                  data-target="demo-vanilla"
+                  tabindex="0"
+                >
+                  Vanilla JS
+                </button>
+                <button
+                  id="demo-tab-react"
+                  class="demo-tab"
+                  type="button"
+                  role="tab"
+                  aria-selected="false"
+                  aria-controls="demo-react"
+                  data-target="demo-react"
+                  tabindex="-1"
+                >
+                  React
+                </button>
+              </div>
+              <span class="demo-status">Feature lab parity</span>
+            </div>
+
+            <div
+              id="demo-vanilla"
+              class="demo-panel"
+              role="tabpanel"
+              aria-labelledby="demo-tab-vanilla"
+            >
+              <iframe
+                src="https://stackblitz.com/github/passiveintent/core/tree/main/demo?embed=1&hideNavigation=1&view=preview"
+                title="PassiveIntent Vanilla JS demo"
+                loading="lazy"
+                sandbox="allow-scripts allow-same-origin"
+                allow="cross-origin-isolated"
+              ></iframe>
+              <a
+                class="demo-open-link"
+                href="https://stackblitz.com/github/passiveintent/core/tree/main/demo"
+                target="_blank"
+                rel="noopener noreferrer"
+                >Open Vanilla demo ↗</a
+              >
+            </div>
+
+            <div
+              id="demo-react"
+              class="demo-panel"
+              role="tabpanel"
+              aria-labelledby="demo-tab-react"
+              hidden
+            >
+              <iframe
+                data-src="https://stackblitz.com/github/passiveintent/core/tree/main/demo-react?embed=1&hideNavigation=1&view=preview"
+                title="PassiveIntent React demo"
+                loading="lazy"
+                sandbox="allow-scripts allow-same-origin"
+                allow="cross-origin-isolated"
+              ></iframe>
+              <a
+                class="demo-open-link"
+                href="https://stackblitz.com/github/passiveintent/core/tree/main/demo-react"
+                target="_blank"
+                rel="noopener noreferrer"
+                >Open React demo ↗</a
+              >
+            </div>
           </div>
         </div>
       </section>
 
       <section id="pricing" class="section reveal">
         <div class="section-head">
-          <p class="eyebrow">Clear licensing</p>
-          <h2>Start free, upgrade when revenue justifies it</h2>
+          <p class="eyebrow">Pricing / licensing</p>
+          <h2>Clear pricing and licensing from the start.</h2>
         </div>
         <div class="pricing-grid">
           <article class="price-card">
             <h3>Free</h3>
             <p class="price">$0</p>
-            <p>AGPLv3 for OSS, students, and internal evaluation.</p>
+            <p>AGPLv3 for OSS, evaluation, and internal exploration.</p>
             <a
-              class="btn btn-ghost"
+              class="btn btn-secondary"
               href="https://github.com/passiveintent/core"
               target="_blank"
               rel="noopener noreferrer"
-              >Get Started</a
+              >Get started</a
             >
           </article>
-          <article class="price-card featured">
-            <span class="tag">Most Chosen</span>
+          <article class="price-card price-card-featured">
+            <span class="price-tag">Most chosen</span>
             <h3>Startup</h3>
             <p class="price">$599<span>/year</span></p>
             <p>Up to 3 commercial projects with priority async support.</p>
             <a
               class="btn btn-primary"
               href="mailto:support@passiveintent.dev?subject=Commercial%20License%20Inquiry%20-%20Startup%20Tier"
-              >Contact for License</a
+              >Contact for license</a
             >
           </article>
           <article class="price-card">
@@ -516,35 +433,222 @@
             <p class="price">$1,999<span>/year</span></p>
             <p>Unlimited internal projects for one organization.</p>
             <a
-              class="btn btn-ghost"
-              href="mailto:support@passiveintent.dev?subject=Commercial%20License%20Inquiry%20%E2%80%94%20Growth%20Tier%20(%241%2C999%2Fyr)"
-              >Buy Growth Tier ($1,999)</a
+              class="btn btn-secondary"
+              href="mailto:support@passiveintent.dev?subject=Commercial%20License%20Inquiry%20-%20Growth%20Tier"
+              >Talk to sales</a
             >
           </article>
         </div>
         <p class="pricing-note">
-          Need to clear this with procurement?
+          Need legal or procurement context?
           <a
             href="./PassiveIntent_AGPL_Commercial_Exemption.pdf"
             target="_blank"
             rel="noopener noreferrer"
-            >Download the Commercial License Exemption Brief (PDF)</a
-          >. For OEM redistribution or custom scope,
-          <a href="mailto:support@passiveintent.dev">contact sales</a>.
+            >Download the Commercial License Exemption Brief</a
+          >.
         </p>
+      </section>
+
+      <section id="products" class="section reveal">
+        <div class="section-head">
+          <p class="eyebrow">Products</p>
+          <h2>Start with PassiveIntent Core. More products will follow.</h2>
+          <p class="section-copy">
+            PassiveIntent Core is the library available today. Sentinel and future integrations are
+            part of the broader direction, but the focus right now is the core product.
+          </p>
+        </div>
+        <div class="product-grid" id="products-grid">
+          <article class="product-card product-card-featured-main">
+            <span class="product-status">Shipping now</span>
+            <h3>PassiveIntent Core Library</h3>
+            <p>
+              The shipping library for in-session intent detection across checkout, pricing,
+              billing, and support-sensitive flows.
+            </p>
+            <div class="product-card-foot">
+              <span class="product-chip">JavaScript</span>
+              <span class="product-chip">React</span>
+              <span class="product-chip">Guided demo</span>
+            </div>
+          </article>
+          <article class="product-card">
+            <span class="product-status product-status-warm">Planned</span>
+            <h3>Sentinel</h3>
+            <p>
+              A future SDK for higher-sensitivity behavioral signals and insider-risk use cases. It
+              is mentioned here only so the product family has shape.
+            </p>
+            <div class="product-card-foot">
+              <span class="product-chip">Future SDK</span>
+              <span class="product-chip warm">Insider-risk focus</span>
+            </div>
+          </article>
+          <article class="product-card">
+            <span class="product-status product-status-warm">Planned</span>
+            <h3>Integration Layer</h3>
+            <p>
+              Packaged integrations for commerce, CRM, and SaaS surfaces so teams can bring the core
+              library into real environments faster.
+            </p>
+            <div class="product-card-foot">
+              <span class="product-chip">Commerce</span>
+              <span class="product-chip">CRM</span>
+              <span class="product-chip warm">Shopify</span>
+              <span class="product-chip warm">BigCommerce</span>
+              <span class="product-chip warm">Salesforce</span>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <section id="integrations" class="section reveal">
+        <div class="section-head">
+          <p class="eyebrow">Integrations</p>
+          <h2>What you can use right now.</h2>
+          <p class="section-copy">These are the current ways to adopt PassiveIntent today.</p>
+        </div>
+        <div class="integration-columns integration-columns-single">
+          <div class="integration-column">
+            <div class="column-head">
+              <span class="column-tag">Available now</span>
+              <h3>Immediate adoption paths</h3>
+            </div>
+            <div class="integration-stack" id="integrations-available">
+              <article class="integration-item">
+                <div class="integration-head">
+                  <h4>Core SDK + React Package</h4>
+                  <span class="integration-pill">Available</span>
+                </div>
+                <p>
+                  Shipping packages for browser apps and React teams adopting the library directly.
+                </p>
+                <a
+                  class="integration-link"
+                  href="https://www.npmjs.com/package/@passiveintent/core"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  >Open packages</a
+                >
+              </article>
+              <article class="integration-item">
+                <div class="integration-head">
+                  <h4>Guided demos</h4>
+                  <span class="integration-pill">Live</span>
+                </div>
+                <p>
+                  Two public demos with matching UI shells so teams can evaluate the product quickly
+                  in either implementation style.
+                </p>
+                <a class="integration-link" href="#demo">Launch demo</a>
+              </article>
+              <article class="integration-item">
+                <div class="integration-head">
+                  <h4>Docs + calibration</h4>
+                  <span class="integration-pill">Available</span>
+                </div>
+                <p>
+                  Implementation docs and tuning guidance for teams moving from evaluation into
+                  production logic.
+                </p>
+                <a
+                  class="integration-link"
+                  href="https://github.com/passiveintent/core/blob/main/CALIBRATION_GUIDE.md"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  >Open guide</a
+                >
+              </article>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="articles" class="section reveal">
+        <div class="section-head">
+          <p class="eyebrow">Articles</p>
+          <h2>Writing, launch notes, and technical explainers live here.</h2>
+          <p class="section-copy">
+            Long-form writing belongs below the core product story, where it can deepen trust
+            without interrupting the main path.
+          </p>
+        </div>
+        <div class="article-grid" id="articles-grid">
+          <article class="article-card article-card-row">
+            <div>
+              <span class="article-source">Medium</span>
+              <h3>Why zero-egress intent detection belongs in the browser</h3>
+              <p>
+                A category piece on why privacy-first intent modeling should happen close to the
+                session.
+              </p>
+            </div>
+            <span class="article-link article-link-disabled">Medium post coming soon</span>
+          </article>
+          <article class="article-card article-card-row">
+            <div>
+              <span class="article-source">dev.to</span>
+              <h3>Implementation notes from the guided lab</h3>
+              <p>
+                A developer walkthrough of the core package, signal model, and intervention patterns
+                shown in the lab.
+              </p>
+            </div>
+            <span class="article-link article-link-disabled">dev.to post coming soon</span>
+          </article>
+          <article class="article-card article-card-row">
+            <div>
+              <span class="article-source">Substack</span>
+              <h3>A note on product direction</h3>
+              <p>
+                Product thinking, launch context, and occasional notes on where the platform is
+                heading.
+              </p>
+            </div>
+            <span class="article-link article-link-disabled">Substack post coming soon</span>
+          </article>
+          <article class="article-card article-card-row">
+            <div>
+              <span class="article-source">Hacker News</span>
+              <h3>Launch thread or technical discussion</h3>
+              <p>
+                A Show HN, launch post, or public technical thread worth sending curious visitors
+                to.
+              </p>
+            </div>
+            <span class="article-link article-link-disabled">HN thread coming soon</span>
+          </article>
+        </div>
+      </section>
+
+      <section class="section reveal">
+        <div class="cta-band">
+          <div>
+            <p class="eyebrow">Next step</p>
+            <h2>Bring one high-dropoff flow and we can map the intervention logic around it.</h2>
+          </div>
+          <div class="cta-actions">
+            <a
+              class="btn btn-primary"
+              href="mailto:support@passiveintent.dev?subject=PassiveIntent%20Pilot%20Request"
+              >Request pilot</a
+            >
+            <a class="btn btn-secondary" href="#pricing">See pricing</a>
+          </div>
+        </div>
       </section>
 
       <section id="faq" class="section reveal">
         <div class="section-head">
           <p class="eyebrow">FAQ</p>
-          <h2>What teams ask before adopting</h2>
+          <h2>What teams usually need answered before they adopt.</h2>
         </div>
         <div class="faq-list">
           <details>
             <summary>What is the main job PassiveIntent solves?</summary>
             <p>
-              Recovering users in the final moments before abandonment, while intent is still
-              active.
+              Recovering users in the last moments before abandonment while intent is still active.
             </p>
           </details>
           <details>
@@ -561,36 +665,17 @@
           <details>
             <summary>Is this only for engineers?</summary>
             <p>
-              No. Product, growth, and CX teams can use signals for practical intervention
+              No. Product, growth, and CX teams can use the signals to drive practical intervention
               playbooks.
             </p>
           </details>
           <details>
             <summary>
-              Can I use the Indie, Startup, or Growth tier to build a Shopify App, SDK, or my own
-              B2B analytics tool?
+              Can I use standard tiers to wrap PassiveIntent into my own SDK or app?
             </summary>
             <p>
-              No. Our standard commercial tiers (Indie, Startup, Growth) are licensed strictly for
-              <strong>Internal Business Purposes</strong> (e.g., deploying on your own company's
-              website or SaaS application to track your own users). You cannot sub-license, resell,
-              white-label, or "wrap" PassiveIntent into a standalone product or application where
-              the primary value derived by your end-user is PassiveIntent's intent-tracking
-              functionality.
-            </p>
-          </details>
-          <details>
-            <summary>
-              I run a development agency / I want to build a B2B app using PassiveIntent. What are
-              my options?
-            </summary>
-            <p>
-              We love partnering with agencies and B2B integrators! For these use cases, you need an
-              <strong>OEM / Agency License</strong>. This custom license grants you the legal right
-              to distribute PassiveIntent inside your own commercial product or deploy it across
-              multiple third-party client sites. Please
-              <a href="mailto:support@passiveintent.dev">contact us directly</a> so we can structure
-              a volume or revenue-share agreement that scales smoothly with your success.
+              No. Standard commercial tiers are for internal business use. Agency, OEM, or
+              wrapped-product scenarios require a separate license.
             </p>
           </details>
         </div>
@@ -598,19 +683,39 @@
     </main>
 
     <footer class="site-footer reveal">
-      <p>
-        PassiveIntent © <span id="year"></span> · Privacy-first intent engine for conversion teams
-      </p>
-      <div
-        style="display: flex; gap: 20px; flex-wrap: wrap; justify-content: center; margin-top: 8px"
-      >
-        <a href="./privacy.html">Privacy Policy</a>
-        <a href="./terms.html">Terms of Service</a>
-        <a href="https://github.com/passiveintent/core" target="_blank" rel="noopener noreferrer"
-          >Source on GitHub</a
-        >
+      <div class="footer-brand">
+        <strong>PassiveIntent</strong>
+        <p>Privacy-first intent engine for conversion, product, and CX teams.</p>
+      </div>
+      <div class="footer-links">
+        <div class="footer-group">
+          <span class="footer-title">Legal</span>
+          <a href="./privacy.html">Privacy Policy</a>
+          <a href="./terms.html">Terms of Service</a>
+        </div>
+        <div class="footer-group">
+          <span class="footer-title">Open</span>
+          <a href="https://github.com/passiveintent/core" target="_blank" rel="noopener noreferrer"
+            >Source on GitHub</a
+          >
+          <a
+            href="https://github.com/passiveintent/core/blob/main/CALIBRATION_GUIDE.md"
+            target="_blank"
+            rel="noopener noreferrer"
+            >Calibration Guide</a
+          >
+        </div>
+        <div class="footer-group">
+          <span class="footer-title">Contact</span>
+          <a href="mailto:support@passiveintent.dev">support@passiveintent.dev</a>
+          <span class="footer-copy">© <span id="year"></span> PassiveIntent</span>
+        </div>
       </div>
     </footer>
+
+    <button class="back-to-top" id="back-to-top" type="button" aria-label="Back to top" hidden>
+      ↑
+    </button>
 
     <script src="./script.js"></script>
   </body>

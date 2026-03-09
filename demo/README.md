@@ -8,6 +8,23 @@
 
 ## Run locally
 
+### Preferred (monorepo / client-demo QA workflow)
+
+```bash
+# From the monorepo root
+npm install
+
+# Build workspace packages first so demo type-check/build has local artifacts
+npm run build:packages
+
+# Start the Vanilla demo
+cd demo
+npm install
+npm run dev
+```
+
+### Alternate (published npm package)
+
 ```bash
 # From the repo root
 cd demo
@@ -15,10 +32,9 @@ npm install
 npm run dev
 ```
 
-> **Pre-requisite:** `@passiveintent/core` must be published to npm (`npm install` pulls `^1.0.0`).  
-> For local development before publishing, see the monorepo workspace setup below.
+> This path assumes `@passiveintent/core` is already published to npm (`^1.0.0`).
 
-### Local dev before npm publish
+### Local dev before npm publish (manual package override)
 
 ```bash
 # From repo root — build core first

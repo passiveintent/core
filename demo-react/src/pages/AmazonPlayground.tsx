@@ -118,7 +118,7 @@ let _interventionSeq = 0;
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export default function AmazonPlayground() {
-  const { track, on, timer, lifecycle } = useIntent();
+  const { track, on, timer, lifecycle, incrementCounter } = useIntent();
 
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [cartItems, setCartItems] = useState<Product[]>([]);
@@ -257,9 +257,10 @@ export default function AmazonPlayground() {
     (product: Product) => {
       track('/amazon/cart');
       setCartItems((prev) => [...prev, product]);
+      incrementCounter('cart-items', 1);
       setCheckoutStep(1);
     },
-    [track],
+    [incrementCounter, track],
   );
 
   const goToPayment = useCallback(() => {

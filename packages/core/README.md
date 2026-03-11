@@ -129,35 +129,58 @@ npm install @passiveintent/core
 
 ## Quick start
 
+### Standard web — one line (recommended)
+
+`createBrowserIntent` is the Layer 3 factory. It wires all standard web plugins
+(`MouseKinematicsAdapter`, `BrowserLifecycleAdapter`, `ContinuousGraphModel`,
+`LocalStorageAdapter`) into a raw `IntentEngine` and returns it ready to use.
+
+```ts
+import { createBrowserIntent } from '@passiveintent/core';
+
+const intent = createBrowserIntent({ storageKey: 'my-app' });
+
+intent.on('high_entropy', ({ state, normalizedEntropy }) => {
+  // User wandering — show help widget
+  console.log('Erratic navigation on', state, normalizedEntropy);
+});
+
+intent.on('exit_intent', ({ state, likelyNext }) => {
+  prefetch(likelyNext); // or show last-chance offer
+});
+
+intent.on('trajectory_anomaly', ({ zScore }) => {
+  Analytics.track('checkout_path_abandoned', { zScore });
+});
+
+// SPA teardown (React useEffect return, Vue onUnmounted, …)
+intent.destroy();
+```
+
+### Full control (`IntentManager`)
+
+For dwell-time anomaly detection, bot protection, cross-tab sync, A/B holdout,
+and the complete event surface, use `IntentManager` directly:
+
 ```ts
 import { IntentManager, BrowserStorageAdapter, BrowserTimerAdapter } from '@passiveintent/core';
 
-// 1. Initialize the engine
 const intent = new IntentManager({
   storageKey: 'my-app-intent',
   storage: new BrowserStorageAdapter(),
   timer: new BrowserTimerAdapter(),
 });
 
-// 2. Track page views or UI states
 intent.track('/home');
 intent.track('/pricing');
 intent.track('/checkout');
 
-// 3. Listen for behavioral signals
 intent.on('dwell_time_anomaly', (signal) => {
-  // User is hesitating — offer help
-  console.log('Hesitation detected on', signal.state, '— z-score:', signal.zScore);
+  console.log('Hesitation on', signal.state, '— z-score:', signal.zScore);
 });
 
 intent.on('trajectory_anomaly', (signal) => {
-  // User deviated heavily from the normal conversion path
-  console.log('Path deviation detected. Z-Score:', signal.zScore);
-});
-
-intent.on('high_entropy', (signal) => {
-  // User is bouncing around erratically — possible frustration
-  console.log('Erratic navigation on', signal.state, signal.normalizedEntropy);
+  console.log('Path deviation. Z-Score:', signal.zScore);
 });
 ```
 
@@ -526,6 +549,97 @@ const intent = new IntentManager({
 
 After a successful write to storage, the flag is reset to `false`. This means apps that call `flushNow()` or trigger the debounce timer repeatedly without having navigated will incur zero serialization cost.
 
+## Microkernel API (Layer 2 + Layer 3)
+
+The microkernel refactor introduced a strict 4-layer separation so any domain
+(food-delivery, dating, fintech, React Native) can plug into the intent engine
+without touching the core algorithms.
+
+```
+Layer 1 — Core algorithms      MarkovGraph, BloomFilter       pure math, no I/O
+Layer 2 — Microkernel          IntentEngine                   adapter interfaces only
+Layer 3 — Web factory          createBrowserIntent()          progressive disclosure
+Layer 4 — Framework SDKs       usePassiveIntent (React hook)  wraps IntentManager
+```
+
+### `createBrowserIntent(config?)` — Layer 3
+
+| Field             | Type                             | Default                       | Description                                                                    |
+| ----------------- | -------------------------------- | ----------------------------- | ------------------------------------------------------------------------------ |
+| `storageKey`      | `string`                         | `'passive-intent-engine'`     | `localStorage` key for cross-session persistence.                              |
+| `baseline`        | `SerializedMarkovGraph`          | —                             | Pre-trained graph for `trajectory_anomaly` detection.                          |
+| `graph`           | `MarkovGraphConfig`              | production defaults           | Entropy / divergence thresholds, smoothing, state cap.                         |
+| `bloom`           | `BloomFilterConfig`              | `bitSize: 2048, hashCount: 4` | Bloom filter sizing.                                                           |
+| `stateNormalizer` | `(s: string) => string`          | —                             | Custom normalizer applied after the built-in one. Return `''` to drop a state. |
+| `onError`         | `(e: { code, message }) => void` | —                             | Non-fatal error callback (storage errors, parse failures).                     |
+
+### `IntentEngine` — Layer 2
+
+The raw microkernel for enterprise / cross-platform use cases. Zero references to
+`window`, `document`, or `localStorage` — all I/O flows through four injected
+adapter interfaces.
+
+```ts
+import { IntentEngine, type IntentEngineConfig } from '@passiveintent/core';
+
+const engine = new IntentEngine({
+  stateModel: myModel, // IStateModel
+  persistence: myStorage, // IPersistenceAdapter
+  lifecycle: myLifecycle, // ILifecycleAdapter
+  input: myInput, // IInputAdapter (optional)
+  storageKey: 'acme-app',
+  onError: ({ code, message }) => logger.warn(code, message),
+});
+```
+
+| Adapter interface     | Responsibility                                        |
+| --------------------- | ----------------------------------------------------- |
+| `IInputAdapter`       | Push-based navigation events (URL changes, swipes, …) |
+| `ILifecycleAdapter`   | Platform pause / resume / exit-intent signals         |
+| `IStateModel`         | Markov graph + Bloom filter signal evaluation         |
+| `IPersistenceAdapter` | Synchronous key-value storage (load / save)           |
+
+### `CoreInterfaces` namespace — enterprise plugin contracts
+
+Import the namespace to implement custom adapters for any domain:
+
+```ts
+import type { CoreInterfaces } from '@passiveintent/core';
+
+// React Native navigation adapter
+class ReactNativeInputAdapter implements CoreInterfaces.IInputAdapter {
+  subscribe(onState: (s: string) => void): () => void {
+    return navigation.addListener('state', (e) => onState(e.data.state.routes.at(-1)?.name ?? '/'));
+  }
+  destroy(): void {}
+}
+
+// Swipe adapter for dating / food-delivery apps
+class SwipeKinematicsAdapter implements CoreInterfaces.IInputAdapter {
+  subscribe(onState: (s: string) => void): () => void {
+    return swipeEmitter.on('swipe', ({ direction, cardId }) =>
+      onState(`card:${cardId}:${direction}`),
+    );
+  }
+  destroy(): void {}
+}
+
+// Capacitor storage for iOS / Android
+class CapacitorStorageAdapter implements CoreInterfaces.IPersistenceAdapter {
+  load(key: string): string | null {
+    return Preferences.get({ key }) ?? null;
+  }
+  save(key: string, value: string): void {
+    Preferences.set({ key, value });
+  }
+}
+```
+
+All four interfaces, plus `EntropyResult`, `TrajectoryResult`, and
+`IntentEngineConfig`, are exported under the `CoreInterfaces` namespace.
+
+---
+
 ## Design decisions (brief)
 
 - **Isomorphic adapters**: direct `window`/`localStorage` usage is avoided in core flow to keep SSR safe.
@@ -644,25 +758,35 @@ packages/core/
 ├── docs/
 │   └── architecture.md       # full architecture & API reference
 ├── src/
-│   ├── index.ts
+│   ├── index.ts               # public barrel — all three layers exported here
 │   ├── intent-sdk.ts
 │   ├── adapters.ts
+│   ├── factory.ts             # Layer 3 — createBrowserIntent() factory
 │   ├── core/
 │   │   ├── bloom.ts
 │   │   └── markov.ts
 │   ├── engine/
+│   │   ├── intent-engine.ts   # Layer 2 — raw IntentEngine (microkernel)
 │   │   ├── dwell.ts
 │   │   ├── entropy-guard.ts
 │   │   └── intent-manager.ts
 │   ├── persistence/
 │   │   └── codec.ts
+│   ├── plugins/
+│   │   └── web/               # Standard browser plugin implementations
+│   │       ├── BrowserLifecycleAdapter.ts   # ILifecycleAdapter (Page Visibility API)
+│   │       ├── MouseKinematicsAdapter.ts    # IInputAdapter (URL + scroll + velocity)
+│   │       ├── ContinuousGraphModel.ts      # IStateModel (Markov + Bloom)
+│   │       └── LocalStorageAdapter.ts       # IPersistenceAdapter (localStorage)
 │   ├── sync/
 │   │   └── broadcast-sync.ts
 │   ├── types/
-│   │   └── events.ts
+│   │   ├── events.ts
+│   │   └── microkernel.ts     # IInputAdapter, ILifecycleAdapter, IStateModel, IPersistenceAdapter
 │   └── utils/
 │       └── route-normalizer.ts
 ├── tests/
+│   ├── microkernel.test.mjs   # IntentEngine + web plugins + factory (58 tests)
 │   ├── unit-fast.test.mjs
 │   ├── integration-contract.test.mjs
 │   ├── probabilistic.test.mjs

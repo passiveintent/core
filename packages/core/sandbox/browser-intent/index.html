@@ -1,0 +1,25 @@
+<!doctype html>
+<!--
+  Copyright (c) 2026 Purushottam <purushottam@passiveintent.dev>
+
+  This source code is licensed under the AGPL-3.0-only license found in the
+  LICENSE file in the root directory of this source tree.
+-->
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>createBrowserIntent() Sandbox</title>
+    <style>
+      body { font-family: Arial, sans-serif; margin: 24px; }
+      #event-log { list-style: none; padding: 0; margin-top: 12px; font-family: monospace; }
+      #event-log li { padding: 4px 8px; border-left: 3px solid #6366f1; margin-bottom: 4px; background: #f8f9fa; }
+    </style>
+  </head>
+  <body>
+    <h1>createBrowserIntent() Sandbox</h1>
+    <p>Event log — populated by the intent engine. Consumed by Cypress assertions.</p>
+    <ul id="event-log" data-cy="event-log"></ul>
+    <script type="module" src="../../dist/sandbox/browser-intent/app.js"></script>
+  </body>
+</html>

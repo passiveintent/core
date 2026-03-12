@@ -194,7 +194,8 @@ export default function PropensityScore() {
   // ── Subscribe to live trajectory z-score ──────────────────────────────────
   useEffect(() => {
     return on('trajectory_anomaly', (p) => {
-      setLiveZ((p as TrajectoryAnomalyPayload).zScore);
+      const z = (p as Partial<TrajectoryAnomalyPayload> | null | undefined)?.zScore;
+      setLiveZ(typeof z === 'number' && Number.isFinite(z) ? z : 0);
     });
   }, [on]);
 

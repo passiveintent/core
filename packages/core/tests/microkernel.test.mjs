@@ -320,7 +320,79 @@ test('IntentEngine track(): emits state_change with the previous state as from o
   engine.destroy();
 });
 
-test('IntentEngine track(): calls stateModel.markSeen() for every tracked state', () => {
+test('IntentEngine track(): stateModel.markSeen() throwing routes STATE_MODEL error and aborts the call', () => {
+  const { model, calls: modelCalls } = makeModel();
+  let throwOnNext = false;
+  const originalMarkSeen = model.markSeen.bind(model);
+  model.markSeen = (s) => {
+    if (throwOnNext) throw new Error('markSeen-fail');
+    originalMarkSeen(s);
+  };
+  const errors = [];
+  const engine = new IntentEngine({
+    stateModel: model,
+    persistence: makePersistence().persistence,
+    lifecycle: makeLifecycle().lifecycle,
+    onError: (e) => errors.push(e),
+  });
+  const events = [];
+  engine.on('state_change', (e) => events.push(e));
+  throwOnNext = true;
+  engine.track('/boom');
+  assert.equal(events.length, 0, 'state_change must not fire when markSeen throws');
+  assert.equal(errors.length, 1);
+  assert.equal(errors[0].code, 'STATE_MODEL');
+  assert.ok(errors[0].message.includes('markSeen-fail'));
+  engine.destroy();
+});
+
+test('IntentEngine track(): stateModel.evaluateEntropy() throwing routes STATE_MODEL error but state_change still fires', () => {
+  const { model } = makeModel();
+  model.evaluateEntropy = () => {
+    throw new Error('entropy-fail');
+  };
+  const errors = [];
+  const engine = new IntentEngine({
+    stateModel: model,
+    persistence: makePersistence().persistence,
+    lifecycle: makeLifecycle().lifecycle,
+    onError: (e) => errors.push(e),
+  });
+  const events = [];
+  engine.on('state_change', (e) => events.push(e));
+  engine.track('/a');
+  engine.track('/b');
+  assert.equal(events.length, 2, 'state_change must still fire after evaluateEntropy throws');
+  assert.equal(errors.length, 1);
+  assert.equal(errors[0].code, 'STATE_MODEL');
+  assert.ok(errors[0].message.includes('entropy-fail'));
+  engine.destroy();
+});
+
+test('IntentEngine track(): stateModel.evaluateTrajectory() throwing routes STATE_MODEL error but state_change still fires', () => {
+  const { model } = makeModel();
+  model.evaluateTrajectory = () => {
+    throw new Error('trajectory-fail');
+  };
+  const errors = [];
+  const engine = new IntentEngine({
+    stateModel: model,
+    persistence: makePersistence().persistence,
+    lifecycle: makeLifecycle().lifecycle,
+    onError: (e) => errors.push(e),
+  });
+  const events = [];
+  engine.on('state_change', (e) => events.push(e));
+  engine.track('/a');
+  engine.track('/b');
+  assert.equal(events.length, 2, 'state_change must still fire after evaluateTrajectory throws');
+  assert.equal(errors.length, 1);
+  assert.equal(errors[0].code, 'STATE_MODEL');
+  assert.ok(errors[0].message.includes('trajectory-fail'));
+  engine.destroy();
+});
+
+test('IntentEngine track(): stateModel.markSeen() for every tracked state', () => {
   const { engine, modelCalls } = makeEngine();
   engine.track('/a');
   engine.track('/b');
@@ -569,6 +641,71 @@ test('IntentEngine input adapter: two pushed states produce a recordTransition c
 // ===========================================================================
 // Section 5 — IntentEngine: destroy() teardown sequence
 // ===========================================================================
+
+test('IntentEngine construction: input.subscribe() throwing routes ADAPTER_SETUP error and engine still constructs', () => {
+  const errors = [];
+  const throwingInput = {
+    subscribe() {
+      throw new Error('subscribe-fail');
+    },
+    destroy() {},
+  };
+  let engine;
+  assert.doesNotThrow(() => {
+    engine = new IntentEngine({
+      stateModel: makeModel().model,
+      persistence: makePersistence().persistence,
+      lifecycle: makeLifecycle().lifecycle,
+      input: throwingInput,
+      onError: (e) => errors.push(e),
+    });
+  });
+  assert.equal(errors.length, 1);
+  assert.equal(errors[0].code, 'ADAPTER_SETUP');
+  assert.ok(errors[0].message.includes('subscribe-fail'));
+  engine.destroy();
+});
+
+test('IntentEngine destroy(): one throwing teardown does not prevent subsequent teardowns from running', () => {
+  const ran = [];
+  const { engine } = makeEngine();
+  // Inject two teardowns: first throws, second must still run
+  engine['teardowns'].push(() => {
+    throw new Error('teardown-boom');
+  });
+  engine['teardowns'].push(() => ran.push('after-throw'));
+  const errors = [];
+  engine['onError'] = (e) => errors.push(e);
+  engine.destroy();
+  assert.ok(ran.includes('after-throw'), 'teardown after the throwing one must still run');
+  assert.equal(errors.length, 1);
+  assert.equal(errors[0].code, 'ADAPTER_TEARDOWN');
+});
+
+test('IntentEngine destroy(): lifecycle.destroy() throwing does not prevent input.destroy() from running', () => {
+  const inputDestroyCalled = { value: false };
+  const { lifecycle } = makeLifecycle();
+  lifecycle.destroy = () => {
+    throw new Error('lifecycle-destroy-fail');
+  };
+  const input = makeInput();
+  const errors = [];
+  const engine = new IntentEngine({
+    stateModel: makeModel().model,
+    persistence: makePersistence().persistence,
+    lifecycle,
+    input: input.input,
+    onError: (e) => errors.push(e),
+  });
+  engine.destroy();
+  assert.equal(
+    input.calls.destroy,
+    1,
+    'input.destroy() must run even when lifecycle.destroy() throws',
+  );
+  assert.equal(errors.length, 1);
+  assert.equal(errors[0].code, 'ADAPTER_TEARDOWN');
+});
 
 test('IntentEngine destroy(): flushes persistence before tearing down', () => {
   const { engine, persistCalls } = makeEngine();

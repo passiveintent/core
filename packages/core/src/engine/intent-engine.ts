@@ -92,31 +92,68 @@ export class IntentEngine {
 
     // ── 2. Subscribe to IInputAdapter (push-based navigation) ─────────────────
     if (this.input) {
-      const unsubInput = this.input.subscribe((state) => this._processState(state));
-      this.teardowns.push(unsubInput);
+      try {
+        const unsubInput = this.input.subscribe((state) => this._processState(state));
+        this.teardowns.push(unsubInput);
+      } catch (err) {
+        this.onError?.({
+          code: 'ADAPTER_SETUP',
+          message: `IntentEngine: input.subscribe() threw: ${
+            err instanceof Error ? err.message : String(err)
+          }`,
+        });
+      }
     }
 
     // ── 3. Wire ILifecycleAdapter ──────────────────────────────────────────────
     // Persist on pause so state survives app backgrounding / tab hide.
-    this.teardowns.push(
-      this.lifecycle.onPause(() => {
-        this._persist();
-      }),
-    );
+    try {
+      this.teardowns.push(
+        this.lifecycle.onPause(() => {
+          this._persist();
+        }),
+      );
+    } catch (err) {
+      this.onError?.({
+        code: 'ADAPTER_SETUP',
+        message: `IntentEngine: lifecycle.onPause() threw: ${
+          err instanceof Error ? err.message : String(err)
+        }`,
+      });
+    }
 
     // Exit-intent: only fire when the graph has a likely continuation path.
     if (typeof this.lifecycle.onExitIntent === 'function') {
-      this.teardowns.push(
-        this.lifecycle.onExitIntent(() => {
-          if (this.previousState === null) return;
-          const candidates = this.stateModel.getLikelyNext(this.previousState, 0.4);
-          if (candidates.length === 0) return;
-          this.emitter.emit('exit_intent', {
-            state: this.previousState,
-            likelyNext: candidates[0].state,
-          });
-        }),
-      );
+      try {
+        this.teardowns.push(
+          this.lifecycle.onExitIntent(() => {
+            if (this.previousState === null) return;
+            let candidates: { state: string; probability: number }[] = [];
+            try {
+              candidates = this.stateModel.getLikelyNext(this.previousState, 0.4);
+            } catch (err) {
+              this.onError?.({
+                code: 'STATE_MODEL',
+                message: `IntentEngine: stateModel.getLikelyNext() threw: ${
+                  err instanceof Error ? err.message : String(err)
+                }`,
+              });
+            }
+            if (candidates.length === 0) return;
+            this.emitter.emit('exit_intent', {
+              state: this.previousState,
+              likelyNext: candidates[0].state,
+            });
+          }),
+        );
+      } catch (err) {
+        this.onError?.({
+          code: 'ADAPTER_SETUP',
+          message: `IntentEngine: lifecycle.onExitIntent() threw: ${
+            err instanceof Error ? err.message : String(err)
+          }`,
+        });
+      }
     }
   }
 
@@ -169,9 +206,40 @@ export class IntentEngine {
    */
   destroy(): void {
     this._persist();
-    for (const teardown of this.teardowns) teardown();
-    this.lifecycle.destroy();
-    this.input?.destroy();
+    for (const teardown of this.teardowns) {
+      try {
+        teardown();
+      } catch (err) {
+        this.onError?.({
+          code: 'ADAPTER_TEARDOWN',
+          message: `IntentEngine: teardown threw: ${
+            err instanceof Error ? err.message : String(err)
+          }`,
+        });
+      }
+    }
+    try {
+      this.lifecycle.destroy();
+    } catch (err) {
+      this.onError?.({
+        code: 'ADAPTER_TEARDOWN',
+        message: `IntentEngine: lifecycle.destroy() threw: ${
+          err instanceof Error ? err.message : String(err)
+        }`,
+      });
+    }
+    if (this.input) {
+      try {
+        this.input.destroy();
+      } catch (err) {
+        this.onError?.({
+          code: 'ADAPTER_TEARDOWN',
+          message: `IntentEngine: input.destroy() threw: ${
+            err instanceof Error ? err.message : String(err)
+          }`,
+        });
+      }
+    }
     this.emitter.removeAll();
   }
 
@@ -230,9 +298,32 @@ export class IntentEngine {
     const from = this.previousState;
 
     // ── Update state model ────────────────────────────────────────────────────
-    this.stateModel.markSeen(state);
+    // markSeen / recordTransition are state mutations — if either throws we abort
+    // this track() call entirely.  previousState has NOT been advanced yet so the
+    // engine state remains consistent.
+    try {
+      this.stateModel.markSeen(state);
+    } catch (err) {
+      this.onError?.({
+        code: 'STATE_MODEL',
+        message: `IntentEngine: stateModel.markSeen() threw: ${
+          err instanceof Error ? err.message : String(err)
+        }`,
+      });
+      return;
+    }
     if (from !== null) {
-      this.stateModel.recordTransition(from, state);
+      try {
+        this.stateModel.recordTransition(from, state);
+      } catch (err) {
+        this.onError?.({
+          code: 'STATE_MODEL',
+          message: `IntentEngine: stateModel.recordTransition() threw: ${
+            err instanceof Error ? err.message : String(err)
+          }`,
+        });
+        return;
+      }
     }
 
     // Advance internal position before evaluation so signals see the new state.
@@ -241,9 +332,21 @@ export class IntentEngine {
     if (this.recentTrajectory.length > TRAJECTORY_WINDOW) this.recentTrajectory.shift();
 
     // ── Signal evaluation (transition-dependent) ─────────────────────────────
+    // Evaluation methods are read-only — if they throw we skip that signal and
+    // continue so state_change and persistence still fire.
     if (from !== null) {
       // Entropy signal
-      const entropyResult = this.stateModel.evaluateEntropy(state);
+      let entropyResult = { entropy: 0, normalizedEntropy: 0, isHigh: false };
+      try {
+        entropyResult = this.stateModel.evaluateEntropy(state);
+      } catch (err) {
+        this.onError?.({
+          code: 'STATE_MODEL',
+          message: `IntentEngine: stateModel.evaluateEntropy() threw: ${
+            err instanceof Error ? err.message : String(err)
+          }`,
+        });
+      }
       if (entropyResult.isHigh) {
         this.emitter.emit('high_entropy', {
           state,
@@ -253,11 +356,17 @@ export class IntentEngine {
       }
 
       // Trajectory anomaly signal
-      const trajectoryResult = this.stateModel.evaluateTrajectory(
-        from,
-        state,
-        this.recentTrajectory,
-      );
+      let trajectoryResult = null;
+      try {
+        trajectoryResult = this.stateModel.evaluateTrajectory(from, state, this.recentTrajectory);
+      } catch (err) {
+        this.onError?.({
+          code: 'STATE_MODEL',
+          message: `IntentEngine: stateModel.evaluateTrajectory() threw: ${
+            err instanceof Error ? err.message : String(err)
+          }`,
+        });
+      }
       if (trajectoryResult !== null && trajectoryResult.isAnomalous) {
         this.emitter.emit('trajectory_anomaly', {
           stateFrom: from,

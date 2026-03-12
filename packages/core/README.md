@@ -158,9 +158,18 @@ intent.on('exit_intent', ({ likelyNext }) => {
 intent.on('trajectory_anomaly', ({ zScore }) => {
   Analytics.track('checkout_path_abandoned', { zScore });
 });
+```
 
-// SPA teardown (React useEffect return, Vue onUnmounted, …)
-intent.destroy();
+Call `destroy()` during component teardown — **not** inline with setup:
+
+```ts
+// React
+useEffect(() => {
+  return () => intent.destroy();
+}, []);
+
+// Vue
+onUnmounted(() => intent.destroy());
 ```
 
 ### Full control (`IntentManager`)
@@ -570,14 +579,14 @@ Layer 4 — Framework SDKs       usePassiveIntent (React hook)  wraps IntentMana
 
 ### `createBrowserIntent(config?)` — Layer 3
 
-| Field             | Type                             | Default                       | Description                                                                    |
-| ----------------- | -------------------------------- | ----------------------------- | ------------------------------------------------------------------------------ |
-| `storageKey`      | `string`                         | `'passive-intent-engine'`     | `localStorage` key for cross-session persistence.                              |
-| `baseline`        | `SerializedMarkovGraph`          | —                             | Pre-trained graph for `trajectory_anomaly` detection.                          |
-| `graph`           | `MarkovGraphConfig`              | production defaults           | Entropy / divergence thresholds, smoothing, state cap.                         |
-| `bloom`           | `BloomFilterConfig`              | `bitSize: 2048, hashCount: 4` | Bloom filter sizing.                                                           |
-| `stateNormalizer` | `(s: string) => string`          | —                             | Custom normalizer applied after the built-in one. Return `''` to drop a state. |
-| `onError`         | `(e: { code, message }) => void` | —                             | Non-fatal error callback (storage errors, parse failures).                     |
+| Field             | Type                                             | Default                       | Description                                                                    |
+| ----------------- | ------------------------------------------------ | ----------------------------- | ------------------------------------------------------------------------------ |
+| `storageKey`      | `string`                                         | `'passive-intent-engine'`     | `localStorage` key for cross-session persistence.                              |
+| `baseline`        | `SerializedMarkovGraph`                          | —                             | Pre-trained graph for `trajectory_anomaly` detection.                          |
+| `graph`           | `MarkovGraphConfig`                              | production defaults           | Entropy / divergence thresholds, smoothing, state cap.                         |
+| `bloom`           | `BloomFilterConfig`                              | `bitSize: 2048, hashCount: 4` | Bloom filter sizing.                                                           |
+| `stateNormalizer` | `(s: string) => string`                          | —                             | Custom normalizer applied after the built-in one. Return `''` to drop a state. |
+| `onError`         | `(e: { code: string; message: string }) => void` | —                             | Non-fatal error callback (storage errors, parse failures).                     |
 
 ### `IntentEngine` — Layer 2
 

@@ -68,10 +68,10 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - **Constructor:** `new PropensityCalculator(alpha?: number = 0.2, throttleMs?: number = 500)`
   - `alpha` — friction sensitivity. At z = 3.5, α = 0.2 halves the score (half-life z = ln(2)/α ≈ 3.47). Increase for short, high-intent funnels; decrease for long, noisier sessions.
   - `throttleMs` — minimum ms between full recomputations. Throttled calls return the cached score with zero allocations.
-- **`updateBaseline(graph, currentState, targetState, maxDepth = 3)`** — computes and caches the Markov hitting probability via BFS. O(D × F) time complexity. Call on each `track()` navigation event.
+- **`updateBaseline(graph, currentState, targetState, maxDepth = 3)`** — computes and caches the Markov hitting probability via path-aware BFS. Each node on the BFS frontier carries its own `pathVisited` set (the states already on that route), so a state is only blocked within the path that introduced it, not globally. This allows multiple distinct simple paths to converge through a shared intermediate state and have their probabilities accumulated correctly. Cycles along a single route are still rejected (the path cannot revisit a node it already contains). Time complexity O(D × F^D) in the worst case where D = `maxDepth` and F = average fan-out. Call on each `track()` navigation event.
 - **`getRealTimePropensity(zScore)`** — applies the exponential friction penalty and returns the combined score, throttled to at most one full computation per `THROTTLE_MS` window.
 - **`lastCalculationTime` initialized to `−Infinity`** — guarantees the first call is never throttled even in test environments where `performance.now()` returns `0`.
-- **BFS cycle prevention** — a per-call `visited` Set blocks re-expansion of intermediate states, bounding the search to O(V) on cyclic graphs.
+- **Per-path cycle prevention** — each BFS node carries a `pathVisited` set of states already on its route from source. Neighbours already in that set are skipped, blocking cycles (A→B→A→…) without a global visited set. Distinct simple paths that converge through a shared intermediate state are each explored independently and their probabilities summed.
 - **Bundle impact:** 866 bytes minified / 453 bytes gzipped.
 - **New file:** `src/engine/propensity-calculator.ts`
 - **Exports:** available from `@passiveintent/core` package root and `intent-sdk` façade. Exposed on `window.__PassiveIntentSDK` in the sandbox app for E2E access.

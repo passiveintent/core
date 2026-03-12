@@ -1277,7 +1277,7 @@ The refactor introduced a strict 4-layer separation so any domain (food-delivery
 dating, fintech, React Native, Electron) can slot into the intent engine as a
 plug-and-play adapter without modifying the core algorithms.
 
-```
+```text
 ┌─────────────────────────────────────────────────────────────────┐
 │  Layer 1 — Core Algorithms                                      │
 │  MarkovGraph · BloomFilter                                      │

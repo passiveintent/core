@@ -40,11 +40,12 @@ export class LocalStorageAdapter implements IPersistenceAdapter {
    * `SecurityError` is thrown.
    */
   load(key: string): string | null {
-    if (typeof window === 'undefined' || !window.localStorage) return null;
     try {
+      if (typeof window === 'undefined' || !window.localStorage) return null;
       return window.localStorage.getItem(key);
     } catch {
-      // SecurityError in sandboxed iframes / opaque origins.
+      // SecurityError accessing window.localStorage on sandboxed/opaque origins,
+      // or SecurityError / other errors from getItem.
       return null;
     }
   }
@@ -61,7 +62,11 @@ export class LocalStorageAdapter implements IPersistenceAdapter {
    * own try/catch and routes any thrown error through `onError`.
    */
   save(key: string, value: string): void {
-    if (typeof window === 'undefined' || !window.localStorage) return;
-    window.localStorage.setItem(key, value);
+    try {
+      if (typeof window === 'undefined' || !window.localStorage) return;
+      window.localStorage.setItem(key, value);
+    } catch {
+      // SecurityError (sandboxed/opaque origin) or QuotaExceededError — swallowed.
+    }
   }
 }

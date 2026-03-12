@@ -92,6 +92,19 @@ export class MouseKinematicsAdapter implements IInputAdapter {
     onState(this.currentPath);
 
     // ── Navigation events ────────────────────────────────────────────
+    // Covers back/forward (popstate) and hash-based routing (hashchange).
+    //
+    // NOTE — push-state SPAs (React Router, Next.js App Router, Vue Router, …)
+    // use history.pushState / history.replaceState, which do NOT fire popstate.
+    // Monkeypatching those methods is intentionally avoided here: it produces
+    // global side-effects that compose poorly when multiple adapters or routers
+    // are present on the same page.
+    //
+    // For push-state SPAs, use one of:
+    //   1. A custom IInputAdapter that calls `engine.track()` inside the
+    //      router's navigation hook (e.g. React Router `history.listen`,
+    //      Vue Router `router.afterEach`, Next.js `router.events.on`).
+    //   2. The raw IntentEngine path: `new IntentEngine({ input: myAdapter })`.
     const onPopState = (): void => this.handleNavigation();
     const onHashChange = (): void => this.handleNavigation();
 
@@ -129,9 +142,21 @@ export class MouseKinematicsAdapter implements IInputAdapter {
     if (typeof window === 'undefined') return;
 
     this.currentPath = window.location.pathname;
+
+    // Cancel any pending scroll debounce from the previous page.
+    if (this.scrollDebounceTimer !== null) {
+      clearTimeout(this.scrollDebounceTimer);
+      this.scrollDebounceTimer = null;
+    }
+
     // Reset sub-state tracking for the new page.
     this.lastScrollPercent = -1;
     this.lastVelocityZone = null;
+
+    // Reset mouse velocity tracking to prevent stale velocity calculations.
+    this.lastMouseTime = 0;
+    this.lastMouseX = 0;
+    this.lastMouseY = 0;
 
     this.emit(this.currentPath);
   }

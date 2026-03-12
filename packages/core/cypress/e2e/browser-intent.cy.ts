@@ -50,10 +50,13 @@ describe('createBrowserIntent() — Layer 3 browser integration', () => {
 
   it('emits an initial state_change via MouseKinematicsAdapter on page load', () => {
     // MouseKinematicsAdapter calls onState(window.location.pathname) on subscribe().
-    // The initial pathname when visiting the sandbox is the sandbox's own path.
-    cy.get('[data-cy="event-log"] [data-event="state_change"]')
-      .first()
-      .should('contain.text', '/sandbox/browser-intent');
+    // Read the actual pathname at runtime so the assertion is not coupled to the
+    // sandbox's file path or the dev-server's base URL configuration.
+    cy.location('pathname').then((pathname) => {
+      cy.get('[data-cy="event-log"] [data-event="state_change"]')
+        .first()
+        .should('contain.text', pathname);
+    });
   });
 
   // =========================================================================

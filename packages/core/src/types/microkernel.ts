@@ -125,7 +125,7 @@ export interface EntropyResult {
 export interface TrajectoryResult {
   /** Z-score of the observed transition relative to the baseline distribution. */
   zScore: number;
-  /** `true` when `|zScore|` exceeds the configured divergence threshold. */
+  /** `true` when `zScore <= -divergenceThreshold` (lower-tail check for anomalously low likelihood). */
   isAnomalous: boolean;
   /** Log-likelihood of the observed transition under the live graph. */
   logLikelihood: number;

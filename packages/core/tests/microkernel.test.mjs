@@ -723,6 +723,63 @@ test('LocalStorageAdapter: load() returns null on SecurityError (sandboxed ifram
   }
 });
 
+test('LocalStorageAdapter: load() returns null when window.localStorage property access itself throws SecurityError', () => {
+  // Covers the case where accessing window.localStorage (not just getItem) throws —
+  // e.g. sandboxed iframes on opaque origins. The guard is now inside the try block.
+  Object.defineProperty(global, 'window', {
+    get() {
+      const e = new Error('SecurityError');
+      e.name = 'SecurityError';
+      throw e;
+    },
+    configurable: true,
+  });
+  try {
+    const adapter = new LocalStorageAdapter();
+    assert.equal(adapter.load('any-key'), null);
+  } finally {
+    delete global.window;
+  }
+});
+
+test('LocalStorageAdapter: save() swallows QuotaExceededError without throwing', () => {
+  global.window = {
+    localStorage: {
+      getItem: () => null,
+      setItem: () => {
+        const e = new Error('QuotaExceededError');
+        e.name = 'QuotaExceededError';
+        throw e;
+      },
+    },
+  };
+  try {
+    const adapter = new LocalStorageAdapter();
+    assert.doesNotThrow(() => adapter.save('any-key', 'large-value'));
+  } finally {
+    delete global.window;
+  }
+});
+
+test('LocalStorageAdapter: save() swallows SecurityError from setItem without throwing', () => {
+  global.window = {
+    localStorage: {
+      getItem: () => null,
+      setItem: () => {
+        const e = new Error('SecurityError');
+        e.name = 'SecurityError';
+        throw e;
+      },
+    },
+  };
+  try {
+    const adapter = new LocalStorageAdapter();
+    assert.doesNotThrow(() => adapter.save('any-key', 'value'));
+  } finally {
+    delete global.window;
+  }
+});
+
 test('LocalStorageAdapter: multiple adapters sharing storage are independent by key', () => {
   const store = new Map();
   global.window = {

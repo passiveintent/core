@@ -555,7 +555,7 @@ The microkernel refactor introduced a strict 4-layer separation so any domain
 (food-delivery, dating, fintech, React Native) can plug into the intent engine
 without touching the core algorithms.
 
-```
+```text
 Layer 1 — Core algorithms      MarkovGraph, BloomFilter       pure math, no I/O
 Layer 2 — Microkernel          IntentEngine                   adapter interfaces only
 Layer 3 — Web factory          createBrowserIntent()          progressive disclosure
@@ -625,12 +625,30 @@ class SwipeKinematicsAdapter implements CoreInterfaces.IInputAdapter {
 }
 
 // Capacitor storage for iOS / Android
+// IPersistenceAdapter.load() is synchronous, so pre-load values into an
+// in-memory cache before constructing IntentEngine.  save() updates the cache
+// immediately and fire-and-forgets Preferences.set() for durability.
+//
+// For a fully async path without the pre-load step, use
+// IntentManager.createAsync() with an AsyncStorageAdapter instead.
 class CapacitorStorageAdapter implements CoreInterfaces.IPersistenceAdapter {
-  load(key: string): string | null {
-    return Preferences.get({ key }) ?? null;
+  private readonly cache = new Map<string, string>();
+
+  /** Call once and await before passing this adapter to new IntentEngine(). */
+  async init(keys: string[]): Promise<void> {
+    for (const key of keys) {
+      const { value } = await Preferences.get({ key });
+      if (value !== null) this.cache.set(key, value);
+    }
   }
+
+  load(key: string): string | null {
+    return this.cache.get(key) ?? null;
+  }
+
   save(key: string, value: string): void {
-    Preferences.set({ key, value });
+    this.cache.set(key, value); // synchronous — engine sees it immediately
+    void Preferences.set({ key, value }); // fire-and-forget persistence
   }
 }
 ```

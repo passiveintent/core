@@ -242,6 +242,28 @@ test('IntentEngine construction: does NOT call stateModel.restore() when persist
   assert.equal(modelCalls.restore.length, 0);
 });
 
+test('IntentEngine construction: routes RESTORE_READ error when persistence.load() throws', () => {
+  const { model, calls: modelCalls } = makeModel();
+  const errors = [];
+  const throwingPersistence = {
+    load() {
+      throw new Error('storage-read-fail');
+    },
+    save() {},
+  };
+  new IntentEngine({
+    stateModel: model,
+    persistence: throwingPersistence,
+    lifecycle: makeLifecycle().lifecycle,
+    onError: (e) => errors.push(e),
+  });
+  assert.equal(errors.length, 1);
+  assert.equal(errors[0].code, 'RESTORE_READ');
+  assert.ok(errors[0].message.includes('storage-read-fail'));
+  // restore() must NOT be called when load() threw
+  assert.equal(modelCalls.restore.length, 0);
+});
+
 test('IntentEngine construction: routes RESTORE_PARSE error when stateModel.restore() throws', () => {
   const { errors } = makeEngine({
     persistence: { stored: 'data' },
@@ -420,6 +442,30 @@ test('IntentEngine track(): empty string returned by stateNormalizer silently dr
   engine.track('/any');
   assert.equal(events.length, 0);
   engine.destroy();
+});
+
+test('IntentEngine track(): stateNormalizer returning a non-string routes a VALIDATION error and drops the call', () => {
+  for (const badReturn of [null, undefined, 42, {}, []]) {
+    const { engine, errors } = makeEngine({
+      config: { stateNormalizer: () => badReturn },
+    });
+    const events = [];
+    engine.on('state_change', (e) => events.push(e));
+    engine.track('/any');
+    assert.equal(
+      events.length,
+      0,
+      `expected no state_change for return value ${JSON.stringify(badReturn)}`,
+    );
+    assert.equal(
+      errors.length,
+      1,
+      `expected one VALIDATION error for return value ${JSON.stringify(badReturn)}`,
+    );
+    assert.equal(errors[0].code, 'VALIDATION');
+    assert.ok(errors[0].message.includes('stateNormalizer must return a string'));
+    engine.destroy();
+  }
 });
 
 test('IntentEngine track(): stateNormalizer throwing routes a VALIDATION error and drops the call', () => {

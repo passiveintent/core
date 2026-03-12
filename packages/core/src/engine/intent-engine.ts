@@ -66,7 +66,17 @@ export class IntentEngine {
     this.onError = config.onError;
 
     // ── 1. Restore persisted model state ──────────────────────────────────────
-    const raw = this.persistence.load(this.storageKey);
+    let raw: string | null = null;
+    try {
+      raw = this.persistence.load(this.storageKey);
+    } catch (err) {
+      this.onError?.({
+        code: 'RESTORE_READ',
+        message: `IntentEngine: failed to read persisted state: ${
+          err instanceof Error ? err.message : String(err)
+        }`,
+      });
+    }
     if (raw !== null) {
       try {
         this.stateModel.restore(raw);
@@ -188,10 +198,16 @@ export class IntentEngine {
     if (this.stateNormalizer) {
       try {
         const normalized = this.stateNormalizer(state);
-        const coerced = String(normalized);
+        if (typeof normalized !== 'string') {
+          this.onError?.({
+            code: 'VALIDATION',
+            message: `IntentEngine.track(): stateNormalizer must return a string, got ${typeof normalized}`,
+          });
+          return;
+        }
         // Empty string is a deliberate "skip this state" signal.
-        if (coerced === '') return;
-        state = coerced;
+        if (normalized === '') return;
+        state = normalized;
       } catch (err) {
         this.onError?.({
           code: 'VALIDATION',

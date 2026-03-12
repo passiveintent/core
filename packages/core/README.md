@@ -145,8 +145,14 @@ intent.on('high_entropy', ({ state, normalizedEntropy }) => {
   console.log('Erratic navigation on', state, normalizedEntropy);
 });
 
-intent.on('exit_intent', ({ state, likelyNext }) => {
-  prefetch(likelyNext); // or show last-chance offer
+const SAFE_PREFETCH_ROUTES = new Set(['/checkout', '/pricing', '/signup']);
+
+intent.on('exit_intent', ({ likelyNext }) => {
+  // Always validate against an explicit allowlist before prefetching —
+  // never pass an unvalidated state string directly to prefetch().
+  if (likelyNext && SAFE_PREFETCH_ROUTES.has(likelyNext)) {
+    prefetch(likelyNext);
+  }
 });
 
 intent.on('trajectory_anomaly', ({ zScore }) => {

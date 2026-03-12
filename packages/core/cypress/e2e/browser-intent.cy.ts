@@ -19,6 +19,9 @@
  * DOM assertions target: [data-cy="event-log"] [data-event="<type>"]
  */
 
+// export {} makes this file a module so declare global is valid (avoids TS2669).
+export {};
+
 // Extend the Window type so TypeScript is happy accessing __engine
 interface IntentEngineLike {
   track(state: string): void;

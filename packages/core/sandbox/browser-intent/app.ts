@@ -24,7 +24,11 @@ const engine: IntentEngine = createBrowserIntent({
 
 /* ── DOM helpers ──────────────────────────────────────────────────────── */
 
-const eventLog = document.getElementById('event-log') as HTMLUListElement;
+const eventLogEl = document.getElementById('event-log');
+if (eventLogEl === null) {
+  throw new Error('createBrowserIntent sandbox: required element #event-log not found in DOM');
+}
+const eventLog = eventLogEl as HTMLUListElement;
 
 function appendEvent(type: string, detail: string): void {
   const li = document.createElement('li');

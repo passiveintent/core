@@ -3166,7 +3166,7 @@ manager.on('trajectory_anomaly', ({ zScore }) => {
       }
 
       function recompute(route: string, z: number) {
-        calc.updateBaseline(stateModel, route, TARGET_ROUTE, 4);
+        calc.updateBaseline(stateModel, route, TARGET_ROUTE, 5);
         const reach = calc.getRealTimePropensity(0);
         const fr = Math.exp(-ALPHA * Math.max(0, z));
         const score = reach * fr;
@@ -3294,14 +3294,17 @@ manager.on('trajectory_anomaly', ({ zScore }) => {
           .querySelectorAll('.funnel-arrow--lit')
           .forEach((el) => el.classList.remove('funnel-arrow--lit'));
         updateFunnelUI();
-        recompute('/home', useManual ? manualZ : 0);
+        const z = useManual ? manualZ : liveZ;
+        zLabelEl.textContent = `z = ${z.toFixed(1)}`;
+        penaltyEl.textContent = `penalty ${Math.round(Math.exp(-ALPHA * Math.max(0, z)) * 100)}%`;
+        recompute('/home', z);
       });
 
       manualCbEl.addEventListener('change', () => {
         useManual = manualCbEl.checked;
         if (!useManual) {
           manualZ = 0;
-          zSliderEl.value = '0';
+          zSliderEl.value = String(Math.min(10, liveZ));
         }
         const z = useManual ? manualZ : liveZ;
         zLabelEl.textContent = `z = ${z.toFixed(1)}`;

@@ -78,11 +78,12 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Unit Tests — `PropensityCalculator`
 
-- **34 unit tests** in `packages/core/tests/propensity-calculator.test.mjs` in five groups:
-  - **`updateBaseline` (8):** BFS traversal, hitting-probability accumulation, cycle safety, `visited` set semantics, baseline clamping.
-  - **`getRealTimePropensity` (10):** cold start, z=0 identity, positive/negative z clamping, mathematical accuracy, large z, throttle window, post-throttle recomputation, mid-throttle baseline update, zero-baseline throttle enforcement.
+- **43 unit tests** in `packages/core/tests/propensity-calculator.test.mjs` in six groups:
+  - **`updateBaseline` (10):** BFS traversal, hitting-probability accumulation, cycle safety, `visited` set semantics, baseline clamping, converging simple paths through shared intermediate state (regression for global-visited-set bug).
+  - **`getRealTimePropensity` (11):** cold start, z=0 identity, positive/negative z clamping, mathematical accuracy, large z, throttle window, post-throttle recomputation, mid-throttle baseline update, zero-baseline score reset, zero-baseline throttle enforcement, post-zero-baseline throttled read.
   - **Constructor options (2):** custom `alpha` magnitude, custom `throttleMs` override.
-  - **Property-based invariants (4):** `[0, 1]` range, monotonic decrease, empty-graph zero, all-properties sweep.
+  - **Input validation / sanitization guards (7):** `alpha=NaN` fallback, negative `alpha` fallback, `throttleMs=NaN` fallback, `throttleMs=Infinity` fallback, `maxDepth=NaN` fallback, `maxDepth=Infinity` fallback, `z=NaN` treated as 0.
+  - **Property-based invariants (3):** `[0, 1]` range, monotonic decrease, empty-graph zero.
   - **Mathematical edge cases (10):** α=0 no-friction identity, half-life formula `z = ln(2)/α`, decay-ratio doubling identity, three-hop probability product, mixed-depth parallel path accumulation, direct-edge reachability at any `maxDepth`, successive `updateBaseline` overwrite semantics, `throttleMs=0` no-cache behavior, `Math.min(1, …)` clamp on degenerate graphs, dense formula grid across 3 α values × 14 z-scores.
 - Total unit test count: **85 tests, 0 failures** (up from 75).
 

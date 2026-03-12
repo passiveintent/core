@@ -176,11 +176,17 @@ export class PropensityCalculator {
   private readonly THROTTLE_MS: number;
 
   constructor(alpha: number = 0.2, throttleMs: number = 500) {
-    this.alpha = alpha;
+    // Negative alpha inverts the friction relationship (higher z → higher score),
+    // and non-finite alpha (NaN or ±Infinity) causes Math.exp to produce NaN at
+    // z=0 via Infinity×0.  Clamp to [0, ∞) finite; 0 means no friction applied.
+    this.alpha = Number.isFinite(alpha) && alpha >= 0 ? alpha : 0;
     this.cachedBaseline = 0;
     this.lastCalculationTime = -Infinity;
     this.lastPropensity = 0;
-    this.THROTTLE_MS = throttleMs;
+    // NaN throttleMs disables throttling silently (n < NaN is always false).
+    // Infinity throttleMs freezes the score after the first computation forever.
+    // Both are hazards; fall back to the documented 500 ms default.
+    this.THROTTLE_MS = Number.isFinite(throttleMs) && throttleMs >= 0 ? throttleMs : 500;
   }
 
   // -------------------------------------------------------------------------
@@ -231,6 +237,13 @@ export class PropensityCalculator {
     targetState: string,
     maxDepth: number = 3,
   ): void {
+    // ── Input sanitization ────────────────────────────────────────────────────
+    // NaN maxDepth: `depth + 1 < NaN` is always false, so non-target neighbors
+    // are never enqueued — only direct target edges are found, silently ignoring
+    // the requested depth.  Infinity maxDepth removes the depth gate entirely,
+    // risking unbounded BFS in dense graphs.  Fall back to the documented default.
+    const safeMaxDepth = Number.isFinite(maxDepth) && maxDepth >= 1 ? Math.floor(maxDepth) : 3;
+
     // ── Trivial case: the user is already at the target ───────────────────────
     // Markov hitting probability from a state to itself is 1 by definition —
     // the chain has already hit the absorbing target state.
@@ -280,7 +293,7 @@ export class PropensityCalculator {
           // not expand from the goal.  Multiple paths of different lengths
           // can hit the target, so we accumulate rather than early-return.
           accumulated += reachProb;
-        } else if (node.depth + 1 < maxDepth) {
+        } else if (node.depth + 1 < safeMaxDepth) {
           // ── Not yet at target and depth budget remains — keep walking ────────
           // Push a shallow copy of pathVisited with nextState added so each
           // queued node carries its own independent path history.
@@ -384,7 +397,10 @@ export class PropensityCalculator {
     // The `max(0, z)` clamp zeroes out any benefit from below-baseline deviation
     // (the user is navigating more efficiently than average — we do not reward
     // this, we simply report no friction).
-    const frictionPenalty = Math.exp(-this.alpha * Math.max(0, currentZScore));
+    // NaN z-score propagates through Math.exp to NaN, corrupting lastPropensity.
+    // Treat it as 0 (no friction): the caller provided no usable signal.
+    const safeZ = Number.isNaN(currentZScore) ? 0 : currentZScore;
+    const frictionPenalty = Math.exp(-this.alpha * Math.max(0, safeZ));
 
     // ── Combined propensity ────────────────────────────────────────────────────
     //

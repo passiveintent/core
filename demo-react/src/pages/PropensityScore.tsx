@@ -204,7 +204,7 @@ export default function PropensityScore() {
     const graph = graphRef.current!;
 
     // BFS — computes and caches P_reach for (route → TARGET)
-    calc.updateBaseline(makeStateModel(graph), route, TARGET, 4);
+    calc.updateBaseline(makeStateModel(graph), route, TARGET, 5);
 
     // P_reach = score with z=0  (exp(-α×0) = 1, so penalty is neutral)
     const reach = calc.getRealTimePropensity(0);
@@ -218,12 +218,7 @@ export default function PropensityScore() {
     setScoreHist((prev) => [...prev.slice(-23), score]);
   }, []);
 
-  // Bootstrap
-  useEffect(() => {
-    recompute('/home', 0);
-  }, [recompute]);
-
-  // Update whenever z-score changes (slider drag or live event)
+  // Recompute whenever route or z-score changes (covers bootstrap, navigation, and slider)
   useEffect(() => {
     recompute(currentRoute, effectiveZ);
   }, [effectiveZ, recompute, currentRoute]);
@@ -235,9 +230,8 @@ export default function PropensityScore() {
       track(page.route);
       setCurrentRoute(page.route);
       setNavHistory((prev) => [...prev, page.route]);
-      recompute(page.route, effectiveZ);
     },
-    [currentRoute, track, recompute, effectiveZ],
+    [currentRoute, track],
   );
 
   const resetJourney = useCallback(() => {
@@ -245,8 +239,7 @@ export default function PropensityScore() {
     setNavHistory(['/home']);
     setLiveZ(0);
     if (!useManual) setManualZ(0);
-    recompute('/home', useManual ? manualZ : 0);
-  }, [useManual, manualZ, recompute]);
+  }, [useManual]);
 
   const { tier, action } = tierInfo(propensity);
   const color = scoreColor(propensity);

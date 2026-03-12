@@ -591,7 +591,172 @@ test('constructor: custom throttleMs overrides the 500ms default', () => {
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
-// 4. Property-based invariants
+// 4. Input validation / sanitization guards
+// ─────────────────────────────────────────────────────────────────────────────
+
+test('input: alpha=NaN falls back to 0 — no friction applied', () => {
+  // NaN alpha: Math.exp(-NaN × z) = NaN, corrupting lastPropensity.
+  // Guard clamps invalid alpha to 0 (no friction), so propensity === cachedBaseline.
+  const calc = new PropensityCalculator(NaN, 0);
+  const model = makeStubModel({ A: [{ state: 'B', probability: 0.7 }] });
+  calc.updateBaseline(model, 'A', 'B', 1);
+
+  withMockClock((setTime) => {
+    setTime(0);
+    const score = calc.getRealTimePropensity(5); // large z would reduce score if alpha > 0
+    assert.ok(Number.isFinite(score), `score must be finite after alpha=NaN; got ${score}`);
+    assert.ok(
+      Math.abs(score - 0.7) < 1e-10,
+      `alpha=NaN must be treated as 0 (no friction): expected 0.7, got ${score}`,
+    );
+  });
+});
+
+test('input: alpha negative falls back to 0 — no friction applied', () => {
+  // Negative alpha inverts the friction relationship: higher z → higher propensity,
+  // violating the [0, 1] contract.  Guard clamps negative alpha to 0.
+  const calc = new PropensityCalculator(-0.5, 0);
+  const model = makeStubModel({ A: [{ state: 'B', probability: 0.6 }] });
+  calc.updateBaseline(model, 'A', 'B', 1);
+
+  withMockClock((setTime) => {
+    setTime(0);
+    const score = calc.getRealTimePropensity(3);
+    assert.ok(score >= 0 && score <= 1, `score must be in [0, 1], got ${score}`);
+    assert.ok(
+      Math.abs(score - 0.6) < 1e-10,
+      `alpha=-0.5 must be treated as 0 (no friction): expected 0.6, got ${score}`,
+    );
+  });
+});
+
+test('input: throttleMs=NaN falls back to 500ms default', () => {
+  // NaN throttleMs: `now - last < NaN` is always false, disabling throttling silently.
+  // Guard falls back to 500ms so the throttle window behaves as documented.
+  withMockClock((setTime) => {
+    const calc = new PropensityCalculator(0.2, NaN);
+    const model = makeStubModel({ A: [{ state: 'B', probability: 1.0 }] });
+    calc.updateBaseline(model, 'A', 'B', 1);
+
+    setTime(0);
+    const first = calc.getRealTimePropensity(0); // primes cache
+    assert.ok(Math.abs(first - 1.0) < 1e-10);
+
+    // 400ms later — within the 500ms fallback window: must return cached value.
+    setTime(400);
+    assert.equal(
+      calc.getRealTimePropensity(10),
+      first,
+      'throttleMs=NaN must fall back to 500ms; call at 400ms must be throttled',
+    );
+
+    // 600ms later — past the 500ms window: must recompute.
+    setTime(600);
+    const fresh = calc.getRealTimePropensity(10);
+    assert.ok(
+      fresh < first,
+      'throttleMs=NaN fallback: after 600ms, score must recompute with z=10',
+    );
+  });
+});
+
+test('input: throttleMs=Infinity falls back to 500ms default', () => {
+  // Infinity throttleMs: `now - last < Infinity` is always true after the first
+  // computation, freezing the score forever.  Guard falls back to 500ms.
+  withMockClock((setTime) => {
+    const calc = new PropensityCalculator(0.2, Infinity);
+    const model = makeStubModel({ A: [{ state: 'B', probability: 1.0 }] });
+    calc.updateBaseline(model, 'A', 'B', 1);
+
+    setTime(0);
+    const first = calc.getRealTimePropensity(0); // primes cache: 1.0
+
+    // 600ms later — past the 500ms fallback window: must recompute with z=10.
+    setTime(600);
+    const fresh = calc.getRealTimePropensity(10);
+    assert.ok(
+      fresh < first,
+      'throttleMs=Infinity fallback: after 600ms score must recompute, not be frozen',
+    );
+  });
+});
+
+test('input: updateBaseline maxDepth=NaN falls back to depth 3', () => {
+  // NaN maxDepth: `depth + 1 < NaN` is always false, so only direct target edges
+  // are accumulated (non-target neighbours are never enqueued).
+  // Guard falls back to 3, allowing multi-hop paths to be found.
+  const calc = new PropensityCalculator(0, 0);
+  // 3-hop chain — unreachable with maxDepth=NaN (which behaves as depth 1),
+  // reachable with the fallback maxDepth=3.
+  const model = makeStubModel({
+    A: [{ state: 'B', probability: 1.0 }],
+    B: [{ state: 'C', probability: 1.0 }],
+    C: [{ state: 'target', probability: 1.0 }],
+  });
+  calc.updateBaseline(model, 'A', 'target', NaN);
+
+  withMockClock((setTime) => {
+    setTime(0);
+    const score = calc.getRealTimePropensity(0);
+    assert.ok(
+      Math.abs(score - 1.0) < 1e-10,
+      `maxDepth=NaN must fall back to 3 and find 3-hop path; expected 1.0, got ${score}`,
+    );
+  });
+});
+
+test('input: updateBaseline maxDepth=Infinity falls back to depth 3', () => {
+  // Infinity maxDepth removes the depth gate entirely, risking unbounded BFS.
+  // Guard falls back to 3.  Verify by using a 4-hop chain: with the fallback,
+  // only paths up to 3 hops are explored, so the 4-hop target is not found.
+  const calc = new PropensityCalculator(0, 0);
+  const model = makeStubModel({
+    A: [{ state: 'B', probability: 1.0 }],
+    B: [{ state: 'C', probability: 1.0 }],
+    C: [{ state: 'D', probability: 1.0 }],
+    D: [{ state: 'target', probability: 1.0 }],
+  });
+  calc.updateBaseline(model, 'A', 'target', Infinity);
+
+  withMockClock((setTime) => {
+    setTime(0);
+    const score = calc.getRealTimePropensity(0);
+    assert.equal(
+      score,
+      0,
+      `maxDepth=Infinity must fall back to 3; 4-hop target must not be found, got ${score}`,
+    );
+  });
+});
+
+test('input: getRealTimePropensity(NaN) treated as z=0, does not corrupt lastPropensity', () => {
+  // NaN z-score propagates through Math.exp(-alpha × NaN) = NaN, storing NaN in
+  // lastPropensity.  Guard replaces NaN with 0 (no friction).
+  const calc = new PropensityCalculator(0.2, 500);
+  const model = makeStubModel({ A: [{ state: 'B', probability: 0.8 }] });
+  calc.updateBaseline(model, 'A', 'B', 1);
+
+  withMockClock((setTime) => {
+    setTime(0);
+    const score = calc.getRealTimePropensity(NaN);
+    assert.ok(Number.isFinite(score), `NaN z-score must not corrupt score; got ${score}`);
+    assert.ok(
+      Math.abs(score - 0.8) < 1e-10,
+      `NaN z-score must be treated as 0 (no friction): expected 0.8, got ${score}`,
+    );
+
+    // Verify lastPropensity is also clean: next throttled read returns the same finite value.
+    setTime(100);
+    const throttled = calc.getRealTimePropensity(NaN);
+    assert.ok(
+      Number.isFinite(throttled),
+      `lastPropensity must not be NaN after NaN z-score; got ${throttled}`,
+    );
+  });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 5. Property-based invariants
 // ─────────────────────────────────────────────────────────────────────────────
 
 test('property: score is always in [0, 1] for any non-negative z-score and valid baseline', () => {

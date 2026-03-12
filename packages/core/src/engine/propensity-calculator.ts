@@ -397,9 +397,10 @@ export class PropensityCalculator {
     // The `max(0, z)` clamp zeroes out any benefit from below-baseline deviation
     // (the user is navigating more efficiently than average — we do not reward
     // this, we simply report no friction).
-    // NaN z-score propagates through Math.exp to NaN, corrupting lastPropensity.
-    // Treat it as 0 (no friction): the caller provided no usable signal.
-    const safeZ = Number.isNaN(currentZScore) ? 0 : currentZScore;
+    // Non-finite z-scores (NaN, ±Infinity) propagate through Math.exp to NaN or
+    // produce degenerate results, corrupting lastPropensity.
+    // Treat them as 0 (no friction): the caller provided no usable signal.
+    const safeZ = Number.isFinite(currentZScore) ? currentZScore : 0;
     const frictionPenalty = Math.exp(-this.alpha * Math.max(0, safeZ));
 
     // ── Combined propensity ────────────────────────────────────────────────────

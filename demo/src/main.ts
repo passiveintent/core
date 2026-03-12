@@ -3073,22 +3073,27 @@ manager.on('trajectory_anomaly', ({ zScore }) => {
       const CIRC = 2 * Math.PI * 71; // matches r=71 in SVG
 
       // Rebuild graph from the same baseline as render() — setup() gets fresh DOM
-      const g = new MarkovGraph({ maxStates: 200, smoothingAlpha: 0 });
-      const mainPath: [string, string][] = [
-        ['/home', '/products'],
-        ['/products', '/product/headphones'],
-        ['/product/headphones', '/cart'],
-        ['/cart', '/checkout/payment'],
-        ['/checkout/payment', '/thank-you'],
-      ];
-      for (let i = 0; i < 20; i++) {
-        for (const [a, b] of mainPath) g.incrementTransition(a, b);
+      function seedGraph() {
+        const graph = new MarkovGraph({ maxStates: 200, smoothingAlpha: 0 });
+        const mainPath: [string, string][] = [
+          ['/home', '/products'],
+          ['/products', '/product/headphones'],
+          ['/product/headphones', '/cart'],
+          ['/cart', '/checkout/payment'],
+          ['/checkout/payment', '/thank-you'],
+        ];
+        for (let i = 0; i < 20; i++) {
+          for (const [a, b] of mainPath) graph.incrementTransition(a, b);
+        }
+        for (let i = 0; i < 4; i++) {
+          graph.incrementTransition('/home', '/pricing');
+          graph.incrementTransition('/products', '/cart');
+          graph.incrementTransition('/product/headphones', '/checkout/payment');
+        }
+        return graph;
       }
-      for (let i = 0; i < 4; i++) {
-        g.incrementTransition('/home', '/pricing');
-        g.incrementTransition('/products', '/cart');
-        g.incrementTransition('/product/headphones', '/checkout/payment');
-      }
+
+      let g = seedGraph();
 
       const calc = new PropensityCalculator(ALPHA, 0); // throttleMs=0
 
@@ -3278,6 +3283,7 @@ manager.on('trajectory_anomaly', ({ zScore }) => {
       });
 
       container.querySelector('#ps-reset-btn')!.addEventListener('click', () => {
+        g = seedGraph();
         currentRoute = '/home';
         navHistory = ['/home'];
         liveZ = 0;

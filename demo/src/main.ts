@@ -3186,7 +3186,7 @@ function navigateTo(demoKey: string): void {
   activeDemo = demoKey;
   const demo = demos[demoKey];
   const headingEl = document.getElementById('active-demo-label');
-  if (headingEl) headingEl.innerHTML = demo.label;
+  if (headingEl) headingEl.innerHTML = demo.title;
   const contentEl = document.getElementById('content')!;
   contentEl.innerHTML = demo.render();
   activeCleanup = demo.setup(contentEl);

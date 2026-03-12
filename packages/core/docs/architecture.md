@@ -45,6 +45,11 @@ PassiveIntent takes the opposite approach. It is a tiny, tree-shakeable TypeScri
 11. [Framework Packages](#framework-packages)
 12. [Technical Deep Dive](#technical-deep-dive)
 
+- [Microkernel Architecture](#microkernel-architecture)
+  - [Four-Layer Model](#four-layer-model)
+  - [Plugin Contracts (CoreInterfaces)](#plugin-contracts-coreinterfaces)
+  - [Standard Web Plugins](#standard-web-plugins)
+  - [Building a Custom Plugin](#building-a-custom-plugin)
 - [Architecture Overview](#architecture-overview)
 - [Bloom Filter](#bloom-filter)
 - [Markov Graph](#markov-graph)
@@ -1263,6 +1268,132 @@ function RouterTracker() {
 ---
 
 ## Technical Deep Dive
+
+### Microkernel Architecture
+
+#### Four-Layer Model
+
+The refactor introduced a strict 4-layer separation so any domain (food-delivery,
+dating, fintech, React Native, Electron) can slot into the intent engine as a
+plug-and-play adapter without modifying the core algorithms.
+
+```text
+┌─────────────────────────────────────────────────────────────────┐
+│  Layer 1 — Core Algorithms                                      │
+│  MarkovGraph · BloomFilter                                      │
+│  Pure math. No I/O. No DOM references.                          │
+├─────────────────────────────────────────────────────────────────┤
+│  Layer 2 — Microkernel (IntentEngine)                           │
+│  src/engine/intent-engine.ts                                    │
+│  Zero references to window / document / localStorage.          │
+│  Communicates exclusively through four adapter interfaces.      │
+├─────────────────────────────────────────────────────────────────┤
+│  Layer 3 — Web Factory (createBrowserIntent)                    │
+│  src/factory.ts                                                 │
+│  Instantiates and injects all standard web plugins.             │
+│  Progressive disclosure: one call for the 90 % use-case.       │
+├─────────────────────────────────────────────────────────────────┤
+│  Layer 4 — Framework SDKs                                       │
+│  usePassiveIntent (React hook) · IntentManager (full API)       │
+│  Wraps Layer 2/3 with framework lifecycle helpers.              │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+#### Plugin Contracts (CoreInterfaces)
+
+All four interfaces live in `src/types/microkernel.ts` and are re-exported
+under the `CoreInterfaces` namespace from the public barrel:
+
+```ts
+import type { CoreInterfaces } from '@passiveintent/core';
+```
+
+| Interface             | File                   | Responsibility                                                                               |
+| --------------------- | ---------------------- | -------------------------------------------------------------------------------------------- |
+| `IInputAdapter`       | `types/microkernel.ts` | Push-based navigation/behavioral input. `subscribe(onState)` → unsubscribe fn.               |
+| `ILifecycleAdapter`   | `types/microkernel.ts` | Platform pause / resume / exit-intent signals.                                               |
+| `IStateModel`         | `types/microkernel.ts` | Markov + Bloom abstraction: membership, transitions, entropy, trajectory, serialize/restore. |
+| `IPersistenceAdapter` | `types/microkernel.ts` | Synchronous key-value storage: `load(key)` / `save(key, value)`.                             |
+
+`IntentEngineConfig` is the strict constructor object that wires all four:
+
+```ts
+interface IntentEngineConfig {
+  stateModel: IStateModel;
+  persistence: IPersistenceAdapter;
+  lifecycle: ILifecycleAdapter;
+  input?: IInputAdapter; // optional — or drive manually via track()
+  storageKey?: string; // default: 'passive-intent-engine'
+  stateNormalizer?: (state: string) => string;
+  onError?: (error: { code: string; message: string }) => void;
+}
+```
+
+#### Standard Web Plugins
+
+`src/plugins/web/` ships four concrete implementations that power the default
+browser experience wired by `createBrowserIntent`:
+
+| File                         | Implements            | Mechanism                                                                                                                                                                                              |
+| ---------------------------- | --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `BrowserLifecycleAdapter.ts` | `ILifecycleAdapter`   | `document.visibilitychange` for pause/resume; `mouseleave` for exit-intent. SSR-safe.                                                                                                                  |
+| `MouseKinematicsAdapter.ts`  | `IInputAdapter`       | URL `popstate` + `hashchange` for navigation states; scroll-depth sub-states (`pathname@scroll.N`); mouse-velocity states (`pathname@velocity.scanning\|focused`). Throttled to ≤ 1 event/s. SSR-safe. |
+| `ContinuousGraphModel.ts`    | `IStateModel`         | Composes `MarkovGraph` + `BloomFilter`. Entropy / trajectory evaluation mirrors `SignalEngine` exactly. Compatible wire format (`bloomBase64` + `graphBinary`).                                        |
+| `LocalStorageAdapter.ts`     | `IPersistenceAdapter` | Thin wrapper over `window.localStorage`. Returns `null` in SSR / sandboxed iframes. Degrades silently on `SecurityError`.                                                                              |
+
+#### Building a Custom Plugin
+
+Implement any interface from `CoreInterfaces` to target a new platform without
+touching the core engine:
+
+```ts
+import { IntentEngine } from '@passiveintent/core';
+import type { CoreInterfaces } from '@passiveintent/core';
+
+// React Native — navigation-based input
+class ReactNativeInputAdapter implements CoreInterfaces.IInputAdapter {
+  subscribe(onState: (s: string) => void): () => void {
+    const unsub = navigation.addListener('state', (e) =>
+      onState(e.data.state.routes.at(-1)?.name ?? '/'),
+    );
+    return unsub;
+  }
+  destroy(): void {}
+}
+
+// Food-delivery / dating — swipe-based behavioral input
+class SwipeKinematicsAdapter implements CoreInterfaces.IInputAdapter {
+  subscribe(onState: (s: string) => void): () => void {
+    return swipeEmitter.on('swipe', ({ direction, cardId }) =>
+      onState(`card:${cardId}:${direction}`),
+    );
+  }
+  destroy(): void {}
+}
+
+// Capacitor — iOS/Android async storage (sync wrapper example)
+class CapacitorStorageAdapter implements CoreInterfaces.IPersistenceAdapter {
+  private cache = new Map<string, string>();
+  load(key: string): string | null {
+    return this.cache.get(key) ?? null;
+  }
+  save(key: string, value: string): void {
+    this.cache.set(key, value);
+    Preferences.set({ key, value }); // fire-and-forget async write
+  }
+}
+
+const engine = new IntentEngine({
+  stateModel: new ContinuousGraphModel(),
+  persistence: new CapacitorStorageAdapter(),
+  lifecycle: new ReactNativeLifecycleAdapter(),
+  input: new SwipeKinematicsAdapter(),
+});
+```
+
+The microkernel itself — `IntentEngine` — never changes. Only the adapters swap.
+
+---
 
 ### Architecture Overview
 

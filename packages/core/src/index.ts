@@ -88,3 +88,89 @@ export type {
   OperationStats,
   PerformanceReport,
 } from './performance-instrumentation.js';
+
+/* ================================================================== */
+/*  Microkernel — Layer 2                                              */
+/* ================================================================== */
+
+/**
+ * Raw IntentEngine class for enterprise / cross-platform use cases.
+ *
+ * Requires explicit injection of all four adapter interfaces.
+ * Use `createBrowserIntent()` instead for standard web applications.
+ *
+ * ```ts
+ * import { IntentEngine } from '@passiveintent/core';
+ *
+ * const engine = new IntentEngine({
+ *   stateModel:  myModel,
+ *   persistence: myStorage,
+ *   lifecycle:   myLifecycle,
+ *   input:       myInput,
+ * });
+ * ```
+ */
+export { IntentEngine } from './engine/intent-engine.js';
+export type { IntentEngineConfig } from './types/microkernel.js';
+
+/* ================================================================== */
+/*  Web Factory — Layer 3 (Progressive Disclosure)                     */
+/* ================================================================== */
+
+/**
+ * `createBrowserIntent` — primary entry point for standard web applications.
+ *
+ * Automatically wires `ContinuousGraphModel`, `LocalStorageAdapter`,
+ * `BrowserLifecycleAdapter`, and `MouseKinematicsAdapter` into a new
+ * `IntentEngine` and returns it ready to use.
+ *
+ * ```ts
+ * import { createBrowserIntent } from '@passiveintent/core';
+ *
+ * const intent = createBrowserIntent({ storageKey: 'my-app' });
+ * intent.on('high_entropy', ({ state }) => showHelpWidget(state));
+ * intent.on('exit_intent',  ({ likelyNext }) => prefetch(likelyNext));
+ * ```
+ */
+export { createBrowserIntent } from './factory.js';
+export type { BrowserConfig } from './factory.js';
+
+/* ================================================================== */
+/*  CoreInterfaces namespace — enterprise plugin contracts             */
+/* ================================================================== */
+
+/**
+ * TypeScript contracts for building custom plugins against the IntentEngine
+ * microkernel.  Import the namespace to implement your own adapters:
+ *
+ * ```ts
+ * import type { CoreInterfaces } from '@passiveintent/core';
+ *
+ * // React Native navigation adapter
+ * class ReactNativeInputAdapter implements CoreInterfaces.IInputAdapter {
+ *   subscribe(onState: (state: string) => void): () => void {
+ *     return navigation.addListener('state', (e) => onState(e.data.state.routes.at(-1)?.name ?? '/'));
+ *   }
+ *   destroy(): void {}
+ * }
+ *
+ * // Custom swipe-based input for dating / food-delivery apps
+ * class SwipeKinematicsAdapter implements CoreInterfaces.IInputAdapter {
+ *   subscribe(onState: (state: string) => void): () => void {
+ *     return swipeEmitter.on('swipe', ({ direction, cardId }) =>
+ *       onState(`card:${cardId}:${direction}`));
+ *   }
+ *   destroy(): void {}
+ * }
+ * ```
+ *
+ * Available contracts:
+ *   - `IInputAdapter`       — push-based navigation/behavioral input
+ *   - `ILifecycleAdapter`   — platform pause / resume / exit-intent
+ *   - `IStateModel`         — Markov + Bloom state model
+ *   - `IPersistenceAdapter` — synchronous key-value storage
+ *   - `IntentEngineConfig`  — full constructor config shape
+ *   - `EntropyResult`       — return type of `IStateModel.evaluateEntropy`
+ *   - `TrajectoryResult`    — return type of `IStateModel.evaluateTrajectory`
+ */
+export type * as CoreInterfaces from './types/microkernel.js';

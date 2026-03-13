@@ -9,17 +9,27 @@ import type { IntentManagerConfig, MarkovGraphConfig } from '../types/events.js'
 import { SMOOTHING_EPSILON } from './constants.js';
 
 /**
- * Lightweight inverse-normal CDF approximation for converting a one-tailed
- * false positive rate to a Z-score threshold.
+ * Converts a one-tailed false positive rate to a Z-score threshold via the
+ * standard inverse-normal CDF: z = Φ⁻¹(1 − fpr).
  *
- * Uses the asymptotic tail approximation `√(−2 ln(fpr))`, which is accurate
- * to within ~5 % for `fpr ≤ 0.1` and grows more precise in the far tail.
- * Inputs outside [0.001, 0.5] are silently clamped.
+ * Uses the rational approximation by Beasley & Springer (1977) — accurate to
+ * within 4.5 × 10⁻⁴ across (0, 0.5], which is far tighter than the asymptotic
+ * `√(−2 ln fpr)` approximation (≈ 36 % error at fpr = 0.05).
+ * Finite inputs outside [0.001, 0.5] are silently clamped.
+ * Non-finite inputs (NaN, ±Infinity) return NaN; callers must guard with
+ * `Number.isFinite` and fall back to a sensible default.
  *
- * Bundle-size optimised: no lookup tables, no erf approximations.
+ * Bundle-size optimised: six scalar constants, no lookup tables.
  */
 function fprToZScore(fpr: number): number {
-  return Math.sqrt(-2.0 * Math.log(Math.min(0.5, Math.max(0.001, fpr))));
+  if (!Number.isFinite(fpr)) return NaN;
+  const p = Math.min(0.5, Math.max(0.001, fpr));
+  const t = Math.sqrt(-2.0 * Math.log(p));
+  return (
+    t -
+    (2.515517 + t * (0.802853 + t * 0.010328)) /
+      (1.0 + t * (1.432788 + t * (0.189269 + t * 0.001308)))
+  );
 }
 
 /**
@@ -114,8 +124,9 @@ export function buildIntentManagerOptions(
     baselineMeanLL: config.baselineMeanLL ?? config.graph?.baselineMeanLL,
     baselineStdLL: config.baselineStdLL ?? config.graph?.baselineStdLL,
     smoothingAlpha: config.smoothingAlpha ?? config.graph?.smoothingAlpha,
-    divergenceThreshold:
-      graphFPR != null ? fprToZScore(graphFPR) : config.graph?.divergenceThreshold,
+    divergenceThreshold: Number.isFinite(graphFPR)
+      ? fprToZScore(graphFPR as number)
+      : config.graph?.divergenceThreshold,
   };
 
   // ── Trajectory smoothing epsilon ────────────────────────────────────────
@@ -157,12 +168,11 @@ export function buildIntentManagerOptions(
 
   const dwellFPR = config.dwellTime?.targetFPR;
   const rawDwellZScore = config.dwellTime?.zScoreThreshold;
-  const dwellTimeZScoreThreshold =
-    dwellFPR != null
-      ? fprToZScore(dwellFPR)
-      : Number.isFinite(rawDwellZScore) && (rawDwellZScore as number) > 0
-        ? (rawDwellZScore as number)
-        : 2.5;
+  const dwellTimeZScoreThreshold = Number.isFinite(dwellFPR)
+    ? fprToZScore(dwellFPR as number)
+    : Number.isFinite(rawDwellZScore) && (rawDwellZScore as number) > 0
+      ? (rawDwellZScore as number)
+      : 2.5;
 
   const enableBigrams = config.enableBigrams ?? false;
 

@@ -109,6 +109,8 @@ export default function DwellTime() {
                   ['zScore', lastEvent.zScore.toFixed(3)],
                   ['mean', `${lastEvent.meanMs.toFixed(0)} ms`],
                   ['stdDev', `${lastEvent.stdMs?.toFixed(0) ?? '—'} ms`],
+                  ['sampleSize', String(lastEvent.sampleSize)],
+                  ['confidence', lastEvent.confidence],
                 ] as [string, string][]
               ).map(([k, v]) => (
                 <tr key={k}>

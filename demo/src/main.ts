@@ -1827,12 +1827,18 @@ intent.<span class="fn">destroy</span>(); <span class="cmt">// closes BroadcastC
       // Wire up signals → interventions
       const unsubs = [
         intent.on('dwell_time_anomaly', (p: unknown) => {
-          const payload = p as { state: string; dwellMs: number; zScore: number };
+          const payload = p as {
+            state: string;
+            dwellMs: number;
+            zScore: number;
+            confidence: string;
+            sampleSize: number;
+          };
           pushIntervention(
             'free-shipping',
             '🚚',
             'Free Shipping on orders over $50!',
-            `You paused on "${payload.state}" for ${Math.round(payload.dwellMs)}ms — z-score: ${payload.zScore.toFixed(1)}`,
+            `You paused on "${payload.state}" for ${Math.round(payload.dwellMs)}ms — z-score: ${payload.zScore.toFixed(1)} (confidence: ${payload.confidence}, n=${payload.sampleSize})`,
             'dwell_time_anomaly',
           );
         }),
@@ -1847,12 +1853,18 @@ intent.<span class="fn">destroy</span>(); <span class="cmt">// closes BroadcastC
           );
         }),
         intent.on('trajectory_anomaly', (p: unknown) => {
-          const payload = p as { stateFrom: string; stateTo: string; zScore: number };
+          const payload = p as {
+            stateFrom: string;
+            stateTo: string;
+            zScore: number;
+            confidence: string;
+            sampleSize: number;
+          };
           pushIntervention(
             'compare',
             '⚖️',
             'Compare these products side by side?',
-            `Unusual path ${payload.stateFrom} → ${payload.stateTo} (z-score: ${payload.zScore.toFixed(1)})`,
+            `Unusual path ${payload.stateFrom} → ${payload.stateTo} (z-score: ${payload.zScore.toFixed(1)}, confidence: ${payload.confidence}, n=${payload.sampleSize})`,
             'trajectory_anomaly',
           );
         }),
@@ -2807,9 +2819,14 @@ intent.<span class="fn">destroy</span>(); <span class="cmt">// closes BroadcastC
       const anomalyFeed: string[] = [];
       const unsubs = [
         intent.on('trajectory_anomaly', (p) => {
-          const payload = p as { stateTo?: string; zScore?: number };
+          const payload = p as {
+            stateTo?: string;
+            zScore?: number;
+            confidence?: string;
+            sampleSize?: number;
+          };
           anomalyFeed.unshift(
-            `🚨 Trajectory anomaly → ${payload.stateTo} (z=${payload.zScore?.toFixed(2)})`,
+            `🚨 Trajectory anomaly → ${payload.stateTo} (z=${payload.zScore?.toFixed(2)}, ${payload.confidence ?? '?'}, n=${payload.sampleSize ?? '?'})`,
           );
           renderAnomalies();
         }),
@@ -2821,9 +2838,14 @@ intent.<span class="fn">destroy</span>(); <span class="cmt">// closes BroadcastC
           renderAnomalies();
         }),
         intent.on('dwell_time_anomaly', (p) => {
-          const payload = p as { state?: string; zScore?: number };
+          const payload = p as {
+            state?: string;
+            zScore?: number;
+            confidence?: string;
+            sampleSize?: number;
+          };
           anomalyFeed.unshift(
-            `⏱ Dwell anomaly at ${payload.state} (z=${payload.zScore?.toFixed(2)})`,
+            `⏱ Dwell anomaly at ${payload.state} (z=${payload.zScore?.toFixed(2)}, ${payload.confidence ?? '?'}, n=${payload.sampleSize ?? '?'})`,
           );
           renderAnomalies();
         }),

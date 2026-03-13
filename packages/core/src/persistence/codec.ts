@@ -66,6 +66,11 @@ export function serialize(bytes: Uint8Array): string {
 /** Deserialize a versioned base64 string back to raw bytes. */
 export function deserialize(base64: string): Uint8Array {
   const versioned = base64ToUint8(base64);
+  if (versioned.length === 0) {
+    throw Object.assign(new Error('Codec version mismatch: empty or invalid payload'), {
+      code: 'RESTORE_PARSE',
+    });
+  }
   if (versioned[0] !== CURRENT_CODEC_VERSION) {
     throw Object.assign(
       new Error(

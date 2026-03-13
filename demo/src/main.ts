@@ -626,9 +626,10 @@ intent.<span class="fn">on</span>(<span class="str">'state_change'</span>, ({ <s
   }
 });
 
-<span class="cmt">// Enable in config:</span>
+<span class="cmt">// Enable in config — express threshold as a false-positive rate (simpler):</span>
 <span class="kw">const</span> intent = <span class="kw">new</span> <span class="fn">IntentManager</span>({
-  dwellTime: { enabled: <span class="kw">true</span>, minSamples: <span class="num">3</span>, zScoreThreshold: <span class="num">2.0</span> }
+  dwellTime: { enabled: <span class="kw">true</span>, minSamples: <span class="num">3</span>, targetFPR: <span class="num">0.05</span> }
+  <span class="cmt">// or raw Z-score: zScoreThreshold: 2.0</span>
 });`,
       )}
     `,
@@ -707,7 +708,7 @@ intent.<span class="fn">on</span>(<span class="str">'state_change'</span>, ({ <s
   baseline,                  <span class="cmt">// SerializedMarkovGraph — your normal conversion path</span>
   baselineMeanLL: <span class="num">-1.4</span>,      <span class="cmt">// mean of per-step log-likelihood in training data</span>
   baselineStdLL:  <span class="num">0.35</span>,      <span class="cmt">// std dev  of per-step log-likelihood in training data</span>
-  graph: { divergenceThreshold: <span class="num">2.5</span> },
+  graph: { targetFPR: <span class="num">0.01</span> },       <span class="cmt">// ~1% FPR; or: divergenceThreshold: 2.5</span>
 });
 
 intent.<span class="fn">on</span>(<span class="str">'trajectory_anomaly'</span>, ({ <span class="prop">state</span>, <span class="prop">zScore</span>, <span class="prop">logLikelihood</span> }) => {

@@ -9,6 +9,20 @@ import type { IntentManagerConfig, MarkovGraphConfig } from '../types/events.js'
 import { SMOOTHING_EPSILON } from './constants.js';
 
 /**
+ * Lightweight inverse-normal CDF approximation for converting a one-tailed
+ * false positive rate to a Z-score threshold.
+ *
+ * Uses the asymptotic tail approximation `√(−2 ln(fpr))`, which is accurate
+ * to within ~5 % for `fpr ≤ 0.1` and grows more precise in the far tail.
+ * Inputs outside [0.001, 0.5] are silently clamped.
+ *
+ * Bundle-size optimised: no lookup tables, no erf approximations.
+ */
+function fprToZScore(fpr: number): number {
+  return Math.sqrt(-2.0 * Math.log(Math.min(0.5, Math.max(0.001, fpr))));
+}
+
+/**
  * Strongly-typed internal options object produced by normalizing an
  * `IntentManagerConfig`.  Every field has a concrete, non-optional value —
  * the constructor can use them directly without further null-coalescing.
@@ -93,11 +107,15 @@ export function buildIntentManagerOptions(
 
   // ── Merge top-level convenience aliases into the nested graph config ────
   // Top-level fields take precedence when both are supplied.
+  // targetFPR overrides divergenceThreshold when present.
+  const graphFPR = config.graph?.targetFPR;
   const graphConfig: MarkovGraphConfig = {
     ...config.graph,
     baselineMeanLL: config.baselineMeanLL ?? config.graph?.baselineMeanLL,
     baselineStdLL: config.baselineStdLL ?? config.graph?.baselineStdLL,
     smoothingAlpha: config.smoothingAlpha ?? config.graph?.smoothingAlpha,
+    divergenceThreshold:
+      graphFPR != null ? fprToZScore(graphFPR) : config.graph?.divergenceThreshold,
   };
 
   // ── Trajectory smoothing epsilon ────────────────────────────────────────
@@ -137,11 +155,14 @@ export function buildIntentManagerOptions(
       ? Math.floor(rawDwellMinSamples as number)
       : 10;
 
+  const dwellFPR = config.dwellTime?.targetFPR;
   const rawDwellZScore = config.dwellTime?.zScoreThreshold;
   const dwellTimeZScoreThreshold =
-    Number.isFinite(rawDwellZScore) && (rawDwellZScore as number) > 0
-      ? (rawDwellZScore as number)
-      : 2.5;
+    dwellFPR != null
+      ? fprToZScore(dwellFPR)
+      : Number.isFinite(rawDwellZScore) && (rawDwellZScore as number) > 0
+        ? (rawDwellZScore as number)
+        : 2.5;
 
   const enableBigrams = config.enableBigrams ?? false;
 

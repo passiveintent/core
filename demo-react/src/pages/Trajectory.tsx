@@ -140,7 +140,7 @@ export default function Trajectory() {
   baseline,
   baselineMeanLL: <span class="num">-1.4</span>,   <span class="cmt">// mean log-likelihood from training run</span>
   baselineStdLL:  <span class="num">0.35</span>,   <span class="cmt">// std dev  log-likelihood from training run</span>
-  graph: { divergenceThreshold: <span class="num">2.5</span> },
+  graph: { targetFPR: <span class="num">0.01</span> },      <span class="cmt">// ~1% FPR; or: divergenceThreshold: 2.5</span>
 });
 
 <span class="fn">useEffect</span>(() => {

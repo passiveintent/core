@@ -131,9 +131,10 @@ export default function DwellTime() {
   });
 }, [on]);
 
-<span class="cmt">// Config:</span>
+<span class="cmt">// Config — express threshold as a false-positive rate (simpler):</span>
 <span class="fn">usePassiveIntent</span>({
-  dwellTime: { enabled: <span class="kw">true</span>, minSamples: <span class="num">3</span>, zScoreThreshold: <span class="num">2.0</span> },
+  dwellTime: { enabled: <span class="kw">true</span>, minSamples: <span class="num">3</span>, targetFPR: <span class="num">0.05</span> },
+  <span class="cmt">// or raw Z-score: dwellTime: { ..., zScoreThreshold: 2.0 }</span>
 });`}
       />
     </>

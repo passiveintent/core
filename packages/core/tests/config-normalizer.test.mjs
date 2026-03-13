@@ -546,3 +546,76 @@ test('hesitationCorrelationWindowMs: negative falls back to default 30000', () =
   const opts = buildIntentManagerOptions({ hesitationCorrelationWindowMs: -1 });
   assert.equal(opts.hesitationCorrelationWindowMs, 30_000);
 });
+
+// ─── targetFPR → Z-score conversion (dwellTime) ──────────────────────────────
+
+test('dwellTime.targetFPR drives dwellTimeZScoreThreshold via fprToZScore', () => {
+  const opts = buildIntentManagerOptions({ dwellTime: { targetFPR: 0.02 } });
+  const expected = Math.sqrt(-2.0 * Math.log(0.02));
+  assert.ok(Math.abs(opts.dwellTimeZScoreThreshold - expected) < 1e-9);
+});
+
+test('dwellTime.targetFPR takes precedence over zScoreThreshold when both provided', () => {
+  const opts = buildIntentManagerOptions({
+    dwellTime: { zScoreThreshold: 3.0, targetFPR: 0.02 },
+  });
+  const expected = Math.sqrt(-2.0 * Math.log(0.02));
+  assert.ok(Math.abs(opts.dwellTimeZScoreThreshold - expected) < 1e-9);
+  assert.notEqual(opts.dwellTimeZScoreThreshold, 3.0);
+});
+
+test('dwellTime.targetFPR absent: zScoreThreshold still works', () => {
+  const opts = buildIntentManagerOptions({ dwellTime: { zScoreThreshold: 3.0 } });
+  assert.equal(opts.dwellTimeZScoreThreshold, 3.0);
+});
+
+test('dwellTime.targetFPR: values below 0.001 are clamped to 0.001', () => {
+  const opts = buildIntentManagerOptions({ dwellTime: { targetFPR: 0.0001 } });
+  const expected = Math.sqrt(-2.0 * Math.log(0.001));
+  assert.ok(Math.abs(opts.dwellTimeZScoreThreshold - expected) < 1e-9);
+});
+
+test('dwellTime.targetFPR: values above 0.5 are clamped to 0.5', () => {
+  const opts = buildIntentManagerOptions({ dwellTime: { targetFPR: 0.9 } });
+  const expected = Math.sqrt(-2.0 * Math.log(0.5));
+  assert.ok(Math.abs(opts.dwellTimeZScoreThreshold - expected) < 1e-9);
+});
+
+// ─── targetFPR → Z-score conversion (graph / divergenceThreshold) ────────────
+
+test('graph.targetFPR drives graphConfig.divergenceThreshold via fprToZScore', () => {
+  const opts = buildIntentManagerOptions({ graph: { targetFPR: 0.005 } });
+  const expected = Math.sqrt(-2.0 * Math.log(0.005));
+  assert.ok(Math.abs(opts.graphConfig.divergenceThreshold - expected) < 1e-9);
+});
+
+test('graph.targetFPR takes precedence over graph.divergenceThreshold when both provided', () => {
+  const opts = buildIntentManagerOptions({
+    graph: { divergenceThreshold: 4.0, targetFPR: 0.005 },
+  });
+  const expected = Math.sqrt(-2.0 * Math.log(0.005));
+  assert.ok(Math.abs(opts.graphConfig.divergenceThreshold - expected) < 1e-9);
+  assert.notEqual(opts.graphConfig.divergenceThreshold, 4.0);
+});
+
+test('graph.targetFPR absent: divergenceThreshold passes through unchanged', () => {
+  const opts = buildIntentManagerOptions({ graph: { divergenceThreshold: 4.0 } });
+  assert.equal(opts.graphConfig.divergenceThreshold, 4.0);
+});
+
+test('graph.targetFPR absent and no divergenceThreshold: graphConfig.divergenceThreshold is undefined', () => {
+  const opts = buildIntentManagerOptions({});
+  assert.equal(opts.graphConfig.divergenceThreshold, undefined);
+});
+
+test('graph.targetFPR: values below 0.001 are clamped to 0.001', () => {
+  const opts = buildIntentManagerOptions({ graph: { targetFPR: 0.0001 } });
+  const expected = Math.sqrt(-2.0 * Math.log(0.001));
+  assert.ok(Math.abs(opts.graphConfig.divergenceThreshold - expected) < 1e-9);
+});
+
+test('graph.targetFPR: values above 0.5 are clamped to 0.5', () => {
+  const opts = buildIntentManagerOptions({ graph: { targetFPR: 0.9 } });
+  const expected = Math.sqrt(-2.0 * Math.log(0.5));
+  assert.ok(Math.abs(opts.graphConfig.divergenceThreshold - expected) < 1e-9);
+});

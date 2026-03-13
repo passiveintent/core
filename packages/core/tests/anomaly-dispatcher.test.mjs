@@ -149,6 +149,8 @@ test('dispatcher: emits trajectory_anomaly for TrajectoryDecision in treatment g
     realLogLikelihood: -1.5,
     expectedBaselineLogLikelihood: -0.5,
     zScore: -4.2,
+    confidence: 'high',
+    sampleSize: 50,
   };
   dispatcher.dispatch({ kind: 'trajectory_anomaly', payload });
 

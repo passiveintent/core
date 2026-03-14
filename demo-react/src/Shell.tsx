@@ -270,7 +270,7 @@ export default function Shell({ active, onNavigate, onReset, children }: Props) 
             {logEntries.length === 0 ? (
               <div className="log-empty">Events appear here as you interact.</div>
             ) : (
-              logEntries.map((entry, i) => <LogEntry key={i} entry={entry} />)
+              logEntries.map((entry, i) => <LogEntryRow key={i} entry={entry} />)
             )}
           </div>
         </aside>
@@ -292,7 +292,7 @@ function safeSerialize(data: unknown): string {
   }
 }
 
-function LogEntry({ entry }: { entry: LogEntry }) {
+function LogEntryRow({ entry }: { entry: LogEntry }) {
   const cssClass = `log-${entry.event.replace(/_/g, '-')}`;
   return (
     <div className={`log-entry ${cssClass} log-default`}>

@@ -216,23 +216,25 @@ describe('PassiveIntentProvider + context-mode usePassiveIntent', () => {
     });
 
     it('multiple consumers in the same tree all share the single Provider instance', () => {
-      const { unmount: u1 } = renderHook(() => usePassiveIntent(), {
-        wrapper: ({ children }) => withProvider(children),
-      });
-      // Second hook rendered in its own tree but same mock registry
-      const { result: r2, unmount: u2 } = renderHook(() => usePassiveIntent(), {
-        wrapper: ({ children }) => withProvider(children),
-      });
+      const { result, unmount } = renderHook(
+        () => {
+          const first = usePassiveIntent();
+          const second = usePassiveIntent();
+          return { first, second };
+        },
+        {
+          wrapper: ({ children }) => withProvider(children),
+        },
+      );
 
-      // Each renderHook call has its own Provider wrapper, so 2 instances total
-      expect(MockIM).toHaveBeenCalledTimes(2);
+      expect(MockIM).toHaveBeenCalledTimes(1);
+      expect(result.current.first.track).toBe(result.current.second.track);
 
-      r2.current.track('/page');
-      const secondInstance = MockIM.mock.results[1].value as unknown as FakeInstance;
-      expect(secondInstance.track).toHaveBeenCalledWith('/page');
+      result.current.second.track('/page');
+      const sharedInstance = MockIM.mock.results[0].value as unknown as FakeInstance;
+      expect(sharedInstance.track).toHaveBeenCalledWith('/page');
 
-      u1();
-      u2();
+      unmount();
     });
   });
 

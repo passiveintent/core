@@ -6,7 +6,7 @@ const graph = new MarkovGraph({
   highEntropyThreshold: 0.75,
   divergenceThreshold: 3.5,
   baselineMeanLL: -0.2, // Very tight variance expected
-  baselineStdLL: 0.05
+  baselineStdLL: 0.05,
 });
 
 // 2. Synthesize a massive amount of "perfect" checkout traffic

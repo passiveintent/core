@@ -1,0 +1,50 @@
+{
+  "states": [
+    "/cart",
+    "/checkout/shipping",
+    "/checkout/payment",
+    "/checkout/success",
+    "/products"
+  ],
+  "rows": [
+    [
+      0,
+      1001,
+      [
+        [
+          1,
+          1000
+        ],
+        [
+          4,
+          1
+        ]
+      ]
+    ],
+    [
+      1,
+      1001,
+      [
+        [
+          2,
+          1000
+        ],
+        [
+          0,
+          1
+        ]
+      ]
+    ],
+    [
+      2,
+      1000,
+      [
+        [
+          3,
+          1000
+        ]
+      ]
+    ]
+  ],
+  "freedIndices": []
+}

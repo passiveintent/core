@@ -62,10 +62,9 @@ engine.on('hesitation_detected', (payload) => {
 ```
 
 ## Re-generating Blueprints
-
-If you alter the core ContinuousGraphModel or BINARY_CODEC_SPEC, you must regenerate these JSON files using the synthesis scripts located in packages/core/scripts/.
+If you alter the core ContinuousGraphModel or BINARY_CODEC_SPEC, regenerate these JSON files using the synthesis scripts in `packages/core/Generate blueprint json/`.
 
 ```Bash
-node .\e-commerce.js
-node .\pub-media.js
+node "packages/core/Generate blueprint json/e-commerce.js"
+node "packages/core/Generate blueprint json/pub-media.js"
 ```

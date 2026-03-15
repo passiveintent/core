@@ -756,7 +756,7 @@ All four interfaces, plus `EntropyResult`, `TrajectoryResult`, and
 
 PassiveIntent does not use black-box neural networks, cloud embeddings, or third-party ML APIs. It is a deterministic, locally executed mathematical engine.
 
-By combining physical kinematics with probabilistic state mapping, the engine calculates a real-time Propensity to Convert score in < 2ms with zero data egress.
+By combining physical kinematics with probabilistic state mapping, the engine calculates a real-time propensity-to-convert score in < 2ms with zero data egress.
 
 Here are the foundational formulas powering the engine:
 

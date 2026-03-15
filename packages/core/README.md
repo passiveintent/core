@@ -756,7 +756,7 @@ All four interfaces, plus `EntropyResult`, `TrajectoryResult`, and
 
 PassiveIntent does not use black-box neural networks, cloud embeddings, or third-party ML APIs. It is a deterministic, locally executed mathematical engine.
 
-By combining physical kinematics with probabilistic state mapping, the engine calculates a real-time Propensity to Convert score in < 2ms with zero data egress.
+By combining physical kinematics with probabilistic state mapping, the engine calculates a real-time propensity-to-convert score in < 2ms with zero data egress.
 
 Here are the foundational formulas powering the engine:
 
@@ -792,7 +792,7 @@ $$
 Z = \frac{x - \mu_{\text{baseline}}}{\sigma_{\text{baseline}}}
 $$
 
-A Z-score of $Z > 2.0$ mathematically guarantees that the user's current physical hesitation is a statistically significant anomaly, triggering the EntropyGuard intervention protocol.
+A threshold such as $Z > 2.0$ indicates statistically unusual hesitation (under near-normal assumptions) and can trigger the configured dwell-time or trajectory anomaly handlers.
 
 ---
 

@@ -792,7 +792,7 @@ $$
 Z = \frac{x - \mu_{\text{baseline}}}{\sigma_{\text{baseline}}}
 $$
 
-A Z-score of $Z > 2.0$ mathematically guarantees that the user's current physical hesitation is a statistically significant anomaly, triggering the EntropyGuard intervention protocol.
+A threshold such as $Z > 2.0$ indicates statistically unusual hesitation (under near-normal assumptions) and can trigger the configured dwell-time or trajectory anomaly handlers.
 
 ---
 

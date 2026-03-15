@@ -37,17 +37,13 @@ On a media site, erratic clicking and looping behavior is completely normal—it
 You can inject a blueprint directly into your engine's configuration upon initialization. The engine will instantly adopt the blueprint's topography and begin refining it with real user data.
 
 ```javascript
-import { IntentEngine } from '@passiveintent/core';
-import strictFunnelBlueprint from '@passiveintent/core/blueprints/ecommerce-strict-funnel.json';
+import { IntentManager } from '@passiveintent/core';
+import strictFunnelBlueprint from './ecommerce-strict-funnel.json';
 
 // Initialize the engine with instant ROI
-const engine = new IntentEngine({
-  graph: {
-    // Inject the pre-calculated baseline
-    initialState: strictFunnelBlueprint,
-    // The engine will adjust this baseline as it learns organic traffic
-    learningRate: 0.05,
-  },
+const engine = new IntentManager({
+  // Inject the pre-calculated baseline
+  baseline: strictFunnelBlueprint,
   dwellTime: {
     targetFPR: 0.02, // 2% False Positive Rate
   },

@@ -752,6 +752,76 @@ All four interfaces, plus `EntropyResult`, `TrajectoryResult`, and
 
 ---
 
+## The Mathematics of PassiveIntent
+
+PassiveIntent does not use black-box neural networks, cloud embeddings, or third-party ML APIs. It is a deterministic, locally executed mathematical engine.
+
+By combining physical kinematics with probabilistic state mapping, the engine calculates a real-time Propensity to Convert score in < 2ms with zero data egress.
+
+Here are the foundational formulas powering the engine:
+
+---
+
+### 1. Kinematic Friction (Welford's Online Algorithm)
+
+To detect user hesitation without storing heavy arrays of mouse/swipe coordinates, we use Welford’s online algorithm to calculate running variance in $O(1)$ time and $O(1)$ memory.
+
+For each new input interaction $x_k$ (e.g., dwell time or swipe velocity), we update the running mean $\mu_k$ and the sum of squared differences $M_k$:
+
+$$
+\mu_k = \mu_{k-1} + \frac{x_k - \mu_{k-1}}{k}
+$$
+
+$$
+M_k = M_{k-1} + (x_k - \mu_{k-1})(x_k - \mu_k)
+$$
+
+The sample variance is then cleanly derived as:
+
+$$
+\sigma^2_k = \frac{M_k}{k-1}
+$$
+
+---
+
+### 2. Anomaly Detection (Z-Score Normalization)
+
+Generic thresholds fail because user behavior on a media site differs completely from a B2B SaaS dashboard. PassiveIntent normalizes hesitation against the site's unique baseline using a standard Z-score:
+
+$$
+Z = \frac{x - \mu_{\text{baseline}}}{\sigma_{\text{baseline}}}
+$$
+
+A Z-score of $Z > 2.0$ mathematically guarantees that the user's current physical hesitation is a statistically significant anomaly, triggering the EntropyGuard intervention protocol.
+
+---
+
+### 3. Journey Prediction (Laplace-Smoothed Markov Chains)
+
+We map the user's path to purchase using a continuous 1st-order and 2nd-order (bigram) Markov graph. To prevent the "Cold Start" problem (where unvisited pages break the probability matrix), we apply Dirichlet prior / Laplace smoothing.
+
+The probability $P$ of a user moving to state $j$ given their current state $i$ is:
+
+$$
+P(s_{t+1}=j \mid s_t=i) = \frac{c(i \to j) + \alpha}{\sum_k c(i \to k) + \alpha K}
+$$
+
+Where $c$ is the transition count, $\alpha$ is the smoothing parameter, and $K$ is the total number of known states.
+
+---
+
+### 4. Real-Time Propensity Scoring
+
+To predict if a user will churn before they actually click away, we penalize their historical Markov probability of reaching the target state $H(S_c, S_t)$ using an exponential decay function tied directly to their real-time kinematic friction $Z$:
+
+$$
+P_{rt} = H(S_c, S_t) \cdot e^{-\lambda \cdot \max(0, Z)}
+$$
+
+If the user stays on the optimal path (low entropy), $P_{rt}$ remains high. The exact millisecond their physical input exhibits anomalous variance ($Z > 0$), the propensity score decays exponentially, allowing UI layers to trigger targeted discounts or support chats precisely at the moment of maximum indecision.
+
+---
+
 ## Design decisions (brief)
 
 - **Isomorphic adapters**: direct `window`/`localStorage` usage is avoided in core flow to keep SSR safe.

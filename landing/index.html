@@ -151,13 +151,14 @@
           </span>
         </a>
         <nav class="site-nav" id="site-nav" aria-label="Primary">
+          <a href="./ecommerce/index.html">E-Commerce</a>
           <a href="#why-different">Why</a>
           <a href="#how">How</a>
           <a href="#demo">Demo</a>
           <a href="#pricing">Pricing</a>
           <a href="#articles">Articles</a>
         </nav>
-        <a class="header-cta" href="#demo">Try the live demo</a>
+        <a class="header-cta" href="#demo">See demo labs</a>
       </div>
     </header>
 
@@ -175,7 +176,7 @@
             intervene without exporting behavioral data to another vendor.
           </p>
           <div class="hero-actions">
-            <a class="btn btn-primary" href="#demo">Try the live demo</a>
+            <a class="btn btn-primary" href="#demo">See demo labs</a>
             <a
               class="btn btn-secondary"
               href="https://github.com/passiveintent/core/tree/main/packages/core"
@@ -402,11 +403,7 @@
                   the sale. Keep your margin.
                 </p>
                 <div class="possible-action-row">
-                  <a
-                    class="possible-action"
-                    href="mailto:support@passiveintent.dev?subject=Interactive%20Demo%20Request%20-%20Revenue%20Saver"
-                    >Experience the Rescue</a
-                  >
+                  <a class="possible-action" href="./ecommerce/index.html">Experience the Rescue</a>
                 </div>
               </div>
             </article>
@@ -848,22 +845,19 @@
       <section id="demo" class="section section-demo reveal">
         <div class="demo-shell">
           <div class="demo-copy">
-            <p class="eyebrow eyebrow-demo">Live guided demo</p>
-            <h2>The fastest way to understand the library is to touch the signals.</h2>
+            <p class="eyebrow eyebrow-demo">Demo labs</p>
+            <h2>Open the lab in its own tab. Keep the landing page clean.</h2>
             <p class="section-copy section-copy-demo">
-              Switch between the React and Vanilla implementations, run the same feature lab in
-              both, and inspect how hesitation, entropy, exit intent, conversion, and trajectory
-              signals behave in real time.
+              For hands-on evaluation, send people straight to StackBlitz. The landing page stays
+              fast and focused, and the lab gets the full browser window it needs.
             </p>
             <ul class="demo-points">
-              <li>Large embedded lab with full feature coverage.</li>
-              <li>
-                Guided quick-entry paths for overview, checkout, anomaly detection, and calibration.
-              </li>
-              <li>Standalone StackBlitz links if you want the demos in their own tab.</li>
+              <li>Choose React or Vanilla JS.</li>
+              <li>Open the full lab in StackBlitz, not an embed.</li>
+              <li>Use the landing page for the story and the lab for the proof.</li>
             </ul>
             <div class="demo-meta">
-              <span class="live-pill">&#9679; Live in browser</span>
+              <span class="live-pill">&#9679; Opens in new tab</span>
               <a
                 href="https://github.com/passiveintent/core/tree/main/demo-react"
                 target="_blank"
@@ -879,81 +873,60 @@
             </div>
           </div>
 
-          <div class="demo-theater">
-            <div class="demo-toolbar">
-              <div class="demo-tabs" role="tablist" aria-label="Choose a demo implementation">
-                <button
-                  id="demo-tab-react"
-                  class="demo-tab active"
-                  type="button"
-                  role="tab"
-                  aria-selected="true"
-                  aria-controls="demo-react"
-                  data-target="demo-react"
-                  tabindex="0"
-                >
-                  React
-                </button>
-                <button
-                  id="demo-tab-vanilla"
-                  class="demo-tab"
-                  type="button"
-                  role="tab"
-                  aria-selected="false"
-                  aria-controls="demo-vanilla"
-                  data-target="demo-vanilla"
-                  tabindex="-1"
-                >
-                  Vanilla JS
-                </button>
+          <div class="demo-link-grid">
+            <article class="demo-link-card demo-link-card-react">
+              <div class="demo-link-head">
+                <span class="demo-link-tag">React lab</span>
+                <h3>Open the React experience.</h3>
               </div>
-              <span class="demo-status">Feature lab parity</span>
-            </div>
+              <p>
+                Full feature coverage for hesitation, dwell, exit intent, trajectory, and conversion
+                flows in a dedicated StackBlitz workspace.
+              </p>
+              <div class="demo-link-actions">
+                <a
+                  class="btn btn-primary"
+                  href="https://stackblitz.com/github/passiveintent/core/tree/main/demo-react"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  >Open React lab ↗</a
+                >
+                <a
+                  class="demo-link-source"
+                  href="https://github.com/passiveintent/core/tree/main/demo-react"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  >See React source</a
+                >
+              </div>
+            </article>
 
-            <div
-              id="demo-react"
-              class="demo-panel"
-              role="tabpanel"
-              aria-labelledby="demo-tab-react"
-            >
-              <iframe
-                data-src="https://stackblitz.com/github/passiveintent/core/tree/main/demo-react?embed=1&hideNavigation=1&view=preview"
-                title="PassiveIntent React demo"
-                loading="lazy"
-                sandbox="allow-scripts allow-same-origin"
-                allow="cross-origin-isolated"
-              ></iframe>
-              <a
-                class="demo-open-link"
-                href="https://stackblitz.com/github/passiveintent/core/tree/main/demo-react"
-                target="_blank"
-                rel="noopener noreferrer"
-                >Open React demo ↗</a
-              >
-            </div>
-
-            <div
-              id="demo-vanilla"
-              class="demo-panel"
-              role="tabpanel"
-              aria-labelledby="demo-tab-vanilla"
-              hidden
-            >
-              <iframe
-                data-src="https://stackblitz.com/github/passiveintent/core/tree/main/demo?embed=1&hideNavigation=1&view=preview"
-                title="PassiveIntent Vanilla JS demo"
-                loading="lazy"
-                sandbox="allow-scripts allow-same-origin"
-                allow="cross-origin-isolated"
-              ></iframe>
-              <a
-                class="demo-open-link"
-                href="https://stackblitz.com/github/passiveintent/core/tree/main/demo"
-                target="_blank"
-                rel="noopener noreferrer"
-                >Open Vanilla demo ↗</a
-              >
-            </div>
+            <article class="demo-link-card demo-link-card-vanilla">
+              <div class="demo-link-head">
+                <span class="demo-link-tag">Vanilla JS lab</span>
+                <h3>Open the JavaScript experience.</h3>
+              </div>
+              <p>
+                The same product lab in a plain browser implementation for teams evaluating the core
+                library without React.
+              </p>
+              <div class="demo-link-actions">
+                <a
+                  class="btn btn-secondary"
+                  href="https://stackblitz.com/github/passiveintent/core/tree/main/demo"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  >Open Vanilla lab ↗</a
+                >
+                <a
+                  class="demo-link-source"
+                  href="https://github.com/passiveintent/core/tree/main/demo"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  >See vanilla source</a
+                >
+              </div>
+            </article>
           </div>
         </div>
       </section>
@@ -964,7 +937,7 @@
           <h2>Documentation, demo, source, and licensing in one place.</h2>
           <p class="section-copy">
             Once the product story lands, the shortest path to trust is simple: read the docs,
-            inspect the source, run the demo, and understand the license.
+            inspect the source, open the demo lab, and understand the license.
           </p>
         </div>
         <div class="start-grid" id="start-grid">
@@ -982,12 +955,9 @@
           </article>
           <article class="start-card start-card-compact">
             <span class="article-source">Demo</span>
-            <h3>Live demo</h3>
-            <p>
-              Run the guided lab and see hesitation, entropy, exit intent, and trajectory signals in
-              motion.
-            </p>
-            <a class="start-link" href="#demo">Open demo</a>
+            <h3>Demo labs</h3>
+            <p>Open the React or Vanilla lab in StackBlitz and inspect the signals in motion.</p>
+            <a class="start-link" href="#demo">See demo labs</a>
           </article>
           <article class="start-card start-card-compact">
             <span class="article-source">GitHub</span>
@@ -1258,14 +1228,14 @@
               </article>
               <article class="integration-item">
                 <div class="integration-head">
-                  <h4>Guided demos</h4>
+                  <h4>StackBlitz demo labs</h4>
                   <span class="integration-pill">Live</span>
                 </div>
                 <p>
-                  Two public demos with matching UI shells so teams can evaluate the product quickly
-                  in either implementation style.
+                  Open the React or Vanilla labs in StackBlitz for a detached, full-window product
+                  evaluation.
                 </p>
-                <a class="integration-link" href="#demo">Launch demo</a>
+                <a class="integration-link" href="#demo">See demo labs</a>
               </article>
               <article class="integration-item">
                 <div class="integration-head">

@@ -4285,8 +4285,7 @@ details p {
   .site-footer,
   .footer-links,
   .bridge-panel,
-  .why-frame,
-  .cta-band {
+  .why-frame {
     grid-template-columns: 1fr;
   }
 
@@ -4324,6 +4323,16 @@ details p {
   .hero-actions,
   .hero-stage-notes {
     justify-content: center;
+  }
+
+  .cta-band {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .cta-band .button-group {
+    width: 100%;
+    justify-content: flex-start;
   }
 
   .hero-proof-grid {

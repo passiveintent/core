@@ -177,6 +177,11 @@ function formatCurrency(value) {
   }).format(value);
 }
 
+function parseFiniteMinimum(value, minimum) {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? Math.max(minimum, parsed) : minimum;
+}
+
 function renderNav() {
   const nav = document.getElementById('site-nav');
   if (!nav || nav.children.length > 0) return; // Skip if nav already has pre-rendered content
@@ -294,8 +299,8 @@ function setupCommerceEstimator() {
   }
 
   const syncEstimator = () => {
-    const traffic = Math.max(25000, Number(trafficInput.value || 0));
-    const aov = Math.max(25, Number(aovInput.value || 0));
+    const traffic = parseFiniteMinimum(trafficInput.value, 25000);
+    const aov = parseFiniteMinimum(aovInput.value, 25);
     const profile =
       COMMERCE_ESTIMATOR_PROFILES[industrySelect.value] ?? COMMERCE_ESTIMATOR_PROFILES.apparel;
     const monthlyRescue = Math.round(traffic * aov * profile.factor);
@@ -316,8 +321,8 @@ function setupCommerceEstimator() {
 
     if (!(emailInput instanceof HTMLInputElement) || !emailInput.reportValidity()) return;
 
-    const traffic = Math.max(25000, Number(trafficInput.value || 0));
-    const aov = Math.max(25, Number(aovInput.value || 0));
+    const traffic = parseFiniteMinimum(trafficInput.value, 25000);
+    const aov = parseFiniteMinimum(aovInput.value, 25);
     const profile =
       COMMERCE_ESTIMATOR_PROFILES[industrySelect.value] ?? COMMERCE_ESTIMATOR_PROFILES.apparel;
     const monthlyRescue = Math.round(traffic * aov * profile.factor);

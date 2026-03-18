@@ -12,6 +12,7 @@
 [![CLA assistant](https://cla-assistant.io/readme/badge/passiveintent/core)](https://cla-assistant.io/passiveintent/core)
 [![npm @passiveintent/core](https://img.shields.io/npm/v/@passiveintent/core.svg)](https://www.npmjs.com/package/@passiveintent/core)
 [![Bundle size](https://img.shields.io/bundlephobia/minzip/@passiveintent/core)](https://bundlephobia.com/package/@passiveintent/core)
+![CodeRabbit Pull Request Reviews](https://img.shields.io/coderabbit/prs/github/passiveintent/core)
 [![npm @passiveintent/react](https://img.shields.io/npm/v/@passiveintent/react.svg)](https://www.npmjs.com/package/@passiveintent/react)
 [![Bundle size](https://img.shields.io/bundlephobia/minzip/@passiveintent/react)](https://bundlephobia.com/package/@passiveintent/react)
 [![Open Vanilla JS demo in StackBlitz](https://img.shields.io/badge/StackBlitz-Vanilla%20JS-1389FD?logo=stackblitz&logoColor=white)](https://stackblitz.com/github/passiveintent/core/tree/main/demo)

@@ -1,4 +1,5 @@
 const NAV_ITEMS = [
+  { href: './ecommerce/index.html', label: 'E-Commerce' },
   { href: '#why-different', label: 'Why' },
   { href: '#how', label: 'How' },
   { href: '#demo', label: 'Demo' },
@@ -16,10 +17,10 @@ const START_HERE = [
   },
   {
     label: 'Demo',
-    title: 'Live demo',
+    title: 'Demo labs',
     description:
-      'Run the guided lab and see hesitation, entropy, exit intent, and trajectory signals in motion.',
-    linkLabel: 'Open demo',
+      'Open the React or Vanilla lab in StackBlitz and inspect hesitation, exit intent, and trajectory signals in motion.',
+    linkLabel: 'See demo labs',
     href: '#demo',
   },
   {
@@ -82,12 +83,12 @@ const INTEGRATIONS = {
       href: 'https://www.npmjs.com/package/@passiveintent/core',
     },
     {
-      title: 'Guided demos',
+      title: 'StackBlitz demo labs',
       status: 'Live',
       warm: false,
       description:
-        'Two public demos with matching UI shells so teams can evaluate the product quickly in either implementation style.',
-      linkLabel: 'Launch demo',
+        'Open the React or Vanilla labs in StackBlitz for a detached, full-window product evaluation.',
+      linkLabel: 'See demo labs',
       href: '#demo',
     },
     {
@@ -136,6 +137,45 @@ const ARTICLES = [
     linkLabel: 'HN thread coming soon',
   },
 ];
+
+const COMMERCE_ESTIMATOR_PROFILES = {
+  apparel: {
+    label: 'apparel',
+    factor: 0.00152,
+    friction: 'Sizing hesitation',
+    intervention: 'Return-assurance slide-in',
+  },
+  furniture: {
+    label: 'furniture and home decor',
+    factor: 0.00234,
+    friction: 'Measurement validation',
+    intervention: 'Save-and-price-lock email',
+  },
+  electronics: {
+    label: 'electronics',
+    factor: 0.00174,
+    friction: 'Spec-comparison fatigue',
+    intervention: 'Live expert compare sheet',
+  },
+  beauty: {
+    label: 'beauty',
+    factor: 0.00129,
+    friction: 'Regimen doubt',
+    intervention: 'Bundle-preserving gift prompt',
+  },
+};
+
+function formatWholeNumber(value) {
+  return new Intl.NumberFormat('en-US', { maximumFractionDigits: 0 }).format(value);
+}
+
+function formatCurrency(value) {
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'USD',
+    maximumFractionDigits: 0,
+  }).format(value);
+}
 
 function renderNav() {
   const nav = document.getElementById('site-nav');
@@ -224,6 +264,125 @@ function renderArticles() {
   }).join('');
 }
 
+function setupCommerceEstimator() {
+  const trafficInput = document.getElementById('monthly-traffic');
+  const trafficDisplay = document.getElementById('monthly-traffic-display');
+  const aovInput = document.getElementById('average-order-value');
+  const industrySelect = document.getElementById('industry-select');
+  const output = document.getElementById('commerce-estimator-output');
+  const annualUpside = document.getElementById('annual-upside');
+  const friction = document.getElementById('industry-friction');
+  const intervention = document.getElementById('industry-intervention');
+  const form = document.getElementById('commerce-estimator-form');
+  const emailInput = document.getElementById('commerce-email');
+  const formNote = document.getElementById('commerce-form-note');
+
+  if (
+    !trafficInput ||
+    !trafficDisplay ||
+    !aovInput ||
+    !industrySelect ||
+    !output ||
+    !annualUpside ||
+    !friction ||
+    !intervention ||
+    !form ||
+    !emailInput ||
+    !formNote
+  ) {
+    return;
+  }
+
+  const syncEstimator = () => {
+    const traffic = Math.max(25000, Number(trafficInput.value || 0));
+    const aov = Math.max(25, Number(aovInput.value || 0));
+    const profile =
+      COMMERCE_ESTIMATOR_PROFILES[industrySelect.value] ?? COMMERCE_ESTIMATOR_PROFILES.apparel;
+    const monthlyRescue = Math.round(traffic * aov * profile.factor);
+
+    trafficDisplay.textContent = formatWholeNumber(traffic);
+    output.textContent = `Estimated monthly recovery: ${formatCurrency(monthlyRescue)} in ${profile.label}.`;
+    annualUpside.textContent = formatCurrency(monthlyRescue * 12);
+    friction.textContent = profile.friction;
+    intervention.textContent = profile.intervention;
+  };
+
+  trafficInput.addEventListener('input', syncEstimator);
+  aovInput.addEventListener('input', syncEstimator);
+  industrySelect.addEventListener('change', syncEstimator);
+
+  form.addEventListener('submit', (event) => {
+    event.preventDefault();
+
+    if (!(emailInput instanceof HTMLInputElement) || !emailInput.reportValidity()) return;
+
+    const traffic = Math.max(25000, Number(trafficInput.value || 0));
+    const aov = Math.max(25, Number(aovInput.value || 0));
+    const profile =
+      COMMERCE_ESTIMATOR_PROFILES[industrySelect.value] ?? COMMERCE_ESTIMATOR_PROFILES.apparel;
+    const monthlyRescue = Math.round(traffic * aov * profile.factor);
+    const subject = encodeURIComponent(
+      `PassiveIntent shadow-mode request - ${profile.label} - ${emailInput.value}`,
+    );
+    const body = encodeURIComponent(
+      [
+        `Email: ${emailInput.value}`,
+        `Industry: ${profile.label}`,
+        `Monthly traffic: ${formatWholeNumber(traffic)}`,
+        `AOV: ${formatCurrency(aov)}`,
+        `Estimated monthly rescue: ${formatCurrency(monthlyRescue)}`,
+        '',
+        'Please send the 14-day shadow-mode integration snippet and next steps.',
+      ].join('\n'),
+    );
+
+    formNote.textContent = 'Opening your email client with a prefilled shadow-mode request.';
+    window.location.href = `mailto:support@passiveintent.dev?subject=${subject}&body=${body}`;
+  });
+
+  syncEstimator();
+}
+
+function setupCommercePlaybookTabs() {
+  const tabs = Array.from(document.querySelectorAll('[data-playbook-tab]'));
+  const panels = Array.from(document.querySelectorAll('[data-playbook-panel]'));
+  if (!tabs.length || !panels.length) return;
+
+  const activateTab = (nextTab) => {
+    const nextId = nextTab.dataset.playbookTab;
+    tabs.forEach((tab) => {
+      const active = tab === nextTab;
+      tab.setAttribute('aria-selected', active ? 'true' : 'false');
+      tab.setAttribute('tabindex', active ? '0' : '-1');
+    });
+
+    panels.forEach((panel) => {
+      panel.hidden = panel.dataset.playbookPanel !== nextId;
+    });
+  };
+
+  tabs.forEach((tab, index) => {
+    tab.addEventListener('click', () => activateTab(tab));
+    tab.addEventListener('keydown', (event) => {
+      const keys = ['ArrowRight', 'ArrowLeft', 'Home', 'End'];
+      if (!keys.includes(event.key)) return;
+
+      event.preventDefault();
+      let nextIndex = index;
+      if (event.key === 'ArrowRight') nextIndex = (index + 1) % tabs.length;
+      if (event.key === 'ArrowLeft') nextIndex = (index - 1 + tabs.length) % tabs.length;
+      if (event.key === 'Home') nextIndex = 0;
+      if (event.key === 'End') nextIndex = tabs.length - 1;
+
+      const nextTab = tabs[nextIndex];
+      nextTab.focus();
+      activateTab(nextTab);
+    });
+  });
+
+  activateTab(tabs[0]);
+}
+
 function setupReveal() {
   const revealItems = document.querySelectorAll('.reveal');
   if (!revealItems.length) return;
@@ -247,120 +406,6 @@ function setupReveal() {
   );
 
   revealItems.forEach((item) => observer.observe(item));
-}
-
-function getStackBlitzDemoSupport() {
-  const userAgent = navigator.userAgent || '';
-  const isMobileDevice =
-    window.matchMedia('(max-width: 900px)').matches ||
-    /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(userAgent);
-  const iframe = document.createElement('iframe');
-  const supportsEmbeddedPreview = 'credentialless' in iframe;
-
-  if (isMobileDevice) {
-    return {
-      supported: false,
-      status: 'Open on a laptop in Chrome or Edge',
-      message:
-        'This interactive demo is intentionally desktop-only. Open it on a laptop or desktop in Chrome, Edge, or another Chromium-based browser.',
-    };
-  }
-
-  if (!supportsEmbeddedPreview) {
-    return {
-      supported: false,
-      status: 'Open on desktop Chrome or Edge',
-      message:
-        'Embedded StackBlitz previews are not supported in this browser. Open the full demo on a laptop or desktop in Chrome, Edge, or another Chromium-based browser.',
-    };
-  }
-
-  return {
-    supported: true,
-    status: 'Feature lab parity',
-    message: '',
-  };
-}
-
-function setupDemoTabs() {
-  const demoTabs = Array.from(document.querySelectorAll('.demo-tab'));
-  const demoPanels = Array.from(document.querySelectorAll('.demo-panel'));
-  if (!demoTabs.length || !demoPanels.length) return;
-
-  const demoSupport = getStackBlitzDemoSupport();
-  if (!demoSupport.supported) {
-    const status = document.querySelector('.demo-status');
-    if (status) status.textContent = demoSupport.status;
-
-    demoPanels.forEach((panel) => {
-      panel.classList.add('demo-panel-fallback');
-
-      const iframe = panel.querySelector('iframe');
-      if (iframe) {
-        iframe.hidden = true;
-        iframe.setAttribute('aria-hidden', 'true');
-      }
-
-      if (!panel.querySelector('.demo-fallback')) {
-        const fallback = document.createElement('p');
-        fallback.className = 'demo-fallback';
-        fallback.textContent = demoSupport.message;
-
-        const link = panel.querySelector('.demo-open-link');
-        panel.insertBefore(fallback, link ?? null);
-      }
-    });
-  }
-
-  const activateTab = (nextTab) => {
-    const targetId = nextTab.dataset.target;
-    demoTabs.forEach((tab) => {
-      const active = tab === nextTab;
-      tab.classList.toggle('active', active);
-      tab.setAttribute('aria-selected', active ? 'true' : 'false');
-      tab.setAttribute('tabindex', active ? '0' : '-1');
-    });
-
-    demoPanels.forEach((panel) => {
-      const active = panel.id === targetId;
-      panel.hidden = !active;
-      panel.setAttribute('aria-hidden', active ? 'false' : 'true');
-
-      // Lazy-load iframe on first tab activation
-      if (active && demoSupport.supported) {
-        const iframe = panel.querySelector('iframe');
-        if (iframe && !iframe.src && iframe.dataset.src) {
-          iframe.src = iframe.dataset.src;
-        }
-      }
-    });
-  };
-
-  demoTabs.forEach((tab, index) => {
-    tab.addEventListener('click', () => activateTab(tab));
-    tab.addEventListener('keydown', (event) => {
-      const keys = ['ArrowRight', 'ArrowLeft', 'Home', 'End'];
-      if (!keys.includes(event.key)) return;
-
-      event.preventDefault();
-      let nextIndex = index;
-      if (event.key === 'ArrowRight') nextIndex = (index + 1) % demoTabs.length;
-      if (event.key === 'ArrowLeft') nextIndex = (index - 1 + demoTabs.length) % demoTabs.length;
-      if (event.key === 'Home') nextIndex = 0;
-      if (event.key === 'End') nextIndex = demoTabs.length - 1;
-
-      const nextTab = demoTabs[nextIndex];
-      nextTab.focus();
-      activateTab(nextTab);
-    });
-  });
-
-  const initialTab =
-    demoTabs.find(
-      (tab) => tab.classList.contains('active') || tab.getAttribute('aria-selected') === 'true',
-    ) ?? demoTabs[0];
-
-  activateTab(initialTab);
 }
 
 function setupBackToTop() {
@@ -392,7 +437,8 @@ renderStartHere();
 renderProducts();
 renderIntegrations();
 renderArticles();
+setupCommerceEstimator();
+setupCommercePlaybookTabs();
 setupReveal();
-setupDemoTabs();
 setupBackToTop();
 setYear();

@@ -1,0 +1,936 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>PassiveIntent for E-Commerce | Recover Cart Revenue in &lt;2ms</title>
+    <meta
+      name="description"
+      content="Recover cart revenue in under 2ms. PassiveIntent runs entirely in the browser and catches sizing doubt, price shock, and comparison fatigue before the shopper leaves."
+    />
+    <meta
+      name="robots"
+      content="index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1"
+    />
+    <link rel="canonical" href="https://passiveintent.dev/ecommerce" />
+    <meta name="author" content="PassiveIntent" />
+    <meta name="application-name" content="PassiveIntent for E-Commerce" />
+    <meta
+      property="og:title"
+      content="PassiveIntent for E-Commerce | Recover Cart Revenue in &lt;2ms"
+    />
+    <meta
+      property="og:description"
+      content="Zero-egress intent detection for high-AOV DTC brands. Catch sizing doubt, price shock, and comparison fatigue before the shopper closes the tab."
+    />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://passiveintent.dev/ecommerce" />
+    <meta property="og:site_name" content="PassiveIntent" />
+    <meta property="og:locale" content="en_US" />
+    <meta property="og:image" content="https://passiveintent.dev/social-preview.png" />
+    <meta property="og:image:url" content="https://passiveintent.dev/social-preview.png" />
+    <meta property="og:image:secure_url" content="https://passiveintent.dev/social-preview.png" />
+    <meta property="og:image:type" content="image/png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta
+      property="og:image:alt"
+      content="PassiveIntent for E-Commerce - zero-egress cart recovery intent engine"
+    />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:url" content="https://passiveintent.dev/ecommerce" />
+    <meta
+      name="twitter:title"
+      content="PassiveIntent for E-Commerce | Recover Cart Revenue in &lt;2ms"
+    />
+    <meta
+      name="twitter:description"
+      content="A privacy-first, zero-egress eCommerce intent engine that acts before the cart is lost."
+    />
+    <meta name="twitter:image" content="https://passiveintent.dev/social-preview.png" />
+    <meta
+      name="twitter:image:alt"
+      content="PassiveIntent for E-Commerce - zero-egress cart recovery intent engine"
+    />
+    <meta name="theme-color" content="#f6f3ee" />
+    <link rel="icon" type="image/svg+xml" href="../favicon.svg" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Manrope:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../styles.css" />
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@graph": [
+          {
+            "@type": "Organization",
+            "@id": "https://passiveintent.dev/#organization",
+            "name": "PassiveIntent",
+            "url": "https://passiveintent.dev/",
+            "logo": "https://passiveintent.dev/favicon.svg",
+            "email": "support@passiveintent.dev"
+          },
+          {
+            "@type": "WebPage",
+            "@id": "https://passiveintent.dev/ecommerce#webpage",
+            "url": "https://passiveintent.dev/ecommerce",
+            "name": "PassiveIntent for E-Commerce",
+            "description": "Zero-egress eCommerce intent detection for cart recovery, sizing hesitation, price shock, and comparison fatigue.",
+            "about": {
+              "@id": "https://passiveintent.dev/ecommerce#solution"
+            }
+          },
+          {
+            "@type": "SoftwareApplication",
+            "@id": "https://passiveintent.dev/ecommerce#solution",
+            "name": "PassiveIntent for E-Commerce",
+            "applicationCategory": "BusinessApplication",
+            "operatingSystem": "Web Browser",
+            "description": "A zero-egress intent engine that runs entirely in the browser to predict shopping hesitation and trigger localized interventions in under 2 milliseconds.",
+            "publisher": {
+              "@id": "https://passiveintent.dev/#organization"
+            },
+            "offers": {
+              "@type": "Offer",
+              "price": "0",
+              "priceCurrency": "USD",
+              "availability": "https://schema.org/InStock",
+              "url": "https://passiveintent.dev/ecommerce#shadow-mode"
+            }
+          },
+          {
+            "@type": "FAQPage",
+            "@id": "https://passiveintent.dev/ecommerce#faq",
+            "mainEntity": [
+              {
+                "@type": "Question",
+                "name": "Does PassiveIntent require cookie banners to work?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "No. PassiveIntent calculates intent locally in the browser without exporting behavioral payloads to PassiveIntent servers."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "Will Shadow Mode trigger popups on our live store?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "No. Shadow Mode runs silently for 14 days, collecting only on-device intent calculations and producing an audit of missed recovery opportunities."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "Can PassiveIntent run on Shopify, BigCommerce, and custom headless storefronts?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "Yes. The installation path is an agnostic vanilla JavaScript snippet that works across Shopify, BigCommerce, and custom headless builds."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "What makes PassiveIntent different from Hotjar or Yieldify?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "Hotjar-style tools replay sessions after the fact, while Yieldify-style tools depend on server latency. PassiveIntent predicts hesitation locally in under 2 milliseconds and keeps the math on the shopper's device."
+                }
+              }
+            ]
+          }
+        ]
+      }
+    </script>
+  </head>
+  <body class="commerce-page">
+    <div class="page-orb page-orb-a" aria-hidden="true"></div>
+    <div class="page-orb page-orb-b" aria-hidden="true"></div>
+
+    <header class="site-header" id="site-header">
+      <div class="header-inner">
+        <a class="brand" href="../index.html" aria-label="PassiveIntent home">
+          <span class="brand-mark" aria-hidden="true"></span>
+          <span class="brand-copy">
+            <strong>PassiveIntent</strong>
+            <span>Behavioral Intent Engine</span>
+          </span>
+        </a>
+        <nav class="site-nav" aria-label="E-commerce page">
+          <a href="../index.html">Home</a>
+          <a href="#calculator">Calculator</a>
+          <a href="#playbooks">Playbooks</a>
+          <a href="#polygraph">Polygraph</a>
+          <a href="#shadow-mode">Offer</a>
+        </nav>
+        <a
+          class="header-cta"
+          href="mailto:support@passiveintent.dev?subject=PassiveIntent%20Revenue%20Rescue%20Test"
+          >Start the 14-Day Revenue Rescue Test</a
+        >
+      </div>
+    </header>
+
+    <main id="top">
+      <section class="section hero commerce-hero reveal">
+        <div class="hero-copy commerce-hero-copy">
+          <div class="hero-kicker-row">
+            <p class="eyebrow">PassiveIntent for E-Commerce</p>
+            <span class="hero-inline-proof">Zero-egress / 100% client-side</span>
+          </div>
+          <h1>See the hesitation. Save the sale. In &lt;2ms.</h1>
+          <p class="hero-text">
+            PassiveIntent reads sizing doubt, price shock, and comparison fatigue in the browser,
+            then responds before the shopper leaves. No replays. No exported behavior.
+          </p>
+          <div class="hero-actions">
+            <a class="btn btn-primary" href="#calculator">Start the 14-Day Revenue Rescue Test</a>
+            <a class="btn btn-secondary" href="#polygraph">See How the Math Works</a>
+          </div>
+          <div class="commerce-proof-bar" aria-label="Proof points">
+            <article class="commerce-proof-pill">
+              <span class="commerce-proof-label">Latency</span>
+              <strong>&lt;2.0ms execution</strong>
+            </article>
+            <article class="commerce-proof-pill">
+              <span class="commerce-proof-label">Payload</span>
+              <strong>11.4 kB</strong>
+            </article>
+            <article class="commerce-proof-pill">
+              <span class="commerce-proof-label">Compliance</span>
+              <strong>Zero-Egress / 100% client-side</strong>
+            </article>
+            <article class="commerce-proof-pill">
+              <span class="commerce-proof-label">Platform</span>
+              <strong>Shopify, BigCommerce, custom headless</strong>
+            </article>
+          </div>
+        </div>
+
+        <div class="hero-stage commerce-stage">
+          <div class="commerce-stage-shell">
+            <div class="commerce-stage-grid">
+              <article class="commerce-stage-pane commerce-stage-pane-cart">
+                <div class="commerce-stage-pane-top">
+                  <span class="commerce-stage-tag">Live storefront</span>
+                  <span class="commerce-stage-badge">Sizing hesitation detected</span>
+                </div>
+                <div class="commerce-checkout-card">
+                  <div class="commerce-browser-bar">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                    <strong>Cart / Checkout</strong>
+                  </div>
+                  <div class="commerce-product-card">
+                    <div>
+                      <span class="story-tag">High-AOV footwear</span>
+                      <h2>The Alpine Chelsea Boot</h2>
+                    </div>
+                    <div class="commerce-product-price">
+                      <span>$198</span>
+                      <strong>$198.00</strong>
+                    </div>
+                  </div>
+                  <div class="commerce-size-grid" aria-hidden="true">
+                    <span>8</span>
+                    <span>8.5</span>
+                    <span class="is-active">9</span>
+                    <span class="is-hovered">10</span>
+                  </div>
+                  <div class="commerce-cart-summary">
+                    <div class="commerce-cart-row">
+                      <span>Subtotal</span>
+                      <strong>$198.00</strong>
+                    </div>
+                    <div class="commerce-cart-row">
+                      <span>Shipping</span>
+                      <strong>$14.00</strong>
+                    </div>
+                    <div class="commerce-cart-row commerce-cart-row-strong">
+                      <span>Total</span>
+                      <strong>$212.00</strong>
+                    </div>
+                  </div>
+                  <div class="commerce-stage-cursor" aria-hidden="true"></div>
+                  <div class="commerce-stage-offer">
+                    <span class="possible-offer-kicker">Millisecond intervention</span>
+                    <strong
+                      >Unsure about the fit? Free returns if you order in the next 10
+                      minutes.</strong
+                    >
+                    <span class="possible-offer-note"
+                      >Rendered locally before the cursor reaches the tab bar.</span
+                    >
+                  </div>
+                </div>
+              </article>
+
+              <article class="commerce-stage-pane commerce-stage-pane-console">
+                <div class="commerce-stage-pane-top">
+                  <span class="commerce-stage-tag">Mathematical polygraph</span>
+                  <span class="commerce-stage-badge commerce-stage-badge-success"
+                    >Propensity update live</span
+                  >
+                </div>
+                <div class="commerce-console-card">
+                  <div class="commerce-console-header">
+                    <strong>Intent Console</strong>
+                    <span>On-device only</span>
+                  </div>
+                  <div class="commerce-score-board">
+                    <div class="commerce-score-card">
+                      <span>Propensity to convert</span>
+                      <strong>34%</strong>
+                      <small>Offer trigger armed</small>
+                    </div>
+                    <div class="commerce-score-card commerce-score-card-warm">
+                      <span>Kinematic variance</span>
+                      <strong>+0.42 sigma</strong>
+                      <small>Sizing anxiety pattern</small>
+                    </div>
+                  </div>
+                  <div class="commerce-console-math">
+                    <div class="commerce-console-math-row">
+                      <span>Markov chain</span>
+                      <strong>size-9 -&gt; size-10 -&gt; tab edge</strong>
+                    </div>
+                    <div class="commerce-console-math-row">
+                      <span>Welford variance</span>
+                      <strong>hover jitter over fit options</strong>
+                    </div>
+                    <div class="commerce-console-math-row">
+                      <span>Intervention</span>
+                      <strong>return-assurance slide-in</strong>
+                    </div>
+                  </div>
+                </div>
+              </article>
+            </div>
+            <div class="commerce-stage-notes">
+              <span>Sizing hesitation</span>
+              <span>Price shock</span>
+              <span>Comparison fatigue</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="calculator" class="section reveal">
+        <div class="section-head section-head-wide">
+          <p class="eyebrow">Bleeding margin calculator</p>
+          <h2>How much revenue is latency costing you?</h2>
+          <p class="section-copy">
+            Set your traffic, AOV, and category. We estimate monthly recovery from fast, on-device
+            intent detection.
+          </p>
+        </div>
+
+        <div class="commerce-estimator-shell">
+          <div class="commerce-estimator-panel commerce-estimator-controls">
+            <div class="commerce-field-group">
+              <label class="commerce-field-label" for="monthly-traffic">Monthly traffic</label>
+              <div class="commerce-range-header">
+                <span>Sessions per month</span>
+                <strong id="monthly-traffic-display">250,000</strong>
+              </div>
+              <input
+                id="monthly-traffic"
+                class="commerce-range"
+                type="range"
+                min="25000"
+                max="1000000"
+                step="25000"
+                value="250000"
+              />
+            </div>
+
+            <div class="commerce-field-group">
+              <label class="commerce-field-label" for="average-order-value"
+                >Average order value (AOV)</label
+              >
+              <input
+                id="average-order-value"
+                class="commerce-input"
+                type="number"
+                min="25"
+                step="1"
+                value="180"
+                inputmode="decimal"
+              />
+            </div>
+
+            <div class="commerce-field-group">
+              <label class="commerce-field-label" for="industry-select">Industry</label>
+              <select id="industry-select" class="commerce-select">
+                <option value="apparel">Apparel, Footwear &amp; Denim</option>
+                <option value="furniture">Furniture &amp; Home Decor</option>
+                <option value="electronics">Electronics &amp; Gadgets</option>
+                <option value="beauty">Beauty &amp; Skincare</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="commerce-estimator-panel commerce-estimator-result">
+            <p class="eyebrow eyebrow-muted">Projected rescue</p>
+            <p class="commerce-estimator-output" id="commerce-estimator-output" aria-live="polite">
+              Estimated monthly recovery: $68,400 in apparel.
+            </p>
+            <div class="commerce-estimator-stat-grid">
+              <article class="commerce-estimator-stat">
+                <span>Estimated annual upside</span>
+                <strong id="annual-upside">$820,800</strong>
+              </article>
+              <article class="commerce-estimator-stat">
+                <span>Most likely friction</span>
+                <strong id="industry-friction">Sizing hesitation</strong>
+              </article>
+              <article class="commerce-estimator-stat">
+                <span>Best intervention path</span>
+                <strong id="industry-intervention">Return-assurance slide-in</strong>
+              </article>
+            </div>
+
+            <form class="commerce-lead-form" id="commerce-estimator-form" novalidate>
+              <label class="commerce-field-label" for="commerce-email"
+                >Enter your email to unlock your 14-day shadow-mode plan.</label
+              >
+              <div class="commerce-lead-row">
+                <input
+                  id="commerce-email"
+                  class="commerce-input"
+                  type="email"
+                  placeholder="you@brand.com"
+                  autocomplete="email"
+                  required
+                />
+                <button class="btn btn-primary" type="submit">Unlock my shadow-mode test</button>
+              </div>
+              <p class="commerce-form-note" id="commerce-form-note">
+                We’ll prefill the request with your category and projected recovery.
+              </p>
+            </form>
+          </div>
+        </div>
+      </section>
+
+      <section id="playbooks" class="section reveal">
+        <div class="possible-shell commerce-playbook-shell">
+          <div class="possible-head commerce-playbook-head">
+            <div>
+              <p class="eyebrow possible-eyebrow">Vertical playbooks</p>
+              <h2>We don’t just see hesitation. We know what caused it.</h2>
+            </div>
+            <p class="possible-copy">
+              Different categories stall for different reasons. PassiveIntent answers the right one,
+              instantly.
+            </p>
+          </div>
+
+          <div
+            class="commerce-tab-list"
+            id="commerce-tab-list"
+            role="tablist"
+            aria-label="E-commerce playbooks"
+          >
+            <button
+              class="commerce-tab"
+              type="button"
+              role="tab"
+              aria-selected="true"
+              aria-controls="playbook-apparel"
+              id="tab-apparel"
+              data-playbook-tab="apparel"
+            >
+              Apparel
+            </button>
+            <button
+              class="commerce-tab"
+              type="button"
+              role="tab"
+              aria-selected="false"
+              aria-controls="playbook-furniture"
+              id="tab-furniture"
+              data-playbook-tab="furniture"
+              tabindex="-1"
+            >
+              Furniture
+            </button>
+            <button
+              class="commerce-tab"
+              type="button"
+              role="tab"
+              aria-selected="false"
+              aria-controls="playbook-electronics"
+              id="tab-electronics"
+              data-playbook-tab="electronics"
+              tabindex="-1"
+            >
+              Electronics
+            </button>
+            <button
+              class="commerce-tab"
+              type="button"
+              role="tab"
+              aria-selected="false"
+              aria-controls="playbook-beauty"
+              id="tab-beauty"
+              data-playbook-tab="beauty"
+              tabindex="-1"
+            >
+              Beauty
+            </button>
+          </div>
+
+          <div class="commerce-playbook-panels">
+            <article
+              class="commerce-playbook-panel"
+              id="playbook-apparel"
+              role="tabpanel"
+              aria-labelledby="tab-apparel"
+              data-playbook-panel="apparel"
+            >
+              <div class="commerce-playbook-copy">
+                <span class="story-tag">Apparel, Footwear &amp; Denim</span>
+                <h3>The Sizing Paralyze</h3>
+                <p>
+                  A $200 boot is in the cart. The cursor bounces between Size 9 and 10. That is not
+                  indecision. It is fit risk.
+                </p>
+                <div class="commerce-playbook-stack">
+                  <article class="commerce-playbook-note">
+                    <span>Problem</span>
+                    <strong>Stuck between sizes.</strong>
+                  </article>
+                  <article class="commerce-playbook-note">
+                    <span>Polygraph solution</span>
+                    <strong>Detects fit anxiety.</strong>
+                  </article>
+                  <article class="commerce-playbook-note">
+                    <span>Intervention</span>
+                    <strong>Offer free returns now.</strong>
+                  </article>
+                </div>
+                <div class="commerce-playbook-signals">
+                  <span>Fit doubt</span>
+                  <span>Hover jitter</span>
+                  <span>Return assurance</span>
+                </div>
+              </div>
+              <div class="commerce-playbook-visual">
+                <div class="commerce-playbook-screen">
+                  <span class="commerce-playbook-screen-label">Sizing anxiety pattern</span>
+                  <div class="commerce-playbook-visual-grid">
+                    <span>9</span>
+                    <span class="is-live">9.5</span>
+                    <span>10</span>
+                    <span class="is-live-alt">10.5</span>
+                  </div>
+                  <div class="commerce-playbook-toast">
+                    <span class="possible-offer-kicker">Intervention</span>
+                    <strong>Unsure about the fit? Free returns if you order today.</strong>
+                  </div>
+                </div>
+              </div>
+            </article>
+
+            <article
+              class="commerce-playbook-panel"
+              id="playbook-furniture"
+              role="tabpanel"
+              aria-labelledby="tab-furniture"
+              data-playbook-panel="furniture"
+              hidden
+            >
+              <div class="commerce-playbook-copy">
+                <span class="story-tag">Premium Furniture &amp; Home Decor</span>
+                <h3>The “Will It Fit?” Pause</h3>
+                <p>
+                  A furniture sale is often lost the moment the shopper leaves to measure the room.
+                  That pause appears before exit intent does.
+                </p>
+                <div class="commerce-playbook-stack">
+                  <article class="commerce-playbook-note">
+                    <span>Problem</span>
+                    <strong>Leaves to measure.</strong>
+                  </article>
+                  <article class="commerce-playbook-note">
+                    <span>Polygraph solution</span>
+                    <strong>Detects room-fit drift.</strong>
+                  </article>
+                  <article class="commerce-playbook-note">
+                    <span>Intervention</span>
+                    <strong>Save it and lock today’s price.</strong>
+                  </article>
+                </div>
+                <div class="commerce-playbook-signals">
+                  <span>Trajectory drift</span>
+                  <span>Measurement pause</span>
+                  <span>Price lock</span>
+                </div>
+              </div>
+              <div class="commerce-playbook-visual">
+                <div class="commerce-playbook-screen">
+                  <span class="commerce-playbook-screen-label">Room-fit uncertainty</span>
+                  <div class="commerce-dimension-card">
+                    <div>
+                      <span>Sectional width</span>
+                      <strong>96 in</strong>
+                    </div>
+                    <div>
+                      <span>Doorway clearance</span>
+                      <strong>34 in</strong>
+                    </div>
+                  </div>
+                  <div class="commerce-playbook-toast">
+                    <span class="possible-offer-kicker">Intervention</span>
+                    <strong>Need to measure? Email this setup and keep today’s price.</strong>
+                  </div>
+                </div>
+              </div>
+            </article>
+
+            <article
+              class="commerce-playbook-panel"
+              id="playbook-electronics"
+              role="tabpanel"
+              aria-labelledby="tab-electronics"
+              data-playbook-panel="electronics"
+              hidden
+            >
+              <div class="commerce-playbook-copy">
+                <span class="story-tag">Electronics &amp; Gadgets</span>
+                <h3>Spec-Comparison Fatigue</h3>
+                <p>
+                  Pro versus Max should close the sale. Instead it can overload it. Long table dwell
+                  and rapid comparison scrolling reveal the stall.
+                </p>
+                <div class="commerce-playbook-stack">
+                  <article class="commerce-playbook-note">
+                    <span>Problem</span>
+                    <strong>Too many specs. Too much doubt.</strong>
+                  </article>
+                  <article class="commerce-playbook-note">
+                    <span>Polygraph solution</span>
+                    <strong>Detects comparison fatigue.</strong>
+                  </article>
+                  <article class="commerce-playbook-note">
+                    <span>Intervention</span>
+                    <strong>Offer live expert help.</strong>
+                  </article>
+                </div>
+                <div class="commerce-playbook-signals">
+                  <span>Spec dwell</span>
+                  <span>Rapid scroll</span>
+                  <span>Live expert handoff</span>
+                </div>
+              </div>
+              <div class="commerce-playbook-visual">
+                <div class="commerce-playbook-screen">
+                  <span class="commerce-playbook-screen-label">Comparison overload</span>
+                  <div class="commerce-spec-table">
+                    <div><span>Battery</span><strong>18h / 24h</strong></div>
+                    <div><span>Camera</span><strong>48MP / 64MP</strong></div>
+                    <div><span>Weight</span><strong>191g / 208g</strong></div>
+                  </div>
+                  <div class="commerce-playbook-toast">
+                    <span class="possible-offer-kicker">Intervention</span>
+                    <strong>Compare specs live with a product expert right now.</strong>
+                  </div>
+                </div>
+              </div>
+            </article>
+
+            <article
+              class="commerce-playbook-panel"
+              id="playbook-beauty"
+              role="tabpanel"
+              aria-labelledby="tab-beauty"
+              data-playbook-panel="beauty"
+              hidden
+            >
+              <div class="commerce-playbook-copy">
+                <span class="story-tag">Beauty &amp; Skincare</span>
+                <h3>The Regimen Doubt</h3>
+                <p>
+                  They want the hero serum. They hesitate on the full routine. Bundle doubt shows up
+                  as jitter over the remove control.
+                </p>
+                <div class="commerce-playbook-stack">
+                  <article class="commerce-playbook-note">
+                    <span>Problem</span>
+                    <strong>The bundle is breaking.</strong>
+                  </article>
+                  <article class="commerce-playbook-note">
+                    <span>Polygraph solution</span>
+                    <strong>Detects regimen doubt.</strong>
+                  </article>
+                  <article class="commerce-playbook-note">
+                    <span>Intervention</span>
+                    <strong>Add a free travel cleanser.</strong>
+                  </article>
+                </div>
+                <div class="commerce-playbook-signals">
+                  <span>Bundle fragility</span>
+                  <span>Remove-button variance</span>
+                  <span>Gift incentive</span>
+                </div>
+              </div>
+              <div class="commerce-playbook-visual">
+                <div class="commerce-playbook-screen">
+                  <span class="commerce-playbook-screen-label">Bundle doubt</span>
+                  <div class="commerce-bundle-stack">
+                    <div><span>Vitamin C Serum</span><strong>Keep</strong></div>
+                    <div><span>Barrier Cream</span><strong>Keep</strong></div>
+                    <div><span>Travel Cleanser</span><strong>Free</strong></div>
+                  </div>
+                  <div class="commerce-playbook-toast">
+                    <span class="possible-offer-kicker">Intervention</span>
+                    <strong>Keep the bundle together and we’ll add a free travel cleanser.</strong>
+                  </div>
+                </div>
+              </div>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section id="polygraph" class="section reveal">
+        <div class="section-head section-head-wide">
+          <p class="eyebrow">The anti-creep moat</p>
+          <h2>The Polygraph Beats the Security Camera.</h2>
+          <p class="section-copy">
+            Most cart tools do one of two things: replay what happened later, or wait on a server
+            before acting. Both are too late.
+          </p>
+        </div>
+
+        <div class="commerce-compare-grid">
+          <article class="commerce-compare-card commerce-compare-card-legacy">
+            <span class="commerce-compare-eyebrow">Legacy stack</span>
+            <h3>Security camera architecture</h3>
+            <p>
+              Session replay explains the loss after the sale is gone. Server-triggered popups still
+              pay a network penalty before they move.
+            </p>
+            <ul class="commerce-list">
+              <li>Replays the miss after it happens.</li>
+              <li>Sends behavior off-device.</li>
+              <li>Waits on server round-trips.</li>
+              <li>Adds legal and performance drag.</li>
+            </ul>
+          </article>
+
+          <article class="commerce-compare-card commerce-compare-card-modern">
+            <span class="commerce-compare-eyebrow">PassiveIntent</span>
+            <h3>Mathematical polygraph</h3>
+            <p>
+              PassiveIntent uses deterministic, on-device math to score intent while the decision is
+              still open.
+            </p>
+            <div class="commerce-advantage-strip">
+              <span>On-device</span>
+              <span>&lt;2ms</span>
+              <span>Zero-egress</span>
+            </div>
+            <div class="commerce-live-card">
+              <div class="commerce-live-head">
+                <span class="commerce-math-label">PassiveIntent in action</span>
+                <strong>Cart rescue sequence</strong>
+              </div>
+              <div class="commerce-live-row">
+                <span>Signal</span>
+                <strong>size hesitation spike</strong>
+              </div>
+              <div class="commerce-live-row">
+                <span>Score</span>
+                <strong>34% propensity</strong>
+              </div>
+              <div class="commerce-live-row">
+                <span>Response</span>
+                <strong>free returns prompt</strong>
+              </div>
+            </div>
+            <div class="commerce-math-card">
+              <span class="commerce-math-label">Engine logic</span>
+              <code>journey state + motion variance - latency penalty = rescue window</code>
+            </div>
+            <ul class="commerce-list">
+              <li>Reads intent on-device.</li>
+              <li>Keeps behavior local.</li>
+              <li>Fires before the close completes.</li>
+              <li>Cuts legal and performance drag.</li>
+            </ul>
+          </article>
+        </div>
+
+        <div class="commerce-anti-creep-grid">
+          <article class="commerce-anti-creep-card">
+            <span class="article-source">No Session Replays</span>
+            <h3>Surveillance is an autopsy.</h3>
+            <p>Watching the miss is not the same as preventing it.</p>
+          </article>
+          <article class="commerce-anti-creep-card">
+            <span class="article-source">No PII Export</span>
+            <h3>The model never leaves the shopper’s CPU.</h3>
+            <p>The signal stays local. No background sensors. No exported behavior.</p>
+          </article>
+          <article class="commerce-anti-creep-card">
+            <span class="article-source">Zero-Egress Architecture</span>
+            <h3>Bypass the legal-team vendor backlog.</h3>
+            <p>The cleanest security review is the one with nothing new to export.</p>
+          </article>
+        </div>
+      </section>
+
+      <section class="section reveal">
+        <div class="section-head section-head-wide">
+          <p class="eyebrow">Shopify positioning</p>
+          <h2>Cleaner for legal. Faster for growth. Lighter for engineering.</h2>
+          <p class="section-copy">Not a faster popup. A cleaner category.</p>
+        </div>
+
+        <div class="commerce-positioning-grid">
+          <article class="commerce-positioning-card">
+            <span class="article-source">Zero-liability hook</span>
+            <h3>Stop paying for predictive AI that acts like spyware.</h3>
+            <p>No banner. No sensors. No PII export.</p>
+          </article>
+          <article class="commerce-positioning-card">
+            <span class="article-source">Sub-millisecond hook</span>
+            <h3>Latency kills conversions.</h3>
+            <p>No round-trip. Just instant math in the browser.</p>
+          </article>
+          <article class="commerce-positioning-card">
+            <span class="article-source">Invisible-footprint hook</span>
+            <h3>An 11kB script your storefront team will not hate.</h3>
+            <p>11kB. No heavy pixels. No DOM churn.</p>
+          </article>
+        </div>
+
+        <div class="commerce-takedown-shell">
+          <div class="section-head commerce-takedown-head">
+            <p class="eyebrow">Competitor takedown</p>
+            <h2>Why the old category suddenly looks old.</h2>
+          </div>
+          <div class="commerce-takedown-grid">
+            <article class="commerce-takedown-card">
+              <span class="commerce-quote-label">Hotjar / Crazy Egg / FullStory</span>
+              <h3>“Watch how users interact with your site.”</h3>
+              <p>Watching the miss is not the same as saving the sale.</p>
+            </article>
+            <article class="commerce-takedown-card">
+              <span class="commerce-quote-label">Yieldify / Dynamic Yield / legacy popups</span>
+              <h3>“Trigger offers when users try to leave.”</h3>
+              <p>If the server answers first, the moment is already slipping away.</p>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section id="shadow-mode" class="section reveal">
+        <div class="cta-band commerce-shadow-band">
+          <div>
+            <p class="eyebrow">Shadow mode offer</p>
+            <h2>Prove it on your traffic. Free.</h2>
+            <p class="section-copy">
+              Install the 11kB script in Shadow Mode. It stays silent for 14 days, then returns a
+              clean audit of missed revenue and recoverable intent.
+            </p>
+            <p class="commerce-shadow-subtext">
+              Vanilla JS snippet. Shopify, BigCommerce, or headless.
+            </p>
+          </div>
+          <div class="cta-actions commerce-shadow-actions">
+            <a
+              class="btn btn-primary"
+              href="mailto:support@passiveintent.dev?subject=PassiveIntent%20Shadow%20Mode%20Installation%20Snippet"
+              >Get the Snippet</a
+            >
+            <a
+              class="btn btn-secondary"
+              href="mailto:support@passiveintent.dev?subject=PassiveIntent%2014-Day%20Revenue%20Rescue%20Test"
+              >Book the 14-Day Test</a
+            >
+          </div>
+        </div>
+      </section>
+
+      <section id="faq" class="section reveal">
+        <div class="section-head">
+          <p class="eyebrow">FAQ</p>
+          <h2>What eCommerce teams ask before they install.</h2>
+        </div>
+        <div class="faq-list">
+          <details>
+            <summary>Does PassiveIntent require cookie banners to work?</summary>
+            <p>
+              No. PassiveIntent runs locally in the browser and does not export behavioral payloads
+              to our servers.
+            </p>
+          </details>
+          <details>
+            <summary>Will Shadow Mode trigger popups on our storefront?</summary>
+            <p>
+              No. Shadow Mode is silent. It observes the same on-device math for 14 days and returns
+              an audit before you decide whether to activate interventions.
+            </p>
+          </details>
+          <details>
+            <summary>Can this work on Shopify, BigCommerce, or a custom headless stack?</summary>
+            <p>
+              Yes. The integration path is an agnostic JavaScript snippet designed to work with
+              standard storefront platforms and custom frontends.
+            </p>
+          </details>
+          <details>
+            <summary>Why is this different from Hotjar or Yieldify?</summary>
+            <p>
+              Hotjar-style tools tell you what happened after the loss. Yieldify-style tools still
+              pay a server-latency penalty. PassiveIntent predicts hesitation locally in under 2
+              milliseconds and reacts while the session is still recoverable.
+            </p>
+          </details>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer reveal">
+      <div class="footer-brand">
+        <strong>PassiveIntent</strong>
+        <p>Privacy-first intent engine for conversion, product, and CX teams.</p>
+      </div>
+      <div class="footer-links">
+        <div class="footer-group">
+          <span class="footer-title">Explore</span>
+          <a href="../index.html">Home</a>
+          <a href="../privacy.html">Privacy Policy</a>
+          <a href="../terms.html">Terms of Service</a>
+        </div>
+        <div class="footer-group">
+          <span class="footer-title">Open</span>
+          <a href="https://github.com/passiveintent/core" target="_blank" rel="noopener noreferrer"
+            >Source on GitHub</a
+          >
+          <a
+            href="https://github.com/passiveintent/core/blob/main/CALIBRATION_GUIDE.md"
+            target="_blank"
+            rel="noopener noreferrer"
+            >Calibration Guide</a
+          >
+        </div>
+        <div class="footer-group">
+          <span class="footer-title">Contact</span>
+          <a href="mailto:support@passiveintent.dev">support@passiveintent.dev</a>
+          <span class="footer-copy">© <span id="year"></span> PassiveIntent</span>
+        </div>
+      </div>
+    </footer>
+
+    <button class="back-to-top" id="back-to-top" type="button" aria-label="Back to top" hidden>
+      ↑
+    </button>
+
+    <script src="../script.js"></script>
+  </body>
+</html>

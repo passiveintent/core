@@ -6,6 +6,7 @@ import React, { useEffect, useState } from 'react';
 import { usePassiveIntent } from '@passiveintent/react';
 import { timerAdapter } from '../adapters';
 import CodeBlock from '../components/CodeBlock';
+import PageHeader from '../components/PageHeader';
 import type { HesitationDetectedPayload } from '@passiveintent/react';
 
 export default function Hesitation() {
@@ -47,16 +48,18 @@ export default function Hesitation() {
 
   return (
     <>
-      <div className="demo-header">
-        <div className="hook-callout">⚛️ on('hesitation_detected', handler)</div>
-        <h2 className="demo-title">Hesitation Detection</h2>
-        <p className="demo-description">
-          The highest-confidence signal: fires only when <em>both</em>{' '}
-          <strong>trajectory_anomaly</strong> and a positive <strong>dwell_time_anomaly</strong>{' '}
-          occur within the correlation window. Use it to drive an <em>Intervention Ladder</em> —
-          escalate from a tooltip to a modal to live chat based on combined severity.
-        </p>
-      </div>
+      <PageHeader
+        hook="⚛️ on('hesitation_detected', handler)"
+        title="Hesitation Detection"
+        description={
+          <>
+            The highest-confidence signal: fires only when <em>both</em>{' '}
+            <strong>trajectory_anomaly</strong> and a positive <strong>dwell_time_anomaly</strong>{' '}
+            occur within the correlation window. Use it to drive an <em>Intervention Ladder</em> —
+            escalate from a tooltip to a modal to live chat based on combined severity.
+          </>
+        }
+      />
 
       <div className="card">
         <div className="card-title">Trigger combined hesitation signal</div>

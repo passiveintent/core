@@ -26,14 +26,20 @@ export interface LogEntry {
 
 type LogAction = { type: 'ADD'; entry: Omit<LogEntry, 'id'> } | { type: 'CLEAR' };
 
-let _logSeq = 0;
+interface LogState {
+  entries: LogEntry[];
+  seq: number;
+}
 
-function logReducer(state: LogEntry[], action: LogAction): LogEntry[] {
+function logReducer(state: LogState, action: LogAction): LogState {
   switch (action.type) {
     case 'ADD':
-      return [{ ...action.entry, id: ++_logSeq }, ...state].slice(0, 100);
+      return {
+        entries: [{ ...action.entry, id: state.seq + 1 }, ...state.entries].slice(0, 100),
+        seq: state.seq + 1,
+      };
     case 'CLEAR':
-      return [];
+      return { entries: [], seq: 0 };
     default:
       return state;
   }
@@ -69,7 +75,7 @@ const ALL_EVENTS: IntentEventName[] = [
 
 export function LogProvider({ children }: { children: ReactNode }) {
   const { on } = usePassiveIntent();
-  const [logEntries, dispatch] = useReducer(logReducer, []);
+  const [{ entries: logEntries }, dispatch] = useReducer(logReducer, { entries: [], seq: 0 });
 
   useEffect(() => {
     const unsubs = ALL_EVENTS.map((ev) =>
@@ -85,7 +91,9 @@ export function LogProvider({ children }: { children: ReactNode }) {
       }),
     );
     return () => unsubs.forEach((u) => u());
-  }, [on]);
+    // on is useCallback([]) — stable across renders, intentionally omitted
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const clearLog = useCallback(() => dispatch({ type: 'CLEAR' }), []);
 

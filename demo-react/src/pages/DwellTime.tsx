@@ -8,6 +8,8 @@ import React, { useEffect, useState } from 'react';
 import { usePassiveIntent } from '@passiveintent/react';
 import { timerAdapter } from '../adapters';
 import CodeBlock from '../components/CodeBlock';
+import PageHeader from '../components/PageHeader';
+import StatusAlert from '../components/StatusAlert';
 import type { DwellTimeAnomalyPayload } from '@passiveintent/react';
 
 export default function DwellTime() {
@@ -55,16 +57,18 @@ export default function DwellTime() {
 
   return (
     <>
-      <div className="demo-header">
-        <div className="hook-callout">⚛️ on('dwell_time_anomaly', handler)</div>
-        <h2 className="demo-title">Dwell Time Anomaly</h2>
-        <p className="demo-description">
-          Uses <strong>Welford's online algorithm</strong> to maintain running mean/variance per
-          state — no raw timestamps are ever stored. When the z-score of the current dwell exceeds
-          the threshold, the event fires. The controllable timer adapter lets you simulate hours of
-          dwell in a click.
-        </p>
-      </div>
+      <PageHeader
+        hook="⚛️ on('dwell_time_anomaly', handler)"
+        title="Dwell Time Anomaly"
+        description={
+          <>
+            Uses <strong>Welford's online algorithm</strong> to maintain running mean/variance per
+            state — no raw timestamps are ever stored. When the z-score of the current dwell exceeds
+            the threshold, the event fires. The controllable timer adapter lets you simulate hours
+            of dwell in a click.
+          </>
+        }
+      />
 
       <div className="card">
         <div className="card-title">Simulate hesitation</div>
@@ -91,11 +95,7 @@ export default function DwellTime() {
             ↩ Reset Timer
           </button>
         </div>
-        {status && (
-          <div className={`alert alert-${status.type}`} style={{ marginTop: 12 }}>
-            {status.msg}
-          </div>
-        )}
+        <StatusAlert status={status} style={{ marginTop: 12 }} />
       </div>
 
       {lastEvent && (

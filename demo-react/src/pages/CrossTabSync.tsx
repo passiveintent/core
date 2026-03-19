@@ -7,6 +7,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { usePassiveIntent } from '@passiveintent/react';
 import CodeBlock from '../components/CodeBlock';
+import PageHeader from '../components/PageHeader';
 
 const DEMO_CHANNEL = 'passiveintent-demo-cross-tab';
 
@@ -61,16 +62,18 @@ export default function CrossTabSync() {
 
   return (
     <>
-      <div className="demo-header">
-        <div className="hook-callout">⚛️ BroadcastSync + crossTabSync config</div>
-        <h2 className="demo-title">Cross-Tab Sync</h2>
-        <p className="demo-description">
-          When <code>crossTabSync: true</code> is passed to <code>IntentManager</code>, verified
-          transitions are broadcast to every other tab via <strong>BroadcastChannel</strong>. All
-          tabs share the same Markov graph, keeping predictions consistent across a multi-tab
-          session. No-op in SSR / environments without BroadcastChannel.
-        </p>
-      </div>
+      <PageHeader
+        hook="⚛️ BroadcastSync + crossTabSync config"
+        title="Cross-Tab Sync"
+        description={
+          <>
+            When <code>crossTabSync: true</code> is passed to <code>IntentManager</code>, verified
+            transitions are broadcast to every other tab via <strong>BroadcastChannel</strong>. All
+            tabs share the same Markov graph, keeping predictions consistent across a multi-tab
+            session. No-op in SSR / environments without BroadcastChannel.
+          </>
+        }
+      />
 
       <div className="card">
         <div className="card-title">How it works</div>

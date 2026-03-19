@@ -5,6 +5,8 @@ import React, { useState } from 'react';
 import { usePassiveIntent, useIdle } from '@passiveintent/react';
 import { timerAdapter, lifecycleAdapter } from '../adapters';
 import CodeBlock from '../components/CodeBlock';
+import PageHeader from '../components/PageHeader';
+import StatusAlert from '../components/StatusAlert';
 
 export default function IdleDetection() {
   const { track } = usePassiveIntent();
@@ -24,17 +26,18 @@ export default function IdleDetection() {
 
   return (
     <>
-      <div className="demo-header">
-        <div className="hook-callout">⚛️ useIdle()</div>
-        <h2 className="demo-title">Idle Detection</h2>
-        <p className="demo-description">
-          <strong>user_idle</strong> fires after 2 minutes of no interaction (mouse, keyboard,
-          scroll, touch).
-          <strong> user_resumed</strong> fires on the next interaction, with total{' '}
-          <code>idleMs</code>. The dwell-time baseline is adjusted to exclude the idle gap
-          automatically — keeping your Welford accumulator clean.
-        </p>
-      </div>
+      <PageHeader
+        hook="⚛️ useIdle()"
+        title="Idle Detection"
+        description={
+          <>
+            <strong>user_idle</strong> fires after 2 minutes of no interaction (mouse, keyboard,
+            scroll, touch). <strong>user_resumed</strong> fires on the next interaction, with total{' '}
+            <code>idleMs</code>. The dwell-time baseline is adjusted to exclude the idle gap
+            automatically — keeping your Welford accumulator clean.
+          </>
+        }
+      />
 
       <div className="card">
         <div className="card-title">Simulate idle cycle</div>

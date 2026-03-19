@@ -6,6 +6,7 @@ import React, { useState } from 'react';
 import { usePassiveIntent, useAttentionReturn } from '@passiveintent/react';
 import { timerAdapter, lifecycleAdapter } from '../adapters';
 import CodeBlock from '../components/CodeBlock';
+import PageHeader from '../components/PageHeader';
 
 export default function AttentionReturn() {
   const { track } = usePassiveIntent();
@@ -30,16 +31,18 @@ export default function AttentionReturn() {
 
   return (
     <>
-      <div className="demo-header">
-        <div className="hook-callout">⚛️ useAttentionReturn()</div>
-        <h2 className="demo-title">Attention Return</h2>
-        <p className="demo-description">
-          Fires when the user returns to the tab after being hidden for ≥{' '}
-          <strong>15 seconds</strong>. Works independently of <code>dwellTime.enabled</code>. Use it
-          for a personalized "Welcome Back" discount modal — the user was almost certainly
-          comparison-shopping.
-        </p>
-      </div>
+      <PageHeader
+        hook="⚛️ useAttentionReturn()"
+        title="Attention Return"
+        description={
+          <>
+            Fires when the user returns to the tab after being hidden for ≥{' '}
+            <strong>15 seconds</strong>. Works independently of <code>dwellTime.enabled</code>. Use
+            it for a personalized "Welcome Back" discount modal — the user was almost certainly
+            comparison-shopping.
+          </>
+        }
+      />
 
       <div className="two-col">
         <div className="card">

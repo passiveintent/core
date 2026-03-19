@@ -4,6 +4,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { usePassiveIntent } from '@passiveintent/react';
 import CodeBlock from '../components/CodeBlock';
+import PageHeader from '../components/PageHeader';
 import type { ConversionPayload } from '@passiveintent/react';
 
 export default function Conversion() {
@@ -25,16 +26,18 @@ export default function Conversion() {
 
   return (
     <>
-      <div className="demo-header">
-        <div className="hook-callout">⚛️ usePassiveIntent() — trackConversion()</div>
-        <h2 className="demo-title">Conversion Tracking</h2>
-        <p className="demo-description">
-          <strong>trackConversion()</strong> emits a <strong>conversion</strong> event locally. The
-          payload <em>never leaves the device</em> unless your listener explicitly sends it. Use it
-          to correlate behavioral signals with revenue outcomes — entirely in-browser, fully
-          GDPR-compliant.
-        </p>
-      </div>
+      <PageHeader
+        hook="⚛️ usePassiveIntent() — trackConversion()"
+        title="Conversion Tracking"
+        description={
+          <>
+            <strong>trackConversion()</strong> emits a <strong>conversion</strong> event locally.
+            The payload <em>never leaves the device</em> unless your listener explicitly sends it.
+            Use it to correlate behavioral signals with revenue outcomes — entirely in-browser,
+            fully GDPR-compliant.
+          </>
+        }
+      />
 
       <div className="card">
         <div className="card-title">Fire a conversion event</div>

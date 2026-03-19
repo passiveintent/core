@@ -1,31 +1,41 @@
-import React, { useState } from 'react';
+import React, { lazy, Suspense, useState } from 'react';
 import { PassiveIntentProvider, MemoryStorageAdapter } from '@passiveintent/react';
 import { LogProvider } from './LogContext';
+import { ToastProvider } from './components/Toast';
 import { timerAdapter, lifecycleAdapter } from './adapters';
 import { ECOMMERCE_BASELINE } from './baseline';
+import { ErrorBoundary } from './components/ErrorBoundary';
 import Shell from './Shell';
-import Overview from './pages/Overview';
-import BasicTracking from './pages/BasicTracking';
-import HighEntropy from './pages/HighEntropy';
-import DwellTime from './pages/DwellTime';
-import Trajectory from './pages/Trajectory';
-import Hesitation from './pages/Hesitation';
-import AttentionReturn from './pages/AttentionReturn';
-import IdleDetection from './pages/IdleDetection';
-import ExitIntent from './pages/ExitIntent';
-import BloomFilterPage from './pages/BloomFilter';
-import MarkovPredictions from './pages/MarkovPredictions';
-import BotDetection from './pages/BotDetection';
-import Conversion from './pages/Conversion';
-import Counters from './pages/Counters';
-import AmazonPlayground from './pages/AmazonPlayground';
-import BYOBaseline from './pages/BYOBaseline';
-import CrossTabSync from './pages/CrossTabSync';
-import PropensityScore from './pages/PropensityScore';
+
+const Overview = lazy(() => import('./pages/Overview'));
+const BasicTracking = lazy(() => import('./pages/BasicTracking'));
+const HighEntropy = lazy(() => import('./pages/HighEntropy'));
+const DwellTime = lazy(() => import('./pages/DwellTime'));
+const Trajectory = lazy(() => import('./pages/Trajectory'));
+const Hesitation = lazy(() => import('./pages/Hesitation'));
+const AttentionReturn = lazy(() => import('./pages/AttentionReturn'));
+const IdleDetection = lazy(() => import('./pages/IdleDetection'));
+const ExitIntent = lazy(() => import('./pages/ExitIntent'));
+const BloomFilterPage = lazy(() => import('./pages/BloomFilter'));
+const MarkovPredictions = lazy(() => import('./pages/MarkovPredictions'));
+const BotDetection = lazy(() => import('./pages/BotDetection'));
+const Conversion = lazy(() => import('./pages/Conversion'));
+const Counters = lazy(() => import('./pages/Counters'));
+const AmazonPlayground = lazy(() => import('./pages/AmazonPlayground'));
+const ShowcaseFintech = lazy(() => import('./pages/ShowcaseFintech'));
+const ShowcaseHealthcare = lazy(() => import('./pages/ShowcaseHealthcare'));
+const ShowcaseChurn = lazy(() => import('./pages/ShowcaseChurn'));
+const BYOBaseline = lazy(() => import('./pages/BYOBaseline'));
+const CrossTabSync = lazy(() => import('./pages/CrossTabSync'));
+const PropensityScore = lazy(() => import('./pages/PropensityScore'));
 
 export type DemoKey =
   | 'overview'
   | 'basic-tracking'
+  | 'showcase-ecommerce'
+  | 'showcase-fintech'
+  | 'showcase-healthcare'
+  | 'showcase-churn'
   | 'high-entropy'
   | 'dwell-time'
   | 'trajectory'
@@ -39,13 +49,16 @@ export type DemoKey =
   | 'conversion'
   | 'counters'
   | 'propensity-score'
-  | 'amazon-playground'
   | 'byob'
   | 'cross-tab';
 
 const PAGE_MAP: Record<DemoKey, React.ComponentType> = {
   overview: Overview,
   'basic-tracking': BasicTracking,
+  'showcase-ecommerce': AmazonPlayground,
+  'showcase-fintech': ShowcaseFintech,
+  'showcase-healthcare': ShowcaseHealthcare,
+  'showcase-churn': ShowcaseChurn,
   'high-entropy': HighEntropy,
   'dwell-time': DwellTime,
   trajectory: Trajectory,
@@ -59,7 +72,6 @@ const PAGE_MAP: Record<DemoKey, React.ComponentType> = {
   conversion: Conversion,
   counters: Counters,
   'propensity-score': PropensityScore,
-  'amazon-playground': AmazonPlayground,
   byob: BYOBaseline,
   'cross-tab': CrossTabSync,
 };
@@ -94,9 +106,15 @@ export default function App() {
       adapters={{ storage: memStorage, timer: timerAdapter, lifecycle: lifecycleAdapter }}
     >
       <LogProvider>
-        <Shell active={active} onNavigate={setActive} onReset={() => setSessionKey((k) => k + 1)}>
-          <ActivePage />
-        </Shell>
+        <ToastProvider>
+          <Shell active={active} onNavigate={setActive} onReset={() => setSessionKey((k) => k + 1)}>
+            <ErrorBoundary key={active}>
+              <Suspense fallback={<div className="page-loading">Loading…</div>}>
+                <ActivePage />
+              </Suspense>
+            </ErrorBoundary>
+          </Shell>
+        </ToastProvider>
       </LogProvider>
     </PassiveIntentProvider>
   );

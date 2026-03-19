@@ -12,6 +12,7 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { PropensityCalculator, MarkovGraph } from '@passiveintent/react';
 import { usePassiveIntent } from '@passiveintent/react';
 import CodeBlock from '../components/CodeBlock';
+import PageHeader from '../components/PageHeader';
 import type { TrajectoryAnomalyPayload } from '@passiveintent/react';
 
 // ── Constants ─────────────────────────────────────────────────────────────────
@@ -120,23 +121,28 @@ function ScoreArc({ score, size = 160 }: { score: number; size?: number }) {
 
 // ── Score history sparkline ───────────────────────────────────────────────────
 
-function Sparkline({ history }: { history: number[] }) {
+interface ScoreSnapshot {
+  id: number;
+  score: number;
+}
+
+function Sparkline({ history }: { history: ScoreSnapshot[] }) {
   if (history.length < 2) return null;
-  const peak = Math.max(...history, 0.01);
+  const peak = Math.max(...history.map((h) => h.score), 0.01);
   return (
     <div className="sparkline-wrap">
       <span className="sparkline-label">Score history</span>
       <div className="sparkline">
-        {history.map((s, i) => (
+        {history.map((h, i) => (
           <div
-            key={i}
+            key={h.id}
             className="spark-bar"
             style={{
-              height: `${(s / peak) * 100}%`,
-              background: scoreColor(s),
+              height: `${(h.score / peak) * 100}%`,
+              background: scoreColor(h.score),
               opacity: 0.35 + 0.65 * (i / history.length),
             }}
-            title={`${Math.round(s * 100)}%`}
+            title={`${Math.round(h.score * 100)}%`}
           />
         ))}
       </div>
@@ -187,7 +193,8 @@ export default function PropensityScore() {
   const [liveZ, setLiveZ] = useState(0);
   const [manualZ, setManualZ] = useState(0);
   const [useManual, setUseManual] = useState(false);
-  const [scoreHist, setScoreHist] = useState<number[]>([]);
+  const [scoreHist, setScoreHist] = useState<ScoreSnapshot[]>([]);
+  const histSeqRef = useRef(0);
 
   const effectiveZ = useManual ? manualZ : liveZ;
 
@@ -216,7 +223,7 @@ export default function PropensityScore() {
     setPReach(reach);
     setFrictionPct(fr);
     setPropensity(score);
-    setScoreHist((prev) => [...prev.slice(-23), score]);
+    setScoreHist((prev) => [...prev.slice(-23), { id: ++histSeqRef.current, score }]);
   }, []);
 
   // Recompute whenever route or z-score changes (covers bootstrap, navigation, and slider)
@@ -249,17 +256,18 @@ export default function PropensityScore() {
   // ── JSX ───────────────────────────────────────────────────────────────────
   return (
     <>
-      {/* ─────────────────── Header ─────────────────────────────────── */}
-      <div className="demo-header">
-        <div className="hook-callout">📐 new PropensityCalculator(alpha?, throttleMs?)</div>
-        <h2 className="demo-title">Propensity Score</h2>
-        <p className="demo-description">
-          Combines a <strong>Markov hitting-probability BFS</strong> — how structurally likely is
-          the user to reach checkout? — with a <strong>Welford Z-score friction penalty</strong> —
-          how much does their trajectory deviate from healthy baseline? Navigate the funnel and
-          inject friction to see the score respond in real time.
-        </p>
-      </div>
+      <PageHeader
+        hook="📐 new PropensityCalculator(alpha?, throttleMs?)"
+        title="Propensity Score"
+        description={
+          <>
+            Combines a <strong>Markov hitting-probability BFS</strong> — how structurally likely is
+            the user to reach checkout? — with a <strong>Welford Z-score friction penalty</strong> —
+            how much does their trajectory deviate from healthy baseline? Navigate the funnel and
+            inject friction to see the score respond in real time.
+          </>
+        }
+      />
 
       {/* ─────────────────── Score ring + formula ───────────────────── */}
       <div className="propensity-top-grid">

@@ -9,9 +9,12 @@
  * After a simulation completes a **cooldown** period kicks in — gauges decay
  * back to 0 at an accelerated rate so the meter visibly "settles".
  */
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useId, useRef, useState } from 'react';
 import { usePassiveIntent } from '@passiveintent/react';
 import { timerAdapter, lifecycleAdapter } from '../adapters';
+import { useToast } from './Toast';
+import { useTelemetryPoll } from '../hooks/useTelemetryPoll';
+import { useSimGuard } from '../hooks/useSimGuard';
 import type {
   HighEntropyPayload,
   DwellTimeAnomalyPayload,
@@ -47,7 +50,8 @@ const RAGE_STATES = [
 ];
 
 export default function IntentMeter() {
-  const { on, getTelemetry, track } = usePassiveIntent();
+  const { on, track } = usePassiveIntent();
+  const { toast } = useToast();
 
   const [rage, setRage] = useState(0);
   const [anxiety, setAnxiety] = useState(0);
@@ -56,8 +60,10 @@ export default function IntentMeter() {
   const [idle, setIdle] = useState(0);
   const [exitIntent, setExitIntent] = useState(0);
   const [simulating, setSimulating] = useState(false);
-  const [open, setOpen] = useState(false);
-  const simRef = useRef(false); // mutable guard for async loops
+  const [activeGaugeLabel, setActiveGaugeLabel] = useState<string | null>(null);
+  const [open, setOpen] = useState(true);
+  const runGuarded = useSimGuard();
+  const panelId = useId();
 
   // Cooldown: faster decay after simulation ends
   const cooldownRef = useRef(false);
@@ -77,13 +83,10 @@ export default function IntentMeter() {
   }, []);
 
   // Bot status from telemetry (polled)
+  const telem = useTelemetryPoll();
   useEffect(() => {
-    const id = setInterval(() => {
-      const t = getTelemetry();
-      setBotPct(t.botStatus === 'suspected_bot' ? 100 : 0);
-    }, 1000);
-    return () => clearInterval(id);
-  }, [getTelemetry]);
+    setBotPct(telem?.botStatus === 'suspected_bot' ? 100 : 0);
+  }, [telem]);
 
   // Subscribe to events
   useEffect(() => {
@@ -124,32 +127,33 @@ export default function IntentMeter() {
 
   /** Wrap a simulation so it guards against concurrency and resets the clock. */
   const runSim = useCallback(
-    async (fn: () => Promise<void>) => {
-      if (simRef.current) return;
-      simRef.current = true;
-      setSimulating(true);
-      cooldownRef.current = false; // normal rate while sim runs
-      try {
-        await fn();
-      } finally {
-        timerAdapter.resetOffset();
-        simRef.current = false;
-        setSimulating(false);
+    (label: string, fn: () => Promise<void>) =>
+      runGuarded(async () => {
+        setSimulating(true);
+        setActiveGaugeLabel(label);
+        cooldownRef.current = false; // normal rate while sim runs
+        try {
+          await fn();
+        } finally {
+          timerAdapter.resetOffset();
+          setSimulating(false);
+          setActiveGaugeLabel(null);
+          toast(`⚡ ${label} simulated`, 'success');
 
-        // Enter cooldown — accelerated decay settles gauges toward baseline
-        cooldownRef.current = true;
-        if (cooldownTimerRef.current) clearTimeout(cooldownTimerRef.current);
-        cooldownTimerRef.current = setTimeout(() => {
-          cooldownRef.current = false;
-        }, COOLDOWN_DURATION);
-      }
-    },
-    [timer],
+          // Enter cooldown — accelerated decay settles gauges toward baseline
+          cooldownRef.current = true;
+          if (cooldownTimerRef.current) clearTimeout(cooldownTimerRef.current);
+          cooldownTimerRef.current = setTimeout(() => {
+            cooldownRef.current = false;
+          }, COOLDOWN_DURATION);
+        }
+      }),
+    [runGuarded, toast],
   );
 
   const simRage = useCallback(
     () =>
-      runSim(async () => {
+      runSim('Rage', async () => {
         const hub = '/sim/rage/hub';
         for (let round = 0; round < 3; round++) {
           for (const s of RAGE_STATES) {
@@ -161,12 +165,12 @@ export default function IntentMeter() {
           await yieldFrame(); // let React render after each round
         }
       }),
-    [runSim, track, timer],
+    [runSim, track],
   );
 
   const simAnxiety = useCallback(
     () =>
-      runSim(async () => {
+      runSim('Anxiety', async () => {
         const oddPath = [
           '/sim/anxiety/checkout',
           '/sim/anxiety/faq',
@@ -195,12 +199,12 @@ export default function IntentMeter() {
           if (i % 5 === 4) await yieldFrame();
         }
       }),
-    [runSim, track, timer],
+    [runSim, track],
   );
 
   const simHesitation = useCallback(
     () =>
-      runSim(async () => {
+      runSim('Hesitation', async () => {
         const a = '/sim/hes/browse';
         const b = '/sim/hes/checkout';
         for (let i = 0; i < 6; i++) {
@@ -219,12 +223,12 @@ export default function IntentMeter() {
           await yieldFrame();
         }
       }),
-    [runSim, track, timer],
+    [runSim, track],
   );
 
   const simBot = useCallback(
     () =>
-      runSim(async () => {
+      runSim('Bot', async () => {
         for (let i = 0; i < 12; i++) {
           track(`/sim/bot/${i}`);
         }
@@ -234,19 +238,19 @@ export default function IntentMeter() {
 
   const simIdle = useCallback(
     () =>
-      runSim(async () => {
+      runSim('Idle', async () => {
         track('/sim/idle/page');
         timerAdapter.fastForward(130_000);
       }),
-    [runSim, track, timer],
+    [runSim, track],
   );
 
   const simExit = useCallback(
     () =>
-      runSim(async () => {
+      runSim('Exit', async () => {
         lifecycleAdapter.triggerExitIntent();
       }),
-    [runSim, lifecycle],
+    [runSim],
   );
 
   const gauges: Gauge[] = [
@@ -282,14 +286,14 @@ export default function IntentMeter() {
       <button
         className="intent-meter-toggle"
         type="button"
-        aria-controls="intent-meter-body"
+        aria-controls={panelId}
         aria-expanded={open}
         onClick={() => setOpen(true)}
       >
         <span className="intent-meter-toggle-label">Intent Meter</span>
         <span className="intent-meter-toggle-value">{summary}</span>
       </button>
-      <div className="intent-meter-body" id="intent-meter-body" hidden={!open}>
+      <div className="intent-meter-body" id={panelId} hidden={!open}>
         <div className="intent-meter-head">
           <span className="intent-meter-title">Live signal monitor</span>
           <button
@@ -307,13 +311,15 @@ export default function IntentMeter() {
               <span className="gauge-emoji">{g.emoji}</span>
               <span className="gauge-label">{g.label}</span>
               <button
-                className="gauge-sim-btn"
+                className={`gauge-sim-btn${activeGaugeLabel === g.label ? ' gauge-sim-btn--active' : ''}`}
                 onClick={g.onSimulate}
                 disabled={simulating}
                 aria-label={`Simulate ${g.label}`}
-                title={simulating ? 'Simulation running…' : `Simulate ${g.label}`}
+                title={
+                  activeGaugeLabel === g.label ? `Simulating ${g.label}…` : `Simulate ${g.label}`
+                }
               >
-                ⚡
+                {activeGaugeLabel === g.label ? '⏳' : '⚡'}
               </button>
               <div className="gauge-track">
                 <div

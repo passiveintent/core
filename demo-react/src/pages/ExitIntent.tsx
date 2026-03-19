@@ -5,6 +5,7 @@ import React from 'react';
 import { usePassiveIntent, useExitIntent } from '@passiveintent/react';
 import { lifecycleAdapter } from '../adapters';
 import CodeBlock from '../components/CodeBlock';
+import PageHeader from '../components/PageHeader';
 
 export default function ExitIntent() {
   const { track } = usePassiveIntent();
@@ -25,16 +26,18 @@ export default function ExitIntent() {
 
   return (
     <>
-      <div className="demo-header">
-        <div className="hook-callout">⚛️ useExitIntent()</div>
-        <h2 className="demo-title">Smart Exit Intent</h2>
-        <p className="demo-description">
-          Fires when the pointer moves above the viewport <em>and</em> the Markov graph has at least
-          one candidate with probability ≥ 0.4. <strong>No graph = no event</strong> — this prevents
-          spammy overlays on accidental toolbar skims. The <code>likelyNext</code> field tells you
-          exactly where the user was heading.
-        </p>
-      </div>
+      <PageHeader
+        hook="⚛️ useExitIntent()"
+        title="Smart Exit Intent"
+        description={
+          <>
+            Fires when the pointer moves above the viewport <em>and</em> the Markov graph has at
+            least one candidate with probability ≥ 0.4. <strong>No graph = no event</strong> — this
+            prevents spammy overlays on accidental toolbar skims. The <code>likelyNext</code> field
+            tells you exactly where the user was heading.
+          </>
+        }
+      />
 
       <div className="two-col">
         <div className="card">

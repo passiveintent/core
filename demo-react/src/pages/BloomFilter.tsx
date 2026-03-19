@@ -11,6 +11,7 @@ import {
   useBloomFilter,
 } from '@passiveintent/react';
 import CodeBlock from '../components/CodeBlock';
+import PageHeader from '../components/PageHeader';
 
 export default function BloomFilterPage() {
   const { hasSeen } = usePassiveIntent();
@@ -39,8 +40,8 @@ export default function BloomFilterPage() {
 
   const handleAdd = useCallback(() => {
     add(bfInput);
-    setBfResult(`Added "${bfInput}". Estimated FPR: ${(estimatedFPR * 100).toFixed(3)}%`);
-  }, [add, bfInput, estimatedFPR]);
+    setBfResult(`Added "${bfInput}".`);
+  }, [add, bfInput]);
 
   const handleTest = useCallback(() => {
     const r = check(bfInput);
@@ -53,16 +54,18 @@ export default function BloomFilterPage() {
 
   return (
     <>
-      <div className="demo-header">
-        <div className="hook-callout">⚛️ hasSeen() + useBloomFilter()</div>
-        <h2 className="demo-title">Bloom Filter API</h2>
-        <p className="demo-description">
-          <strong>hasSeen(route)</strong> is an O(k) membership test on the engine's internal Bloom
-          filter — useful to check if a user has ever visited a page without storing a list. Use{' '}
-          <strong>useBloomFilter()</strong> standalone for your own deduplication needs, and
-          <strong> computeBloomConfig()</strong> to size it optimally.
-        </p>
-      </div>
+      <PageHeader
+        hook="⚛️ hasSeen() + useBloomFilter()"
+        title="Bloom Filter API"
+        description={
+          <>
+            <strong>hasSeen(route)</strong> is an O(k) membership test on the engine's internal
+            Bloom filter — useful to check if a user has ever visited a page without storing a list.
+            Use <strong>useBloomFilter()</strong> standalone for your own deduplication needs, and{' '}
+            <strong>computeBloomConfig()</strong> to size it optimally.
+          </>
+        }
+      />
 
       <div className="two-col">
         <div className="card">
@@ -100,9 +103,16 @@ export default function BloomFilterPage() {
               Test
             </button>
           </div>
+          {bfResult === null && (
+            <p style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 8 }}>
+              The input is pre-filled — press <strong style={{ color: 'var(--text)' }}>Add</strong>{' '}
+              to insert it, then <strong style={{ color: 'var(--text)' }}>Test</strong> to check
+              membership. Watch the bits light up below.
+            </p>
+          )}
           {bfResult && (
             <div className="alert alert-info" style={{ marginTop: 10 }}>
-              {bfResult}
+              {bfResult} Estimated FPR: {(estimatedFPR * 100).toFixed(3)}%
             </div>
           )}
           <div className="bit-viz" style={{ marginTop: 12 }}>

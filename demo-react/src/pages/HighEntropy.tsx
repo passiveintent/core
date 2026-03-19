@@ -6,6 +6,7 @@
 import React, { useEffect, useState } from 'react';
 import { usePassiveIntent } from '@passiveintent/react';
 import CodeBlock from '../components/CodeBlock';
+import PageHeader from '../components/PageHeader';
 import type { HighEntropyPayload } from '@passiveintent/react';
 
 const RANDOM_STATES = [
@@ -57,16 +58,18 @@ export default function HighEntropy() {
 
   return (
     <>
-      <div className="demo-header">
-        <div className="hook-callout">⚛️ on('high_entropy', handler)</div>
-        <h2 className="demo-title">High Entropy Detection</h2>
-        <p className="demo-description">
-          Fires when the Shannon entropy of the outgoing-transition distribution from a state
-          exceeds <code>highEntropyThreshold</code> (0.72 here). Rapid-firing many random
-          destinations from the same origin spreads probability mass and spikes entropy — classic
-          erratic navigation or frustration signal.
-        </p>
-      </div>
+      <PageHeader
+        hook="⚛️ on('high_entropy', handler)"
+        title="High Entropy Detection"
+        description={
+          <>
+            Fires when the Shannon entropy of the outgoing-transition distribution from a state
+            exceeds <code>highEntropyThreshold</code> (0.72 here). Rapid-firing many random
+            destinations from the same origin spreads probability mass and spikes entropy — classic
+            erratic navigation or frustration signal.
+          </>
+        }
+      />
 
       <div className="two-col">
         <div className="card">

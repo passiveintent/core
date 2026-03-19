@@ -7,6 +7,7 @@
 import React, { useRef, useState } from 'react';
 import { MarkovGraph, usePassiveIntent, useMarkovGraph } from '@passiveintent/react';
 import CodeBlock from '../components/CodeBlock';
+import PageHeader from '../components/PageHeader';
 
 export default function MarkovPredictions() {
   const { track, predictNextStates } = usePassiveIntent();
@@ -16,9 +17,11 @@ export default function MarkovPredictions() {
   const [predictions, setPredictions] = useState<{ state: string; probability: number }[]>([]);
 
   // Standalone MarkovGraph panel
-  const { record, stateCount, edgeCount, toJSON } = useMarkovGraph({ maxStates: 50 });
-  // Kept only for toBinary() — not exposed by hook
+  const { record, stateCount, edgeCount } = useMarkovGraph({ maxStates: 50 });
+  // Kept for toBinary() and toJSON() — recreated on each build so both
+  // serialization paths use the same fresh dataset as the hook.
   const binaryGraphRef = useRef<MarkovGraph | null>(null);
+  const [graphBuilt, setGraphBuilt] = useState(false);
   const [serialized, setSerialized] = useState<string | null>(null);
   const [binaryInfo, setBinaryInfo] = useState<string | null>(null);
 
@@ -50,12 +53,15 @@ export default function MarkovPredictions() {
       }
     });
     binaryGraphRef.current = newGraph;
+    setGraphBuilt(true);
     setSerialized(null);
     setBinaryInfo(null);
   }
 
   function serializeJSON() {
-    const json = JSON.stringify(toJSON(), null, 2);
+    const g = binaryGraphRef.current;
+    if (!g) return;
+    const json = JSON.stringify(g.toJSON(), null, 2);
     setSerialized(json.slice(0, 1000) + (json.length > 1000 ? '\n...' : ''));
   }
 
@@ -63,7 +69,7 @@ export default function MarkovPredictions() {
     const g = binaryGraphRef.current;
     if (!g) return;
     const bin = g.toBinary();
-    const json = JSON.stringify(toJSON());
+    const json = JSON.stringify(g.toJSON());
     setBinaryInfo(
       `Binary: ${bin.byteLength} B | JSON: ${json.length} B | Savings: ${(((json.length - bin.byteLength) / json.length) * 100).toFixed(0)}%`,
     );
@@ -72,16 +78,18 @@ export default function MarkovPredictions() {
 
   return (
     <>
-      <div className="demo-header">
-        <div className="hook-callout">⚛️ predictNextStates() + useMarkovGraph()</div>
-        <h2 className="demo-title">Markov Graph — Predictions</h2>
-        <p className="demo-description">
-          <strong>predictNextStates()</strong> returns the top-N destinations from the current state
-          above a probability threshold. Use the <code>sanitize</code> guard to exclude sensitive
-          routes in production. The standalone <strong>useMarkovGraph()</strong> hook lets you
-          build, serialize, and restore graphs independently.
-        </p>
-      </div>
+      <PageHeader
+        hook="⚛️ predictNextStates() + useMarkovGraph()"
+        title="Markov Graph — Predictions"
+        description={
+          <>
+            <strong>predictNextStates()</strong> returns the top-N destinations from the current
+            state above a probability threshold. Use the <code>sanitize</code> guard to exclude
+            sensitive routes in production. The standalone <strong>useMarkovGraph()</strong> hook
+            lets you build, serialize, and restore graphs independently.
+          </>
+        }
+      />
 
       <div className="card">
         <div className="card-title">Live predictions from the shared engine</div>
@@ -158,10 +166,10 @@ export default function MarkovPredictions() {
           <button className="btn btn-secondary" onClick={buildStandaloneGraph}>
             Build sample graph
           </button>
-          <button className="btn btn-primary" onClick={serializeJSON} disabled={stateCount === 0}>
+          <button className="btn btn-primary" onClick={serializeJSON} disabled={!graphBuilt}>
             Serialize JSON
           </button>
-          <button className="btn btn-ghost" onClick={binarySize} disabled={stateCount === 0}>
+          <button className="btn btn-ghost" onClick={binarySize} disabled={!graphBuilt}>
             Binary vs JSON size
           </button>
         </div>

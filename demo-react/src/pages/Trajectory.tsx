@@ -5,6 +5,7 @@ import React, { useEffect, useState } from 'react';
 import { usePassiveIntent } from '@passiveintent/react';
 import { timerAdapter } from '../adapters';
 import CodeBlock from '../components/CodeBlock';
+import PageHeader from '../components/PageHeader';
 import { ECOMMERCE_BASELINE } from '../baseline';
 import type { TrajectoryAnomalyPayload, SerializedMarkovGraph } from '@passiveintent/react';
 
@@ -52,16 +53,18 @@ export default function Trajectory() {
 
   return (
     <>
-      <div className="demo-header">
-        <div className="hook-callout">⚛️ on('trajectory_anomaly', handler)</div>
-        <h2 className="demo-title">Trajectory Anomaly</h2>
-        <p className="demo-description">
-          Compares the current session's per-step log-likelihood against a
-          <strong> pre-trained baseline graph</strong>. When the z-score diverges beyond
-          <code>divergenceThreshold</code>, the event fires. Pass your own baseline via the
-          <code>baseline</code> config field using <code>MarkovGraph.toJSON()</code>.
-        </p>
-      </div>
+      <PageHeader
+        hook="⚛️ on('trajectory_anomaly', handler)"
+        title="Trajectory Anomaly"
+        description={
+          <>
+            Compares the current session's per-step log-likelihood against a
+            <strong> pre-trained baseline graph</strong>. When the z-score diverges beyond{' '}
+            <code>divergenceThreshold</code>, the event fires. Pass your own baseline via the{' '}
+            <code>baseline</code> config field using <code>MarkovGraph.toJSON()</code>.
+          </>
+        }
+      />
 
       <div className="two-col">
         <div className="card">

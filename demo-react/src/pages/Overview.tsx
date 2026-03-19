@@ -3,11 +3,12 @@
  *
  * React pattern: useEffect polling on a 1s interval to keep metrics fresh.
  */
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import { usePassiveIntent } from '@passiveintent/react';
 import MetricCard from '../components/MetricCard';
 import CodeBlock from '../components/CodeBlock';
-import type { PassiveIntentTelemetry } from '@passiveintent/react';
+import PageHeader from '../components/PageHeader';
+import { useTelemetryPoll } from '../hooks/useTelemetryPoll';
 
 const QUICK_STATES = [
   '/home',
@@ -23,19 +24,9 @@ const QUICK_STATES = [
 ];
 
 export default function Overview() {
-  const { track, getTelemetry } = usePassiveIntent();
-  const [telem, setTelem] = useState<PassiveIntentTelemetry | null>(null);
+  const { track } = usePassiveIntent();
+  const telem = useTelemetryPoll();
   const [stateCount, setStateCount] = useState(0);
-
-  // Refresh telemetry every second
-  useEffect(() => {
-    const refresh = () => {
-      setTelem(getTelemetry());
-    };
-    refresh();
-    const id = setInterval(refresh, 1000);
-    return () => clearInterval(id);
-  }, [getTelemetry]);
 
   const handleTrack = useCallback(
     (state: string) => {
@@ -47,15 +38,17 @@ export default function Overview() {
 
   return (
     <>
-      <div className="demo-header">
-        <div className="hook-callout">⚛️ usePassiveIntent() — getTelemetry()</div>
-        <h2 className="demo-title">Overview &amp; Live Telemetry</h2>
-        <p className="demo-description">
-          Track a few states below to populate the engine, then watch the metrics update live.{' '}
-          <strong>getTelemetry()</strong> returns a GDPR-safe aggregate snapshot — no raw URLs, no
-          PII, no behavioral sequences are ever exposed.
-        </p>
-      </div>
+      <PageHeader
+        hook="⚛️ usePassiveIntent() — getTelemetry()"
+        title="Overview & Live Telemetry"
+        description={
+          <>
+            Track a few states below to populate the engine, then watch the metrics update live.{' '}
+            <strong>getTelemetry()</strong> returns a GDPR-safe aggregate snapshot — no raw URLs, no
+            PII, no behavioral sequences are ever exposed.
+          </>
+        }
+      />
 
       <div className="card">
         <div className="card-title">Quick Track</div>

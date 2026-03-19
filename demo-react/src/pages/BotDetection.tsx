@@ -4,6 +4,7 @@
 import React, { useEffect, useState } from 'react';
 import { usePassiveIntent } from '@passiveintent/react';
 import CodeBlock from '../components/CodeBlock';
+import PageHeader from '../components/PageHeader';
 import type { BotDetectedPayload, PassiveIntentTelemetry } from '@passiveintent/react';
 
 const STATES = ['/home', '/products', '/cart', '/checkout', '/search', '/blog'];
@@ -33,15 +34,18 @@ export default function BotDetection() {
 
   return (
     <>
-      <div className="demo-header">
-        <div className="hook-callout">⚛️ on('bot_detected', handler)</div>
-        <h2 className="demo-title">Bot Detection (EntropyGuard)</h2>
-        <p className="demo-description">
-          <strong>EntropyGuard</strong> detects impossibly fast or robotic click cadences by
-          accumulating a <em>botScore</em>. When it reaches 5, <strong>bot_detected</strong> fires.
-          Set <code>botProtection: false</code> in E2E/CI environments to prevent false positives.
-        </p>
-      </div>
+      <PageHeader
+        hook="⚛️ on('bot_detected', handler)"
+        title="Bot Detection (EntropyGuard)"
+        description={
+          <>
+            <strong>EntropyGuard</strong> detects impossibly fast or robotic click cadences by
+            accumulating a <em>botScore</em>. When it reaches 5, <strong>bot_detected</strong>{' '}
+            fires. Set <code>botProtection: false</code> in E2E/CI environments to prevent false
+            positives.
+          </>
+        }
+      />
 
       <div className="card">
         <div className="card-title">Simulate bot traffic</div>

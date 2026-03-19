@@ -118,10 +118,23 @@ export function PassiveIntentProvider({
     instanceRef.current = new IntentManager(mergedConfig);
   }
 
-  // Cleanup only — creation is synchronous above. In React Strict Mode the
-  // cleanup runs between the double-invoke, setting ref to null so the lazy
-  // init re-creates a fresh instance on the second render.
+  // In React Strict Mode, cleanup runs WITHOUT a re-render before effects
+  // re-run. This means the sync init guard above (which only fires during
+  // render) cannot recreate the instance after Strict Mode's simulated
+  // unmount sets instanceRef.current = null. We recreate it here in the
+  // effect setup so the instance is live whenever effects are running.
   useEffect(() => {
+    if (instanceRef.current === null && IS_BROWSER) {
+      const mergedConfig: IntentManagerConfig = {
+        ...configRef.current,
+        ...(adaptersRef.current?.storage !== undefined && { storage: adaptersRef.current.storage }),
+        ...(adaptersRef.current?.timer !== undefined && { timer: adaptersRef.current.timer }),
+        ...(adaptersRef.current?.lifecycle !== undefined && {
+          lifecycleAdapter: adaptersRef.current.lifecycle,
+        }),
+      };
+      instanceRef.current = new IntentManager(mergedConfig);
+    }
     return () => {
       instanceRef.current?.destroy();
       instanceRef.current = null;

@@ -5,6 +5,7 @@
 import React, { useCallback, useState } from 'react';
 import { usePassiveIntent } from '@passiveintent/react';
 import CodeBlock from '../components/CodeBlock';
+import PageHeader from '../components/PageHeader';
 
 const PRESETS: Array<{ label: string; key: string; by: number }> = [
   { label: 'Modal shown', key: 'offer-impressions', by: 1 },
@@ -45,15 +46,17 @@ export default function Counters() {
 
   return (
     <>
-      <div className="demo-header">
-        <div className="hook-callout">⚛️ incrementCounter / getCounter / resetCounter</div>
-        <h2 className="demo-title">Session Counters</h2>
-        <p className="demo-description">
-          Exact integer counters scoped to the session. <strong>Never persisted.</strong> Ideal for
-          tracking offer impressions, modal views, or cart quantity — without any server
-          round-trips. Syncs cross-tab when <code>crossTabSync: true</code>.
-        </p>
-      </div>
+      <PageHeader
+        hook="⚛️ incrementCounter / getCounter / resetCounter"
+        title="Session Counters"
+        description={
+          <>
+            Exact integer counters scoped to the session. <strong>Never persisted.</strong> Ideal
+            for tracking offer impressions, modal views, or cart quantity — without any server
+            round-trips. Syncs cross-tab when <code>crossTabSync: true</code>.
+          </>
+        }
+      />
 
       <div className="card">
         <div className="card-title">Counter controls</div>

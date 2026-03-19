@@ -9,12 +9,13 @@
  * adjust calibration parameters with sliders and toggles, and see how the
  * engine responds to those different configurations in real time.
  */
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState, useTransition } from 'react';
 import { MarkovGraph } from '@passiveintent/react';
 import type { SerializedMarkovGraph } from '@passiveintent/react';
 import { usePassiveIntent } from '@passiveintent/react';
 import CodeBlock from '../components/CodeBlock';
 import MetricCard from '../components/MetricCard';
+import PageHeader from '../components/PageHeader';
 
 // ─── Site archetype definitions ───────────────────────────────────────────────
 
@@ -178,6 +179,7 @@ function computeCalibration(
 
 export default function BYOBaseline() {
   const { track, on } = usePassiveIntent();
+  const [isGenerating, startTransition] = useTransition();
 
   // Deployment mode toggle
   const [persona, setPersona] = useState<'indie' | 'enterprise'>('enterprise');
@@ -259,15 +261,19 @@ export default function BYOBaseline() {
     setTrackedSteps(0);
   }, [archetype]);
 
-  // Generate baseline
+  // Generate baseline — wrapped in startTransition so the heavy sync computation
+  // (buildBaselineGraph + computeCalibration for up to 500 sessions) is treated
+  // as a non-urgent update, keeping the button press responsive.
   const handleGenerate = useCallback(() => {
-    const graph = buildBaselineGraph(archetype);
-    const cal = computeCalibration(archetype, graph);
-    setGeneratedGraph(graph);
-    setCalibrationResult(cal);
-    setMeanLL(parseFloat(cal.meanLL.toFixed(2)));
-    setStdLL(parseFloat(cal.stdLL.toFixed(2)));
-  }, [archetype]);
+    startTransition(() => {
+      const graph = buildBaselineGraph(archetype);
+      const cal = computeCalibration(archetype, graph);
+      setGeneratedGraph(graph);
+      setCalibrationResult(cal);
+      setMeanLL(parseFloat(cal.meanLL.toFixed(2)));
+      setStdLL(parseFloat(cal.stdLL.toFixed(2)));
+    });
+  }, [archetype, startTransition]);
 
   // Walk the perfect path (should be normal)
   const walkPerfect = useCallback(() => {
@@ -344,15 +350,17 @@ export default function BYOBaseline() {
 
   return (
     <>
-      <div className="demo-header">
-        <div className="hook-callout">🎯 Bring Your Own Baseline (BYOB)</div>
-        <h2 className="demo-title">Enterprise Calibration Playground</h2>
-        <p className="demo-description">
-          Start from zero and let the engine learn in real-time — or inject 5 years of historical
-          analytics data so anomaly detection is accurate from session one.
-          <strong> This playground lets you explore both approaches.</strong>
-        </p>
-      </div>
+      <PageHeader
+        hook="🎯 Bring Your Own Baseline (BYOB)"
+        title="Enterprise Calibration Playground"
+        description={
+          <>
+            Start from zero and let the engine learn in real-time — or inject 5 years of historical
+            analytics data so anomaly detection is accurate from session one.
+            <strong> This playground lets you explore both approaches.</strong>
+          </>
+        }
+      />
 
       {/* ── Deployment Mode Toggle ──────────────────────────────────────── */}
       <div className="card">
@@ -639,8 +647,10 @@ export default function BYOBaseline() {
               the <strong>{archetype.label}</strong> funnels and computes calibration parameters. In
               production, you&apos;d run this against a Mixpanel / Amplitude / GA4 export.
             </p>
-            <button className="btn btn-primary" onClick={handleGenerate}>
-              ⚙️ Generate Baseline ({archetype.sessionsToSimulate} sessions)
+            <button className="btn btn-primary" onClick={handleGenerate} disabled={isGenerating}>
+              {isGenerating
+                ? 'Generating…'
+                : `⚙️ Generate Baseline (${archetype.sessionsToSimulate} sessions)`}
             </button>
 
             {calibrationResult && (

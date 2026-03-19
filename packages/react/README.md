@@ -150,7 +150,7 @@ import { IntentErrorBoundary, PassiveIntentProvider } from '@passiveintent/react
 | `fallback` | `(error: Error, reset: () => void) => ReactNode` | Optional. Custom error UI. `reset()` clears the error state and remounts children. Defaults to an accessible alert with a "Retry" button. |
 | `children` | `ReactNode`                                      | —                                                                                                                                         |
 
-> **`onError` vs `IntentErrorBoundary`:** Use `onError` on the provider when you want to log errors but keep the tree alive (hooks silently no-op). Use `IntentErrorBoundary` when you want to show a fallback UI instead. You can use both together.
+> **`onError` vs `IntentErrorBoundary`:** Use `onError` to log errors and keep the tree alive (hooks silently no-op). Use `IntentErrorBoundary` to render fallback UI. You can combine both.
 
 ### `usePassiveIntent`
 

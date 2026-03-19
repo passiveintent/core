@@ -16,7 +16,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Changed
 
-- `useExitIntent` now uses `useSyncExternalStoreWithSelector` (from `use-sync-external-store/with-selector`) instead of `useSyncExternalStore`, enabling selector-level memoisation: re-renders are only scheduled when the projected value changes (via `Object.is`), reducing unnecessary renders for callers that project to primitives or stable refs.
+- `useExitIntent` now uses `useSyncExternalStoreWithSelector` (from `use-sync-external-store/with-selector`) instead of `useSyncExternalStore`, enabling selector-level memoization: re-renders are only scheduled when the projected value changes (via `Object.is`), reducing unnecessary renders for callers that project to primitives or stable refs.
 - `useExitIntent`'s `isPending` flag is now managed via `useState` instead of `useTransition`. `useTransition`'s pending state does not reliably reflect updates driven by `useSyncExternalStore`'s `onStoreChange`; the new implementation sets the flag immediately before notifying and clears it in the next microtask.
 - `PassiveIntentProvider` defers `onError` invocation to a post-commit effect, avoiding the React rule against side-effects during render. A `failedInitRef` guard prevents duplicate error reports and redundant re-initialisation when render-phase construction has already failed.
 - Added `use-sync-external-store` as a direct runtime dependency (previously relied on the transitive copy from React internals).

@@ -5,12 +5,13 @@
  * time passing without real waiting.
  */
 import React, { useEffect, useState } from 'react';
-import { useIntent } from '../IntentContext';
+import { usePassiveIntent } from '@passiveintent/react';
+import { timerAdapter } from '../adapters';
 import CodeBlock from '../components/CodeBlock';
 import type { DwellTimeAnomalyPayload } from '@passiveintent/react';
 
 export default function DwellTime() {
-  const { track, on, timer } = useIntent();
+  const { track, on } = usePassiveIntent();
   const [status, setStatus] = useState<{
     type: 'success' | 'warning' | 'info';
     msg: string;
@@ -24,12 +25,12 @@ export default function DwellTime() {
   }, [on]);
 
   function buildBaseline() {
-    timer.reset();
+    timerAdapter.reset();
     for (let i = 0; i < 10; i++) {
       track('/products');
-      timer.fastForward(2500 + Math.random() * 1500);
+      timerAdapter.fastForward(2500 + Math.random() * 1500);
       track('/checkout/payment');
-      timer.fastForward(3000 + Math.random() * 1000);
+      timerAdapter.fastForward(3000 + Math.random() * 1000);
     }
     setStatus({
       type: 'success',
@@ -39,7 +40,7 @@ export default function DwellTime() {
 
   function simulateHesitation() {
     track('/checkout/payment');
-    timer.fastForward(5 * 60 * 1000); // 5 minutes — way above baseline
+    timerAdapter.fastForward(5 * 60 * 1000); // 5 minutes — way above baseline
     track('/checkout/confirm');
     setStatus({
       type: 'warning',
@@ -48,7 +49,7 @@ export default function DwellTime() {
   }
 
   function resetTimer() {
-    timer.reset();
+    timerAdapter.reset();
     setStatus({ type: 'info', msg: 'Timer offset reset to 0.' });
   }
 

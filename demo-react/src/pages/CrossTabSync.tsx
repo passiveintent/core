@@ -5,13 +5,13 @@
  * and an inline received-events log to prove cross-tab delivery.
  */
 import React, { useEffect, useRef, useState } from 'react';
-import { useIntent } from '../IntentContext';
+import { usePassiveIntent } from '@passiveintent/react';
 import CodeBlock from '../components/CodeBlock';
 
 const DEMO_CHANNEL = 'passiveintent-demo-cross-tab';
 
 export default function CrossTabSync() {
-  const { track } = useIntent();
+  const { track } = usePassiveIntent();
 
   const [syncEnabled, setSyncEnabled] = useState(false);
   const [broadcastSupported] = useState(() => typeof BroadcastChannel !== 'undefined');

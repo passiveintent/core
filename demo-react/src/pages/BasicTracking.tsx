@@ -5,7 +5,7 @@
  * return to unsubscribe so no listener leaks occur across re-renders.
  */
 import React, { useCallback, useEffect, useState } from 'react';
-import { useIntent } from '../IntentContext';
+import { usePassiveIntent } from '@passiveintent/react';
 import CodeBlock from '../components/CodeBlock';
 
 const FUNNEL = [
@@ -25,7 +25,7 @@ interface LastChange {
 }
 
 export default function BasicTracking() {
-  const { track, on } = useIntent();
+  const { track, on } = usePassiveIntent();
   const [customState, setCustomState] = useState('/checkout/payment');
   const [lastChange, setLastChange] = useState<LastChange | null>(null);
   const [stepIndex, setStepIndex] = useState(0);

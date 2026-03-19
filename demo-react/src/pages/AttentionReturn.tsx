@@ -2,21 +2,15 @@
  * Attention Return — comparison-shopper "Welcome Back" pattern.
  * Shows both browser-native (real tab switch) and simulated triggers.
  */
-import React, { useEffect, useState } from 'react';
-import { useIntent } from '../IntentContext';
+import React, { useState } from 'react';
+import { usePassiveIntent, useAttentionReturn } from '@passiveintent/react';
+import { timerAdapter, lifecycleAdapter } from '../adapters';
 import CodeBlock from '../components/CodeBlock';
-import type { AttentionReturnPayload } from '@passiveintent/react';
 
 export default function AttentionReturn() {
-  const { track, on, timer, lifecycle } = useIntent();
-  const [lastEvent, setLastEvent] = useState<AttentionReturnPayload | null>(null);
+  const { track } = usePassiveIntent();
+  const { returned, hiddenDuration, dismiss } = useAttentionReturn();
   const [tracked, setTracked] = useState(false);
-
-  useEffect(() => {
-    return on('attention_return', (payload) => {
-      setLastEvent(payload as AttentionReturnPayload);
-    });
-  }, [on]);
 
   function setupNative() {
     track('/pricing');
@@ -25,19 +19,19 @@ export default function AttentionReturn() {
 
   function simulateHide() {
     track('/pricing');
-    lifecycle.triggerPause();
-    timer.fastForward(30_000); // 30 s virtual hide
+    lifecycleAdapter.triggerPause();
+    timerAdapter.fastForward(30_000); // 30 s virtual hide
     setTracked(true);
   }
 
   function simulateReturn() {
-    lifecycle.triggerResume();
+    lifecycleAdapter.triggerResume();
   }
 
   return (
     <>
       <div className="demo-header">
-        <div className="hook-callout">⚛️ on('attention_return', handler)</div>
+        <div className="hook-callout">⚛️ useAttentionReturn()</div>
         <h2 className="demo-title">Attention Return</h2>
         <p className="demo-description">
           Fires when the user returns to the tab after being hidden for ≥{' '}
@@ -76,27 +70,26 @@ export default function AttentionReturn() {
         </div>
       </div>
 
-      {lastEvent && (
+      {returned && (
         <div className="alert alert-success">
-          <strong>attention_return</strong> fired! state:{' '}
-          <code style={{ fontFamily: 'var(--font-mono)' }}>{lastEvent.state}</code> | hidden for:{' '}
-          <strong>{lastEvent.hiddenDuration.toLocaleString()} ms</strong>
+          <strong>attention_return</strong> fired! hidden for:{' '}
+          <strong>{hiddenDuration.toLocaleString()} ms</strong>
+          {' '}<button type="button" className="btn btn-secondary" onClick={dismiss}>Dismiss</button>
         </div>
       )}
 
       <CodeBlock
-        label="attention_return — Welcome Back offer"
-        code={`<span class="fn">useEffect</span>(() => {
-  <span class="kw">return</span> <span class="fn">on</span>(<span class="str">'attention_return'</span>, ({ <span class="prop">state</span>, <span class="prop">hiddenDuration</span> }) => {
-    <span class="kw">if</span> (state === <span class="str">'/pricing'</span> || state === <span class="str">'/product'</span>) {
-      <span class="fn">setBanner</span>({
-        title:   <span class="str">'Welcome back! 👋'</span>,
-        message: <span class="str">'Found a better deal? We\'ll match it + free shipping.'</span>,
-        cta:     <span class="str">'Claim offer'</span>,
-      });
-    }
-  });
-}, [on]);`}
+        label="useAttentionReturn() — Welcome Back offer"
+        code={`<span class="kw">const</span> { <span class="prop">returned</span>, <span class="prop">hiddenDuration</span>, <span class="prop">dismiss</span> } = <span class="fn">useAttentionReturn</span>();
+
+<span class="kw">if</span> (returned && hiddenDuration > <span class="num">30_000</span>) {
+  <span class="kw">return</span> (
+    &lt;<span class="fn">WelcomeBackOffer</span>
+      message=<span class="str">"Found a better deal? We'll match it + free shipping."</span>
+      onClose={dismiss}
+    /&gt;
+  );
+}`}
       />
     </>
   );

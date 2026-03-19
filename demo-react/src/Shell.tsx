@@ -1,5 +1,5 @@
 import React, { useMemo, useState, type ReactNode } from 'react';
-import { useIntent, type LogEntry } from './IntentContext';
+import { useLogContext, type LogEntry } from './LogContext';
 import IntentMeter from './components/IntentMeter';
 import type { DemoKey } from './App';
 
@@ -82,7 +82,7 @@ interface Props {
 }
 
 export default function Shell({ active, onNavigate, onReset, children }: Props) {
-  const { logEntries, clearLog } = useIntent();
+  const { logEntries, clearLog } = useLogContext();
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [logOpen, setLogOpen] = useState(true);
 

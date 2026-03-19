@@ -10,7 +10,7 @@
 
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { PropensityCalculator, MarkovGraph } from '@passiveintent/react';
-import { useIntent } from '../IntentContext';
+import { usePassiveIntent } from '@passiveintent/react';
 import CodeBlock from '../components/CodeBlock';
 import type { TrajectoryAnomalyPayload } from '@passiveintent/react';
 
@@ -147,7 +147,7 @@ function Sparkline({ history }: { history: number[] }) {
 // ── Main component ────────────────────────────────────────────────────────────
 
 export default function PropensityScore() {
-  const { track, on } = useIntent();
+  const { track, on } = usePassiveIntent();
 
   // Stable refs: graph + calculator are created once per component lifetime
   const graphRef = useRef<MarkovGraph | null>(null);

@@ -12,7 +12,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { MarkovGraph } from '@passiveintent/react';
 import type { SerializedMarkovGraph } from '@passiveintent/react';
-import { useIntent } from '../IntentContext';
+import { usePassiveIntent } from '@passiveintent/react';
 import CodeBlock from '../components/CodeBlock';
 import MetricCard from '../components/MetricCard';
 
@@ -177,7 +177,7 @@ function computeCalibration(
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export default function BYOBaseline() {
-  const { track, on } = useIntent();
+  const { track, on } = usePassiveIntent();
 
   // Deployment mode toggle
   const [persona, setPersona] = useState<'indie' | 'enterprise'>('enterprise');

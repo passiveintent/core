@@ -4,21 +4,21 @@
  * React pattern: controlled form state, derived prediction results rendered
  * as a sortable table.
  */
-import React, { useState } from 'react';
-import { MarkovGraph } from '@passiveintent/react';
-import { useIntent } from '../IntentContext';
+import React, { useRef, useState } from 'react';
+import { MarkovGraph, usePassiveIntent, useMarkovGraph } from '@passiveintent/react';
 import CodeBlock from '../components/CodeBlock';
 
 export default function MarkovPredictions() {
-  const { track, predictNextStates } = useIntent();
+  const { track, predictNextStates } = usePassiveIntent();
 
   // predictNextStates panel
   const [threshold, setThreshold] = useState(0.05);
   const [predictions, setPredictions] = useState<{ state: string; probability: number }[]>([]);
 
   // Standalone MarkovGraph panel
-  const [graph, setGraph] = useState(() => new MarkovGraph({ maxStates: 50 }));
-  const [graphBuilt, setGraphBuilt] = useState(false);
+  const { record, stateCount, edgeCount, toJSON } = useMarkovGraph({ maxStates: 50 });
+  // Kept only for toBinary() — not exposed by hook
+  const binaryGraphRef = useRef<MarkovGraph | null>(null);
   const [serialized, setSerialized] = useState<string | null>(null);
   const [binaryInfo, setBinaryInfo] = useState<string | null>(null);
 
@@ -42,26 +42,28 @@ export default function MarkovPredictions() {
       ['/home', '/pricing', '/checkout/payment', '/thank-you'],
       ['/home', '/products', '/product/widget', '/cart', '/checkout/payment', '/thank-you'],
     ];
-    const newGraph = new MarkovGraph({ maxStates: 50 });
+    const newGraph = new MarkovGraph({ maxStates: 50 }); // for binarySize()
     paths.forEach((path) => {
       for (let i = 0; i < path.length - 1; i++) {
+        record(path[i], path[i + 1]);
         newGraph.incrementTransition(path[i], path[i + 1]);
       }
     });
-    setGraph(newGraph);
-    setGraphBuilt(true);
+    binaryGraphRef.current = newGraph;
     setSerialized(null);
     setBinaryInfo(null);
   }
 
   function serializeJSON() {
-    const json = JSON.stringify(graph.toJSON(), null, 2);
+    const json = JSON.stringify(toJSON(), null, 2);
     setSerialized(json.slice(0, 1000) + (json.length > 1000 ? '\n...' : ''));
   }
 
   function binarySize() {
-    const bin = graph.toBinary();
-    const json = JSON.stringify(graph.toJSON());
+    const g = binaryGraphRef.current;
+    if (!g) return;
+    const bin = g.toBinary();
+    const json = JSON.stringify(toJSON());
     setBinaryInfo(
       `Binary: ${bin.byteLength} B | JSON: ${json.length} B | Savings: ${(((json.length - bin.byteLength) / json.length) * 100).toFixed(0)}%`,
     );
@@ -71,12 +73,12 @@ export default function MarkovPredictions() {
   return (
     <>
       <div className="demo-header">
-        <div className="hook-callout">⚛️ predictNextStates() + MarkovGraph</div>
+        <div className="hook-callout">⚛️ predictNextStates() + useMarkovGraph()</div>
         <h2 className="demo-title">Markov Graph — Predictions</h2>
         <p className="demo-description">
           <strong>predictNextStates()</strong> returns the top-N destinations from the current state
           above a probability threshold. Use the <code>sanitize</code> guard to exclude sensitive
-          routes in production. The standalone <strong>MarkovGraph</strong> class lets you build,
+          routes in production. The standalone <strong>useMarkovGraph()</strong> hook lets you build,
           serialize, and restore graphs independently.
         </p>
       </div>
@@ -156,16 +158,16 @@ export default function MarkovPredictions() {
           <button className="btn btn-secondary" onClick={buildStandaloneGraph}>
             Build sample graph
           </button>
-          <button className="btn btn-primary" onClick={serializeJSON} disabled={!graphBuilt}>
+          <button className="btn btn-primary" onClick={serializeJSON} disabled={stateCount === 0}>
             Serialize JSON
           </button>
-          <button className="btn btn-ghost" onClick={binarySize} disabled={!graphBuilt}>
+          <button className="btn btn-ghost" onClick={binarySize} disabled={stateCount === 0}>
             Binary vs JSON size
           </button>
         </div>
-        {graphBuilt && !serialized && !binaryInfo && (
+        {stateCount > 0 && !serialized && !binaryInfo && (
           <div className="alert alert-success" style={{ marginTop: 10 }}>
-            Graph built: {graph.stateCount()} states, {graph.totalTransitions()} transitions.
+            Graph built: {stateCount} states, {edgeCount} transitions.
           </div>
         )}
         {binaryInfo && (

@@ -4,7 +4,7 @@
  * React pattern: subscribe in useEffect, accumulate payload in useState.
  */
 import React, { useEffect, useState } from 'react';
-import { useIntent } from '../IntentContext';
+import { usePassiveIntent } from '@passiveintent/react';
 import CodeBlock from '../components/CodeBlock';
 import type { HighEntropyPayload } from '@passiveintent/react';
 
@@ -27,7 +27,7 @@ const RANDOM_STATES = [
 ];
 
 export default function HighEntropy() {
-  const { track, on } = useIntent();
+  const { track, on } = usePassiveIntent();
   const [lastEvent, setLastEvent] = useState<HighEntropyPayload | null>(null);
   const [count, setCount] = useState(0);
 

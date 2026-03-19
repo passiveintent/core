@@ -3,12 +3,13 @@
  * Shows the intervention ladder recipe in React.
  */
 import React, { useEffect, useState } from 'react';
-import { useIntent } from '../IntentContext';
+import { usePassiveIntent } from '@passiveintent/react';
+import { timerAdapter } from '../adapters';
 import CodeBlock from '../components/CodeBlock';
 import type { HesitationDetectedPayload } from '@passiveintent/react';
 
 export default function Hesitation() {
-  const { track, on, timer } = useIntent();
+  const { track, on } = usePassiveIntent();
   const [status, setStatus] = useState<string | null>(null);
   const [primed, setPrimed] = useState(false);
   const [lastEvent, setLastEvent] = useState<HesitationDetectedPayload | null>(null);
@@ -20,14 +21,14 @@ export default function Hesitation() {
   }, [on]);
 
   function primeEngine() {
-    timer.reset();
+    timerAdapter.reset();
     for (let i = 0; i < 5; i++) {
       track('/products');
-      timer.fastForward(1500);
+      timerAdapter.fastForward(1500);
       track('/checkout/payment');
-      timer.fastForward(3000);
+      timerAdapter.fastForward(3000);
       track('/products');
-      timer.fastForward(2000);
+      timerAdapter.fastForward(2000);
     }
     setPrimed(true);
     setStatus('Engine primed with 5 quick visits. Now trigger the hesitation →');
@@ -35,7 +36,7 @@ export default function Hesitation() {
 
   function triggerHesitation() {
     track('/support');
-    timer.fastForward(7 * 60 * 1000); // 7 min — very abnormal
+    timerAdapter.fastForward(7 * 60 * 1000); // 7 min — very abnormal
     track('/faq');
     setStatus('Triggered: anomalous path + long dwell. Check log for hesitation_detected.');
   }

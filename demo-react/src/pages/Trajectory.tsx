@@ -2,7 +2,8 @@
  * Trajectory Anomaly — pre-trained baseline graph, walk normal vs. anomalous paths.
  */
 import React, { useEffect, useState } from 'react';
-import { useIntent } from '../IntentContext';
+import { usePassiveIntent } from '@passiveintent/react';
+import { timerAdapter } from '../adapters';
 import CodeBlock from '../components/CodeBlock';
 import { ECOMMERCE_BASELINE } from '../baseline';
 import type { TrajectoryAnomalyPayload, SerializedMarkovGraph } from '@passiveintent/react';
@@ -27,7 +28,7 @@ const ANOMALOUS_PATH = [
 ];
 
 export default function Trajectory() {
-  const { track, on, timer } = useIntent();
+  const { track, on } = usePassiveIntent();
   const [events, setEvents] = useState<TrajectoryAnomalyPayload[]>([]);
 
   useEffect(() => {
@@ -42,7 +43,7 @@ export default function Trajectory() {
   function walkAnomalous() {
     ANOMALOUS_PATH.forEach((s, i) => {
       track(s);
-      if (i > 1) timer.fastForward(300);
+      if (i > 1) timerAdapter.fastForward(300);
     });
   }
 

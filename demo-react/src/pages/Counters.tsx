@@ -3,7 +3,7 @@
  * Shows the controlled-component pattern: counter state derived on demand.
  */
 import React, { useCallback, useState } from 'react';
-import { useIntent } from '../IntentContext';
+import { usePassiveIntent } from '@passiveintent/react';
 import CodeBlock from '../components/CodeBlock';
 
 const PRESETS: Array<{ label: string; key: string; by: number }> = [
@@ -15,7 +15,7 @@ const PRESETS: Array<{ label: string; key: string; by: number }> = [
 ];
 
 export default function Counters() {
-  const { incrementCounter, getCounter, resetCounter } = useIntent();
+  const { incrementCounter, getCounter, resetCounter } = usePassiveIntent();
   const [key, setKey] = useState('offer-impressions');
   const [by, setBy] = useState(1);
   const [result, setResult] = useState<string | null>(null);

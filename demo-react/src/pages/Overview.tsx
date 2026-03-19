@@ -4,7 +4,7 @@
  * React pattern: useEffect polling on a 1s interval to keep metrics fresh.
  */
 import React, { useCallback, useEffect, useState } from 'react';
-import { useIntent } from '../IntentContext';
+import { usePassiveIntent } from '@passiveintent/react';
 import MetricCard from '../components/MetricCard';
 import CodeBlock from '../components/CodeBlock';
 import type { PassiveIntentTelemetry } from '@passiveintent/react';
@@ -23,7 +23,7 @@ const QUICK_STATES = [
 ];
 
 export default function Overview() {
-  const { track, getTelemetry } = useIntent();
+  const { track, getTelemetry } = usePassiveIntent();
   const [telem, setTelem] = useState<PassiveIntentTelemetry | null>(null);
   const [stateCount, setStateCount] = useState(0);
 

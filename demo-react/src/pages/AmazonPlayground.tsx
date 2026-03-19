@@ -5,7 +5,8 @@
  * Every signal → proposed action mapping is visible to non-technical PMs.
  */
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { useIntent } from '../IntentContext';
+import { usePassiveIntent } from '@passiveintent/react';
+import { timerAdapter, lifecycleAdapter } from '../adapters';
 import type {
   HighEntropyPayload,
   DwellTimeAnomalyPayload,
@@ -118,7 +119,7 @@ let _interventionSeq = 0;
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export default function AmazonPlayground() {
-  const { track, on, timer, lifecycle, incrementCounter, resetCounter } = useIntent();
+  const { track, on, incrementCounter, resetCounter } = usePassiveIntent();
 
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [cartItems, setCartItems] = useState<Product[]>([]);
@@ -276,15 +277,15 @@ export default function AmazonPlayground() {
       const hub = '/amazon/home';
       for (let round = 0; round < 3; round++) {
         for (const p of PRODUCTS) {
-          timer.fastForward(100);
+          timerAdapter.fastForward(100);
           track(hub);
-          timer.fastForward(100);
+          timerAdapter.fastForward(100);
           track(p.state);
         }
         await yieldFrame();
       }
     } finally {
-      timer.resetOffset();
+      timerAdapter.resetOffset();
       simRef.current = false;
       setSimulating(false);
     }
@@ -307,25 +308,25 @@ export default function AmazonPlayground() {
         '/amazon/home',
       ];
       for (let i = 0; i < states.length; i++) {
-        timer.fastForward(5000);
+        timerAdapter.fastForward(5000);
         track(states[i]);
         if (i % 3 === 2) await yieldFrame();
       }
     } finally {
-      timer.resetOffset();
+      timerAdapter.resetOffset();
       simRef.current = false;
       setSimulating(false);
     }
   }, [track, timer]);
 
   const simulateExitIntent = useCallback(() => {
-    lifecycle.triggerExitIntent();
+    lifecycleAdapter.triggerExitIntent();
   }, [lifecycle]);
 
   const simulateTabSwitch = useCallback(() => {
-    lifecycle.triggerPause();
+    lifecycleAdapter.triggerPause();
     // Auto-resume after 2s to fire attention_return with hiddenDuration
-    setTimeout(() => lifecycle.triggerResume(), 2000);
+    setTimeout(() => lifecycleAdapter.triggerResume(), 2000);
   }, [lifecycle]);
 
   const simulateBotActivity = useCallback(async () => {
@@ -346,7 +347,7 @@ export default function AmazonPlayground() {
         await yieldFrame();
       }
     } finally {
-      timer.resetOffset();
+      timerAdapter.resetOffset();
       simRef.current = false;
       setSimulating(false);
     }
@@ -368,12 +369,12 @@ export default function AmazonPlayground() {
         '/account/cancel-subscription/confirm',
       ];
       for (let i = 0; i < cancelPath.length; i++) {
-        timer.fastForward(4000);
+        timerAdapter.fastForward(4000);
         track(cancelPath[i]);
         if (i % 3 === 2) await yieldFrame();
       }
     } finally {
-      timer.resetOffset();
+      timerAdapter.resetOffset();
       simRef.current = false;
       setSimulating(false);
     }

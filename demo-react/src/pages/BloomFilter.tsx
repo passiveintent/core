@@ -4,34 +4,20 @@
  * React pattern: controlled input + local state for the standalone filter demo.
  */
 import React, { useCallback, useState } from 'react';
-import { BloomFilter, computeBloomConfig } from '@passiveintent/react';
-import { useIntent } from '../IntentContext';
+import { BloomFilter, computeBloomConfig, usePassiveIntent, useBloomFilter } from '@passiveintent/react';
 import CodeBlock from '../components/CodeBlock';
 
-function getBits(bf: BloomFilter): boolean[] {
-  const b64 = bf.toBase64();
-  const bytes = atob(b64);
-  const bits: boolean[] = [];
-  for (let i = 0; i < Math.min(bytes.length, 32); i++) {
-    const byte = bytes.charCodeAt(i);
-    for (let k = 7; k >= 0; k--) bits.push(!!((byte >> k) & 1));
-  }
-  return bits;
-}
-
 export default function BloomFilterPage() {
-  const { hasSeen } = useIntent();
+  const { hasSeen } = usePassiveIntent();
 
   // hasSeen() panel
   const [checkInput, setCheckInput] = useState('/checkout/payment');
   const [checkResult, setCheckResult] = useState<boolean | null>(null);
 
   // Standalone BloomFilter panel
-  const [bf] = useState(() => new BloomFilter({ bitSize: 512, hashCount: 4 }));
+  const { add, check, estimatedFPR, bits } = useBloomFilter({ bitSize: 512, hashCount: 4 });
   const [bfInput, setBfInput] = useState('user@example.com');
-  const [bfItems, setBfItems] = useState(0);
   const [bfResult, setBfResult] = useState<string | null>(null);
-  const [bits, setBits] = useState<boolean[]>(() => getBits(bf));
 
   // computeBloomConfig panel
   const [cfgItems, setCfgItems] = useState(1000);
@@ -47,18 +33,14 @@ export default function BloomFilterPage() {
   }, [hasSeen, checkInput]);
 
   const handleAdd = useCallback(() => {
-    bf.add(bfInput);
-    setBfItems((n) => n + 1);
-    setBits(getBits(bf));
-    setBfResult(
-      `Added "${bfInput}". Estimated FPR: ${(bf.estimateCurrentFPR(bfItems + 1) * 100).toFixed(3)}%`,
-    );
-  }, [bf, bfInput, bfItems]);
+    add(bfInput);
+    setBfResult(`Added "${bfInput}". Estimated FPR: ${(estimatedFPR * 100).toFixed(3)}%`);
+  }, [add, bfInput, estimatedFPR]);
 
   const handleTest = useCallback(() => {
-    const r = bf.check(bfInput);
+    const r = check(bfInput);
     setBfResult(`"${bfInput}" → ${r ? '✓ Probably in set' : '✗ Definitely not in set'}`);
-  }, [bf, bfInput]);
+  }, [check, bfInput]);
 
   const handleComputeCfg = useCallback(() => {
     setCfgResult(computeBloomConfig(cfgItems, cfgFpr));
@@ -67,12 +49,12 @@ export default function BloomFilterPage() {
   return (
     <>
       <div className="demo-header">
-        <div className="hook-callout">⚛️ hasSeen() + standalone BloomFilter</div>
+        <div className="hook-callout">⚛️ hasSeen() + useBloomFilter()</div>
         <h2 className="demo-title">Bloom Filter API</h2>
         <p className="demo-description">
           <strong>hasSeen(route)</strong> is an O(k) membership test on the engine's internal Bloom
           filter — useful to check if a user has ever visited a page without storing a list. Use{' '}
-          <strong>BloomFilter</strong> standalone for your own deduplication needs, and
+          <strong>useBloomFilter()</strong> standalone for your own deduplication needs, and
           <strong> computeBloomConfig()</strong> to size it optimally.
         </p>
       </div>
@@ -119,7 +101,7 @@ export default function BloomFilterPage() {
             </div>
           )}
           <div className="bit-viz" style={{ marginTop: 12 }}>
-            {bits.map((on, i) => (
+            {bits.slice(0, 256).map((on, i) => (
               <div key={i} className={`bit${on ? ' on' : ''}`} />
             ))}
           </div>
@@ -158,18 +140,14 @@ export default function BloomFilterPage() {
 
       <CodeBlock
         label="BloomFilter API"
-        code={`<span class="kw">import</span> { <span class="type">BloomFilter</span>, <span class="fn">computeBloomConfig</span> } <span class="kw">from</span> <span class="str">'@passiveintent/react'</span>;
+        code={`<span class="kw">import</span> { <span class="type">BloomFilter</span>, <span class="fn">computeBloomConfig</span>, <span class="fn">useBloomFilter</span> } <span class="kw">from</span> <span class="str">'@passiveintent/react'</span>;
 
-<span class="kw">const</span> cfg = <span class="fn">computeBloomConfig</span>(<span class="num">1_000</span>, <span class="num">0.01</span>);
-<span class="kw">const</span> bf  = <span class="kw">new</span> <span class="type">BloomFilter</span>(cfg.bitSize, cfg.hashCount);
+<span class="cmt">// Reactive hook — owns the instance lifecycle</span>
+<span class="kw">const</span> { <span class="prop">add</span>, <span class="prop">check</span>, <span class="prop">itemCount</span>, <span class="prop">estimatedFPR</span>, <span class="prop">bits</span> } = <span class="fn">useBloomFilter</span>({ bitSize: <span class="num">512</span>, hashCount: <span class="num">4</span> });
 
-bf.<span class="fn">add</span>(<span class="str">'user@example.com'</span>);
-bf.<span class="fn">check</span>(<span class="str">'user@example.com'</span>);  <span class="cmt">// true  — probably seen (no false negatives)</span>
-bf.<span class="fn">check</span>(<span class="str">'other@example.com'</span>); <span class="cmt">// false — definitely not seen</span>
-
-<span class="cmt">// Compact serialization for cross-tab / server transport</span>
-<span class="kw">const</span> snap = bf.<span class="fn">toBase64</span>();
-<span class="kw">const</span> back = <span class="type">BloomFilter</span>.<span class="fn">fromBase64</span>(snap, cfg.hashCount);
+<span class="fn">add</span>(<span class="str">'user@example.com'</span>);
+<span class="fn">check</span>(<span class="str">'user@example.com'</span>);  <span class="cmt">// true  — probably seen (no false negatives)</span>
+<span class="fn">check</span>(<span class="str">'other@example.com'</span>); <span class="cmt">// false — definitely not seen</span>
 
 <span class="cmt">// Via usePassiveIntent</span>
 <span class="kw">const</span> { hasSeen } = <span class="fn">usePassiveIntent</span>(config);

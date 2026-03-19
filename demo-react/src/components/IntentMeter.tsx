@@ -10,7 +10,8 @@
  * back to 0 at an accelerated rate so the meter visibly "settles".
  */
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { useIntent } from '../IntentContext';
+import { usePassiveIntent } from '@passiveintent/react';
+import { timerAdapter, lifecycleAdapter } from '../adapters';
 import type {
   HighEntropyPayload,
   DwellTimeAnomalyPayload,
@@ -46,7 +47,7 @@ const RAGE_STATES = [
 ];
 
 export default function IntentMeter() {
-  const { on, getTelemetry, track, timer, lifecycle } = useIntent();
+  const { on, getTelemetry, track } = usePassiveIntent();
 
   const [rage, setRage] = useState(0);
   const [anxiety, setAnxiety] = useState(0);
@@ -131,7 +132,7 @@ export default function IntentMeter() {
       try {
         await fn();
       } finally {
-        timer.resetOffset();
+        timerAdapter.resetOffset();
         simRef.current = false;
         setSimulating(false);
 
@@ -152,9 +153,9 @@ export default function IntentMeter() {
         const hub = '/sim/rage/hub';
         for (let round = 0; round < 3; round++) {
           for (const s of RAGE_STATES) {
-            timer.fastForward(100);
+            timerAdapter.fastForward(100);
             track(hub);
-            timer.fastForward(100);
+            timerAdapter.fastForward(100);
             track(s);
           }
           await yieldFrame(); // let React render after each round
@@ -189,7 +190,7 @@ export default function IntentMeter() {
           '/sim/anxiety/compare',
         ];
         for (let i = 0; i < oddPath.length; i++) {
-          timer.fastForward(2000);
+          timerAdapter.fastForward(2000);
           track(oddPath[i]);
           if (i % 5 === 4) await yieldFrame();
         }
@@ -203,17 +204,17 @@ export default function IntentMeter() {
         const a = '/sim/hes/browse';
         const b = '/sim/hes/checkout';
         for (let i = 0; i < 6; i++) {
-          timer.fastForward(3000);
+          timerAdapter.fastForward(3000);
           track(a);
-          timer.fastForward(3000);
+          timerAdapter.fastForward(3000);
           track(b);
           if (i % 2 === 1) await yieldFrame();
         }
         await yieldFrame();
         for (let i = 0; i < 2; i++) {
-          timer.fastForward(30000);
+          timerAdapter.fastForward(30000);
           track(a);
-          timer.fastForward(30000);
+          timerAdapter.fastForward(30000);
           track(b);
           await yieldFrame();
         }
@@ -235,7 +236,7 @@ export default function IntentMeter() {
     () =>
       runSim(async () => {
         track('/sim/idle/page');
-        timer.fastForward(130_000);
+        timerAdapter.fastForward(130_000);
       }),
     [runSim, track, timer],
   );
@@ -243,7 +244,7 @@ export default function IntentMeter() {
   const simExit = useCallback(
     () =>
       runSim(async () => {
-        lifecycle.triggerExitIntent();
+        lifecycleAdapter.triggerExitIntent();
       }),
     [runSim, lifecycle],
   );

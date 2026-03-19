@@ -2,14 +2,14 @@
  * Bot Detection — EntropyGuard, bot_detected event.
  */
 import React, { useEffect, useState } from 'react';
-import { useIntent } from '../IntentContext';
+import { usePassiveIntent } from '@passiveintent/react';
 import CodeBlock from '../components/CodeBlock';
 import type { BotDetectedPayload, PassiveIntentTelemetry } from '@passiveintent/react';
 
 const STATES = ['/home', '/products', '/cart', '/checkout', '/search', '/blog'];
 
 export default function BotDetection() {
-  const { track, on, getTelemetry } = useIntent();
+  const { track, on, getTelemetry } = usePassiveIntent();
   const [botEvent, setBotEvent] = useState<BotDetectedPayload | null>(null);
   const [telem, setTelem] = useState<PassiveIntentTelemetry | null>(null);
 

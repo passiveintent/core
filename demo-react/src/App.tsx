@@ -90,7 +90,12 @@ export default function App() {
   return (
     <IntentErrorBoundary
       fallback={(err, reset) => (
-        <div className="alert alert-error engine-error-boundary">
+        <div
+          className="alert alert-error engine-error-boundary"
+          role="alert"
+          aria-live="assertive"
+          aria-atomic="true"
+        >
           <strong>[PassiveIntent] Engine failed to initialise</strong>
           <pre className="engine-error-message">{err.message}</pre>
           <button type="button" onClick={reset}>

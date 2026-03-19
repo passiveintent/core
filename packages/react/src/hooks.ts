@@ -29,8 +29,8 @@ import {
   useRef,
   useState,
   useSyncExternalStore,
-  useTransition,
 } from 'react';
+import { useSyncExternalStoreWithSelector } from 'use-sync-external-store/with-selector';
 import { BloomFilter, MarkovGraph } from '@passiveintent/core';
 import type {
   BloomFilterConfig,
@@ -95,7 +95,11 @@ export function useExitIntent<T = UseExitIntentReturn>(
   select?: (data: UseExitIntentReturn) => T,
 ): UseExitIntentReturn | T {
   const ctx = useContext(PassiveIntentContext);
-  const [isPending, startExitTransition] = useTransition();
+  // useTransition's isPending does not reliably reflect pending state when the
+  // store update is driven by useSyncExternalStore's onStoreChange. Use a local
+  // useState flag instead: set it true before notifying, clear it in the next
+  // microtask after the synchronous notify completes.
+  const [isPending, setIsPending] = useState(false);
 
   const snapshotRef = useRef<ExitIntentData>(EXIT_INITIAL);
   // notifyRef captures React's onStoreChange so dismiss() can imperatively
@@ -124,30 +128,63 @@ export function useExitIntent<T = UseExitIntentReturn>(
     [ctx],
   );
 
+  // Set isPending true before notifying, then clear it in the next microtask
+  // once the synchronous store notification has been delivered to React.
+  const dismiss = useCallback(() => {
+    setIsPending(true);
+    snapshotRef.current = EXIT_INITIAL;
+    notifyRef.current?.();
+    Promise.resolve().then(() => setIsPending(false));
+  }, []);
+
+  // getSnapshot must return the cached ref value — never a new object literal —
+  // to satisfy useSyncExternalStore(WithSelector)'s requirement that repeated
+  // calls during the same render return the same reference.
   const getSnapshot = useCallback(() => snapshotRef.current, []);
 
-  const data = useSyncExternalStore(subscribe, getSnapshot, () => EXIT_INITIAL);
+  // Wrap the caller's selector (or the identity) so it receives the full
+  // UseExitIntentReturn shape. dismiss and isPending are folded in here via
+  // refs so the wrapper's identity is stable and doesn't recreate on every render.
+  const isPendingRef = useRef(isPending);
+  isPendingRef.current = isPending;
+  const dismissRef = useRef(dismiss);
+  dismissRef.current = dismiss;
 
-  // Wrap dismiss in a transition so the reset is deferrable. isPending is
-  // true briefly while React flushes the deferred update, giving callers a
-  // signal to show a loading indicator while the overlay collapses.
-  const dismiss = useCallback(() => {
-    startExitTransition(() => {
-      snapshotRef.current = EXIT_INITIAL;
-      notifyRef.current?.();
-    });
-  }, [startExitTransition]);
+  const wrappedSelect = useCallback(
+    (data: ExitIntentData): UseExitIntentReturn | T => {
+      const full: UseExitIntentReturn = {
+        ...data,
+        dismiss: dismissRef.current,
+        isPending: isPendingRef.current,
+      };
+      return select ? select(full) : full;
+    },
+    // select identity changes only when the caller passes a new function ref.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [select],
+  );
 
-  useDebugValue(data, (d) => (d.triggered ? `triggered → ${d.likelyNext ?? 'unknown'}` : 'idle'));
+  // useSyncExternalStoreWithSelector applies wrappedSelect at the store level:
+  // React only schedules a re-render when Object.is(prevSelected, nextSelected)
+  // is false, so selectors projecting to primitives or stable refs avoid
+  // re-renders caused by unrelated field changes in the snapshot.
+  const result = useSyncExternalStoreWithSelector(
+    subscribe,
+    getSnapshot,
+    () => EXIT_INITIAL,
+    wrappedSelect,
+    Object.is,
+  );
+
+  useDebugValue(result, (r) => {
+    const full = r as UseExitIntentReturn;
+    return full.triggered ? `triggered → ${full.likelyNext ?? 'unknown'}` : 'idle';
+  });
 
   // Throw after all hooks — required by Rules of Hooks.
   if (!ctx) throw new Error(providerError('useExitIntent'));
 
-  // useMemo ensures the returned object is referentially stable between renders
-  // when none of data, dismiss, or isPending has changed.
-  const result = useMemo(() => ({ ...data, dismiss, isPending }), [data, dismiss, isPending]);
-
-  return select ? select(result) : result;
+  return result as UseExitIntentReturn | T;
 }
 
 // ── useIdle ───────────────────────────────────────────────────────────────────
@@ -189,9 +226,6 @@ export function useIdle(): UseIdleReturn;
 export function useIdle<T>(select: (data: UseIdleReturn) => T): T;
 export function useIdle<T = UseIdleReturn>(select?: (data: UseIdleReturn) => T): UseIdleReturn | T {
   const ctx = useContext(PassiveIntentContext);
-  // isPending is always false for useIdle — exposed for interface consistency
-  // with useExitIntent and useAttentionReturn.
-  const [isPending] = useTransition();
 
   const snapshotRef = useRef<Omit<UseIdleReturn, 'isPending'>>(IDLE_INITIAL);
 
@@ -214,17 +248,38 @@ export function useIdle<T = UseIdleReturn>(select?: (data: UseIdleReturn) => T):
     [ctx],
   );
 
+  // getSnapshot returns the cached ref — never a new object — to satisfy the
+  // stable-reference requirement of useSyncExternalStore(WithSelector).
   const getSnapshot = useCallback(() => snapshotRef.current, []);
 
-  const snapshot = useSyncExternalStore(subscribe, getSnapshot, () => IDLE_INITIAL);
+  // Fold in isPending: false (always) so the caller's selector receives the
+  // full UseIdleReturn shape. Selector identity only changes when the caller
+  // passes a new function reference.
+  const wrappedSelect = useCallback(
+    (data: Omit<UseIdleReturn, 'isPending'>): UseIdleReturn | T => {
+      const full: UseIdleReturn = { ...data, isPending: false as const };
+      return select ? select(full) : full;
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [select],
+  );
 
-  useDebugValue(snapshot, (s) => (s.isIdle ? `idle ${s.idleMs}ms` : 'active'));
+  const result = useSyncExternalStoreWithSelector(
+    subscribe,
+    getSnapshot,
+    () => IDLE_INITIAL,
+    wrappedSelect,
+    Object.is,
+  );
+
+  useDebugValue(result, (r) => {
+    const full = r as UseIdleReturn;
+    return full.isIdle ? `idle ${full.idleMs}ms` : 'active';
+  });
 
   if (!ctx) throw new Error(providerError('useIdle'));
 
-  const result = useMemo(() => ({ ...snapshot, isPending }), [snapshot, isPending]);
-
-  return select ? select(result) : result;
+  return result as UseIdleReturn | T;
 }
 
 // ── useAttentionReturn ────────────────────────────────────────────────────────
@@ -271,7 +326,11 @@ export function useAttentionReturn<T = UseAttentionReturnReturn>(
   select?: (data: UseAttentionReturnReturn) => T,
 ): UseAttentionReturnReturn | T {
   const ctx = useContext(PassiveIntentContext);
-  const [isPending, startAttentionTransition] = useTransition();
+  // useTransition's isPending does not reliably reflect pending state when the
+  // store update is driven by useSyncExternalStore's onStoreChange. Use a local
+  // useState flag instead: set it true before notifying, clear it in the next
+  // microtask after the synchronous notify completes.
+  const [isPending, setIsPending] = useState(false);
 
   const snapshotRef = useRef<AttentionData>(ATTENTION_INITIAL);
   const notifyRef = useRef<(() => void) | null>(null);
@@ -297,27 +356,56 @@ export function useAttentionReturn<T = UseAttentionReturnReturn>(
     [ctx],
   );
 
+  // Set isPending true before notifying, then clear it in the next microtask
+  // once the synchronous store notification has been delivered to React.
+  const dismiss = useCallback(() => {
+    setIsPending(true);
+    snapshotRef.current = ATTENTION_INITIAL;
+    notifyRef.current?.();
+    Promise.resolve().then(() => setIsPending(false));
+  }, []);
+
+  // getSnapshot returns the cached ref — never a new object — to satisfy the
+  // stable-reference requirement of useSyncExternalStore(WithSelector).
   const getSnapshot = useCallback(() => snapshotRef.current, []);
 
-  const data = useSyncExternalStore(subscribe, getSnapshot, () => ATTENTION_INITIAL);
+  // Fold in dismiss and isPending so the caller's selector receives the full
+  // UseAttentionReturnReturn shape. Refs keep the wrapper's identity stable.
+  const isPendingRef = useRef(isPending);
+  isPendingRef.current = isPending;
+  const dismissRef = useRef(dismiss);
+  dismissRef.current = dismiss;
 
-  // Wrap dismiss in a transition so the reset is deferrable. isPending is
-  // true briefly while React flushes the deferred update.
-  const dismiss = useCallback(() => {
-    startAttentionTransition(() => {
-      snapshotRef.current = ATTENTION_INITIAL;
-      notifyRef.current?.();
-    });
-  }, [startAttentionTransition]);
+  const wrappedSelect = useCallback(
+    (data: AttentionData): UseAttentionReturnReturn | T => {
+      const full: UseAttentionReturnReturn = {
+        ...data,
+        dismiss: dismissRef.current,
+        isPending: isPendingRef.current,
+      };
+      return select ? select(full) : full;
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [select],
+  );
 
-  useDebugValue(data, (d) => (d.returned ? `returned after ${d.hiddenDuration}ms` : 'present'));
+  const result = useSyncExternalStoreWithSelector(
+    subscribe,
+    getSnapshot,
+    () => ATTENTION_INITIAL,
+    wrappedSelect,
+    Object.is,
+  );
+
+  useDebugValue(result, (r) => {
+    const full = r as UseAttentionReturnReturn;
+    return full.returned ? `returned after ${full.hiddenDuration}ms` : 'present';
+  });
 
   // Throw after all hooks — required by Rules of Hooks.
   if (!ctx) throw new Error(providerError('useAttentionReturn'));
 
-  const result = useMemo(() => ({ ...data, dismiss, isPending }), [data, dismiss, isPending]);
-
-  return select ? select(result) : result;
+  return result as UseAttentionReturnReturn | T;
 }
 
 // ── useSignals ────────────────────────────────────────────────────────────────

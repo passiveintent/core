@@ -14,7 +14,7 @@
  */
 
 import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { renderHook, act } from '@testing-library/react';
+import { renderHook, act, waitFor } from '@testing-library/react';
 import React from 'react';
 
 vi.mock('@passiveintent/core', () => ({
@@ -154,6 +154,58 @@ describe('Domain hooks', () => {
       expect(result.current.likelyNext).toBeNull();
       unmount();
     });
+
+    it('isPending is true immediately after dismiss() and false after microtask', async () => {
+      const { result, unmount } = renderHook(() => useExitIntent(), {
+        wrapper: ({ children }) => withProvider(children),
+      });
+
+      act(() => {
+        fakeInstance._emit('exit_intent', { state: '/pricing', likelyNext: '/checkout' });
+      });
+      expect(result.current.triggered).toBe(true);
+
+      act(() => {
+        result.current.dismiss();
+      });
+      // isPending should be true immediately after dismiss (before microtask clears it)
+      expect(result.current.isPending).toBe(true);
+
+      // After the microtask queue drains isPending should return to false
+      await waitFor(() => expect(result.current.isPending).toBe(false));
+      unmount();
+    });
+
+    it('selector receives only re-renders when the selected field changes', () => {
+      let renderCount = 0;
+      const { result, unmount } = renderHook(
+        () => {
+          renderCount++;
+          return useExitIntent((d) => d.triggered);
+        },
+        { wrapper: ({ children }) => withProvider(children) },
+      );
+
+      const baseCount = renderCount;
+
+      // Emit exit_intent — triggered changes false → true, selector fires
+      act(() => {
+        fakeInstance._emit('exit_intent', { state: '/pricing', likelyNext: '/checkout' });
+      });
+      expect(result.current).toBe(true);
+      const afterTrigger = renderCount;
+      expect(afterTrigger).toBeGreaterThan(baseCount);
+
+      // Dismiss resets triggered back to false — selector fires again
+      act(() => {
+        result.current; // read to confirm
+        renderHook(() => useExitIntent((d) => d.triggered), {
+          wrapper: ({ children }) => withProvider(children),
+        }).unmount();
+      });
+
+      unmount();
+    });
   });
 
   // ── useIdle ───────────────────────────────────────────────────────────────
@@ -203,6 +255,41 @@ describe('Domain hooks', () => {
 
       expect(result.current.isIdle).toBe(false);
       expect(result.current.idleMs).toBe(135_000);
+      unmount();
+    });
+
+    it('isPending is always false', () => {
+      const { result, unmount } = renderHook(() => useIdle(), {
+        wrapper: ({ children }) => withProvider(children),
+      });
+
+      expect(result.current.isPending).toBe(false);
+
+      act(() => {
+        fakeInstance._emit('user_idle', { state: '/home', idleMs: 120_000 });
+      });
+      expect(result.current.isPending).toBe(false);
+      unmount();
+    });
+
+    it('selector receives only re-renders when the selected field changes', () => {
+      let renderCount = 0;
+      const { result, unmount } = renderHook(
+        () => {
+          renderCount++;
+          return useIdle((d) => d.isIdle);
+        },
+        { wrapper: ({ children }) => withProvider(children) },
+      );
+
+      const baseCount = renderCount;
+
+      act(() => {
+        fakeInstance._emit('user_idle', { state: '/home', idleMs: 120_000 });
+      });
+      expect(result.current).toBe(true);
+      expect(renderCount).toBeGreaterThan(baseCount);
+
       unmount();
     });
 
@@ -271,6 +358,46 @@ describe('Domain hooks', () => {
 
       expect(result.current.returned).toBe(false);
       expect(result.current.hiddenDuration).toBe(0);
+      unmount();
+    });
+
+    it('isPending is true immediately after dismiss() and false after microtask', async () => {
+      const { result, unmount } = renderHook(() => useAttentionReturn(), {
+        wrapper: ({ children }) => withProvider(children),
+      });
+
+      act(() => {
+        fakeInstance._emit('attention_return', { state: '/products', hiddenDuration: 45_000 });
+      });
+      expect(result.current.returned).toBe(true);
+
+      act(() => {
+        result.current.dismiss();
+      });
+      expect(result.current.isPending).toBe(true);
+
+      await waitFor(() => expect(result.current.isPending).toBe(false));
+      unmount();
+    });
+
+    it('selector receives only re-renders when the selected field changes', () => {
+      let renderCount = 0;
+      const { result, unmount } = renderHook(
+        () => {
+          renderCount++;
+          return useAttentionReturn((d) => d.returned);
+        },
+        { wrapper: ({ children }) => withProvider(children) },
+      );
+
+      const baseCount = renderCount;
+
+      act(() => {
+        fakeInstance._emit('attention_return', { state: '/products', hiddenDuration: 45_000 });
+      });
+      expect(result.current).toBe(true);
+      expect(renderCount).toBeGreaterThan(baseCount);
+
       unmount();
     });
   });

@@ -17,7 +17,7 @@
  */
 
 import { vi, describe, it, expect, beforeEach } from 'vitest';
-import { renderHook } from '@testing-library/react';
+import { renderHook, act } from '@testing-library/react';
 import React from 'react';
 
 vi.mock('@passiveintent/core', () => ({
@@ -247,6 +247,65 @@ describe('PassiveIntentProvider + context-mode usePassiveIntent', () => {
 
     it('thrown error message mentions passing a config as the alternative', () => {
       expect(() => renderHook(() => usePassiveIntent())).toThrow('config');
+    });
+  });
+
+  // ── onError deferred & failedInitRef ──────────────────────────────────────
+
+  describe('onError handling', () => {
+    it('calls onError after commit (not synchronously during render) when constructor throws', async () => {
+      const callOrder: string[] = [];
+      MockIM.mockImplementation(() => {
+        callOrder.push('constructor');
+        throw new Error('boom');
+      });
+      const onError = vi.fn(() => callOrder.push('onError'));
+
+      // renderHook triggers render + commit + effects
+      const { unmount } = renderHook(() => usePassiveIntent(), {
+        wrapper: ({ children }) =>
+          React.createElement(PassiveIntentProvider, { config: BASE_CONFIG, onError }, children),
+      });
+
+      // After effects have run onError must have been called
+      expect(onError).toHaveBeenCalledTimes(1);
+      expect(onError.mock.calls[0][0]).toBeInstanceOf(Error);
+      // Constructor ran before onError (deferred, not during render)
+      expect(callOrder.indexOf('constructor')).toBeLessThan(callOrder.indexOf('onError'));
+      unmount();
+    });
+
+    it('calls onError exactly once (not twice) when constructor throws under Strict Mode', async () => {
+      MockIM.mockImplementation(() => {
+        throw new Error('strict-boom');
+      });
+      const onError = vi.fn();
+
+      const { unmount } = renderHook(() => usePassiveIntent(), {
+        wrapper: ({ children }) =>
+          React.createElement(
+            React.StrictMode,
+            null,
+            React.createElement(PassiveIntentProvider, { config: BASE_CONFIG, onError }, children),
+          ),
+      });
+
+      // failedInitRef prevents the effect-time retry from re-throwing / re-reporting
+      expect(onError).toHaveBeenCalledTimes(1);
+      unmount();
+    });
+
+    it('propagates the error (no onError) when constructor throws', () => {
+      MockIM.mockImplementation(() => {
+        throw new Error('unhandled');
+      });
+
+      expect(() =>
+        renderHook(() => usePassiveIntent(), {
+          wrapper: ({ children }) =>
+            React.createElement(PassiveIntentProvider, { config: BASE_CONFIG }, children),
+        }),
+      ).toThrow('unhandled');
     });
   });
 

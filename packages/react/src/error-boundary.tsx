@@ -67,7 +67,7 @@ export class IntentErrorBoundary extends Component<IntentErrorBoundaryProps, Sta
         this.props.fallback(error, this.reset)
       ) : (
         <div role="alert" aria-live="assertive" aria-atomic="true">
-          <strong>[PassiveIntent]</strong> Failed to initialise: <code>{error.message}</code>{' '}
+          <strong>[PassiveIntent]</strong> Something went wrong: <code>{error.message}</code>{' '}
           <button type="button" onClick={this.reset}>
             Retry
           </button>

@@ -202,7 +202,7 @@ body {
   height: calc(100vh - var(--header-h));
   padding: var(--layout-gap);
   overflow: hidden;
-  align-items: start;
+  align-items: stretch;
   position: relative;
   min-height: 0;
   transition: grid-template-columns 0.25s ease;

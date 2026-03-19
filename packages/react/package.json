@@ -62,11 +62,13 @@
     "typecheck": "tsc -b",
     "prepublishOnly": "npm run build"
   },
-  "dependencies": {},
+  "dependencies": {
+    "use-sync-external-store": "^1.6.0"
+  },
   "peerDependencies": {
+    "@passiveintent/core": "^1.1.0",
     "react": ">=18.0.0",
-    "react-dom": ">=18.0.0",
-    "@passiveintent/core": "^1.1.0"
+    "react-dom": ">=18.0.0"
   },
   "peerDependenciesMeta": {
     "react-dom": {
@@ -78,6 +80,7 @@
     "@testing-library/react": "^16.3.2",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.2.3",
+    "@types/use-sync-external-store": "^1.5.0",
     "jsdom": "^28.1.0",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",

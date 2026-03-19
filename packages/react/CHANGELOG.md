@@ -5,6 +5,26 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [1.2.0] - 2026-03-20
+
+### Added
+
+- `IntentErrorBoundary` — a library-level React error boundary for wrapping `PassiveIntentProvider`. Catches errors thrown by the synchronous `IntentManager` constructor (e.g. invalid config, restricted storage origin) and prevents them from crashing the entire tree. Accepts an optional `fallback` render prop `(error, reset) => ReactNode`; defaults to an accessible `role="alert"` box with a Retry button.
+- `onError` prop on `PassiveIntentProvider` — when provided, absorbs `IntentManager` constructor errors instead of propagating them to the nearest error boundary. All hooks return safe zero-value snapshots when the engine fails to initialise. When omitted, errors propagate normally and can be caught by `IntentErrorBoundary`.
+- SSR safety test suite (`ssr-safety.test.ts`) covering zero-value defaults for all hooks when the engine is absent.
+- `'use client'` directive on `PassiveIntentProvider` for compatibility with React Server Components.
+
+### Changed
+
+- `useExitIntent` now uses `useSyncExternalStoreWithSelector` (from `use-sync-external-store/with-selector`) instead of `useSyncExternalStore`, enabling selector-level memoisation: re-renders are only scheduled when the projected value changes (via `Object.is`), reducing unnecessary renders for callers that project to primitives or stable refs.
+- `useExitIntent`'s `isPending` flag is now managed via `useState` instead of `useTransition`. `useTransition`'s pending state does not reliably reflect updates driven by `useSyncExternalStore`'s `onStoreChange`; the new implementation sets the flag immediately before notifying and clears it in the next microtask.
+- `PassiveIntentProvider` defers `onError` invocation to a post-commit effect, avoiding the React rule against side-effects during render. A `failedInitRef` guard prevents duplicate error reports and redundant re-initialisation when render-phase construction has already failed.
+- Added `use-sync-external-store` as a direct runtime dependency (previously relied on the transitive copy from React internals).
+- React peer dependency updated to `>=18.0.0` (React 19 officially supported).
+- `@types/react` and `@types/react-dom` dev dependencies updated to `^19`.
+
+---
+
 ## [1.1.0] - 2026-03-14
 
 ### Added

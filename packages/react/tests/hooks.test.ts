@@ -196,13 +196,13 @@ describe('Domain hooks', () => {
       const afterTrigger = renderCount;
       expect(afterTrigger).toBeGreaterThan(baseCount);
 
-      // Dismiss resets triggered back to false — selector fires again
+      // Emit again with triggered still true but a different unselected field (likelyNext) —
+      // the selector returns the same value so no re-render should occur.
       act(() => {
-        result.current; // read to confirm
-        renderHook(() => useExitIntent((d) => d.triggered), {
-          wrapper: ({ children }) => withProvider(children),
-        }).unmount();
+        fakeInstance._emit('exit_intent', { state: '/pricing', likelyNext: '/cart' });
       });
+      expect(result.current).toBe(true);
+      expect(renderCount).toBe(afterTrigger);
 
       unmount();
     });
@@ -284,11 +284,21 @@ describe('Domain hooks', () => {
 
       const baseCount = renderCount;
 
+      // Emit user_idle — isIdle changes false → true, selector fires
       act(() => {
         fakeInstance._emit('user_idle', { state: '/home', idleMs: 120_000 });
       });
       expect(result.current).toBe(true);
-      expect(renderCount).toBeGreaterThan(baseCount);
+      const afterIdle = renderCount;
+      expect(afterIdle).toBeGreaterThan(baseCount);
+
+      // Emit user_idle again with isIdle still true but a different unselected field (idleMs) —
+      // the selector returns the same value so no re-render should occur.
+      act(() => {
+        fakeInstance._emit('user_idle', { state: '/home', idleMs: 180_000 });
+      });
+      expect(result.current).toBe(true);
+      expect(renderCount).toBe(afterIdle);
 
       unmount();
     });
@@ -392,11 +402,21 @@ describe('Domain hooks', () => {
 
       const baseCount = renderCount;
 
+      // Emit attention_return — returned changes false → true, selector fires
       act(() => {
         fakeInstance._emit('attention_return', { state: '/products', hiddenDuration: 45_000 });
       });
       expect(result.current).toBe(true);
-      expect(renderCount).toBeGreaterThan(baseCount);
+      const afterReturn = renderCount;
+      expect(afterReturn).toBeGreaterThan(baseCount);
+
+      // Emit attention_return again with returned still true but a different unselected field
+      // (hiddenDuration) — the selector returns the same value so no re-render should occur.
+      act(() => {
+        fakeInstance._emit('attention_return', { state: '/products', hiddenDuration: 60_000 });
+      });
+      expect(result.current).toBe(true);
+      expect(renderCount).toBe(afterReturn);
 
       unmount();
     });

@@ -9,7 +9,7 @@ import PageHeader from '../components/PageHeader';
 
 export default function ExitIntent() {
   const { track } = usePassiveIntent();
-  const { triggered, state, likelyNext, dismiss } = useExitIntent();
+  const { triggered, state, likelyNext, dismiss, isPending } = useExitIntent();
 
   function buildGraph() {
     for (let i = 0; i < 10; i++) {
@@ -74,8 +74,13 @@ export default function ExitIntent() {
           <strong>exit_intent</strong> fired! state:{' '}
           <code style={{ fontFamily: 'var(--font-mono)' }}>{state}</code> | likelyNext:{' '}
           <code style={{ fontFamily: 'var(--font-mono)' }}>{likelyNext ?? 'none'}</code>{' '}
-          <button type="button" className="btn btn-secondary" onClick={dismiss}>
-            Dismiss
+          <button
+            type="button"
+            className="btn btn-secondary"
+            onClick={dismiss}
+            disabled={isPending}
+          >
+            {isPending ? 'Dismissing…' : 'Dismiss'}
           </button>
         </div>
       )}

@@ -4,6 +4,7 @@
  * This source code is licensed under the AGPL-3.0-only license found in the
  * LICENSE file in the root directory of this source tree.
  */
+'use client';
 
 import React, { useCallback, useEffect, useMemo, useRef, type ReactNode } from 'react';
 import { IntentManager } from '@passiveintent/core';
@@ -61,6 +62,19 @@ export interface PassiveIntentProviderProps {
    * - `lifecycle` overrides `config.lifecycleAdapter`
    */
   adapters?: Partial<{ storage: StorageAdapter; timer: TimerAdapter; lifecycle: LifecycleAdapter }>;
+  /**
+   * Called when the `IntentManager` constructor throws during initialisation.
+   *
+   * When `onError` is provided and the constructor throws, the engine is
+   * skipped (all hooks return safe zero-value snapshots) instead of
+   * propagating the error to the nearest React error boundary. Use this to
+   * log errors to an observability service without crashing the tree.
+   *
+   * When `onError` is **not** provided, the error propagates normally and will
+   * be caught by a surrounding `<IntentErrorBoundary>` (or any other error
+   * boundary).
+   */
+  onError?: (error: Error) => void;
   children: ReactNode;
 }
 
@@ -96,11 +110,26 @@ export interface PassiveIntentProviderProps {
 export function PassiveIntentProvider({
   config,
   adapters,
+  onError,
   children,
 }: PassiveIntentProviderProps): React.JSX.Element {
   const instanceRef = useRef<IntentManager | null>(null);
   const configRef = useRef<IntentManagerConfig>(config);
   const adaptersRef = useRef(adapters);
+  // Mutate during render so both instantiation sites always see the latest
+  // callback without it becoming a useEffect dependency. Matches the
+  // alphaRef/targetStateRef pattern used in hooks.ts.
+  const onErrorRef = useRef(onError);
+  onErrorRef.current = onError;
+  // Stash construction errors from the render phase so they can be reported
+  // from an effect after commit — calling onErrorRef.current() during render
+  // is a side-effect and violates React's rendering contract.
+  const constructionErrorRef = useRef<Error | null>(null);
+  // Guards the effect-time recreation path: if render-phase init already
+  // failed (and onError absorbed it), skip retrying in the effect to avoid
+  // duplicate expensive failures and duplicate error reports.
+  // Reset to false on cleanup so a subsequent successful remount can proceed.
+  const failedInitRef = useRef(false);
 
   // Synchronous lazy initialization — the engine must exist before child
   // effects run (React runs child effects before parent effects). Without
@@ -115,8 +144,31 @@ export function PassiveIntentProvider({
         lifecycleAdapter: adaptersRef.current.lifecycle,
       }),
     };
-    instanceRef.current = new IntentManager(mergedConfig);
+    try {
+      instanceRef.current = new IntentManager(mergedConfig);
+    } catch (err) {
+      const error = err instanceof Error ? err : new Error(String(err));
+      if (onErrorRef.current) {
+        // Stash the error — report it after commit (see effect below).
+        // instanceRef stays null — all ctx callbacks safely no-op via optional chaining
+        constructionErrorRef.current = error;
+        failedInitRef.current = true;
+      } else {
+        throw error;
+      }
+    }
   }
+
+  // Report any error that was stashed during the render-phase instantiation.
+  // Invoking onErrorRef.current() during render is a side-effect, so we defer
+  // it to after commit here.
+  useEffect(() => {
+    if (constructionErrorRef.current) {
+      const error = constructionErrorRef.current;
+      constructionErrorRef.current = null;
+      onErrorRef.current?.(error);
+    }
+  });
 
   // In React Strict Mode, cleanup runs WITHOUT a re-render before effects
   // re-run. This means the sync init guard above (which only fires during
@@ -125,6 +177,9 @@ export function PassiveIntentProvider({
   // effect setup so the instance is live whenever effects are running.
   useEffect(() => {
     if (instanceRef.current === null && IS_BROWSER) {
+      // Skip recreation if render-phase init already failed — retrying would
+      // duplicate the expensive failure and fire onError a second time.
+      if (failedInitRef.current) return;
       const mergedConfig: IntentManagerConfig = {
         ...configRef.current,
         ...(adaptersRef.current?.storage !== undefined && { storage: adaptersRef.current.storage }),
@@ -133,11 +188,20 @@ export function PassiveIntentProvider({
           lifecycleAdapter: adaptersRef.current.lifecycle,
         }),
       };
-      instanceRef.current = new IntentManager(mergedConfig);
+      try {
+        instanceRef.current = new IntentManager(mergedConfig);
+      } catch (err) {
+        const error = err instanceof Error ? err : new Error(String(err));
+        failedInitRef.current = true;
+        onErrorRef.current?.(error);
+        // instanceRef stays null — all ctx callbacks safely no-op via optional chaining
+      }
     }
     return () => {
       instanceRef.current?.destroy();
       instanceRef.current = null;
+      // Reset so a subsequent remount (e.g. key change) can attempt creation fresh.
+      failedInitRef.current = false;
     };
   }, []);
 

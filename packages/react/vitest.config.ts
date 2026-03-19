@@ -30,7 +30,7 @@ export default defineConfig({
      * It is also required by @testing-library/react's act() and renderHook().
      */
     environment: 'jsdom',
-    include: ['tests/**/*.test.ts'],
+    include: ['tests/**/*.test.ts', 'tests/**/*.test.tsx'],
     /**
      * Ensure each test file gets a fresh module registry. This matters for
      * the SSR test that stubs `window` and re-imports the hook to re-evaluate

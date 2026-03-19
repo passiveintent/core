@@ -4,8 +4,9 @@
  * This source code is licensed under the AGPL-3.0-only license found in the
  * LICENSE file in the root directory of this source tree.
  */
+'use client';
 
-import { useCallback, useContext, useEffect, useMemo, useRef } from 'react';
+import { useCallback, useContext, useDebugValue, useEffect, useMemo, useRef } from 'react';
 import { IntentManager } from '@passiveintent/core';
 import type {
   ConversionPayload,
@@ -22,6 +23,8 @@ import type { UsePassiveIntentReturn } from './types.js';
 export type { UsePassiveIntentReturn } from './types.js';
 export { PassiveIntentProvider } from './provider.js';
 export type { PassiveIntentProviderProps } from './provider.js';
+export { IntentErrorBoundary } from './error-boundary.js';
+export type { IntentErrorBoundaryProps } from './error-boundary.js';
 
 export type {
   // Config & telemetry
@@ -283,6 +286,8 @@ export function usePassiveIntent(config?: IntentManagerConfig): UsePassiveIntent
   );
 
   // ── Conditional return — after all hooks ──────────────────────────────────
+
+  useDebugValue(configRef.current === undefined ? 'context' : 'standalone');
 
   // Context mode: no config provided → delegate to the nearest Provider.
   if (configRef.current === undefined) {

@@ -1,6 +1,6 @@
 # `@passiveintent/react`
 
-> React 18+ wrapper for [`@passiveintent/core`](../core/README.md) with provider-based sharing, standalone engine mode, reactive intent hooks, and React-friendly wrappers around the core data structures.
+> React 18 & 19 wrapper for [`@passiveintent/core`](../core/README.md) with provider-based sharing, standalone engine mode, reactive intent hooks, and React-friendly wrappers around the core data structures.
 
 [![Open React demo in StackBlitz](https://img.shields.io/badge/StackBlitz-React-1389FD?logo=stackblitz&logoColor=white)](https://stackblitz.com/github/passiveintent/core/tree/main/demo-react)
 
@@ -120,11 +120,37 @@ export function WidgetTracker({ route }: { route: string }) {
 
 Place this near your app root when multiple components should share one engine.
 
-| Prop       | Type                               | Notes                                                                                         |
-| ---------- | ---------------------------------- | --------------------------------------------------------------------------------------------- |
-| `config`   | `IntentManagerConfig`              | Required. Captured on first render; remount to apply changes.                                 |
-| `adapters` | `{ storage?, timer?, lifecycle? }` | Optional adapter overrides merged into `config`. `lifecycle` maps to core `lifecycleAdapter`. |
-| `children` | `ReactNode`                        | Descendant components can call `usePassiveIntent()` with no arguments.                        |
+| Prop       | Type                               | Notes                                                                                                                                                                                                                                               |
+| ---------- | ---------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `config`   | `IntentManagerConfig`              | Required. Captured on first render; remount to apply changes.                                                                                                                                                                                       |
+| `adapters` | `{ storage?, timer?, lifecycle? }` | Optional adapter overrides merged into `config`. `lifecycle` maps to core `lifecycleAdapter`.                                                                                                                                                       |
+| `onError`  | `(error: Error) => void`           | Optional. Called when `IntentManager` construction throws. When provided, the error is swallowed and all hooks return safe zero-value snapshots. When omitted, the error propagates to the nearest `<IntentErrorBoundary>` or React error boundary. |
+| `children` | `ReactNode`                        | Descendant components can call `usePassiveIntent()` with no arguments.                                                                                                                                                                              |
+
+### `IntentErrorBoundary`
+
+Wrap `PassiveIntentProvider` to catch errors thrown by the `IntentManager` constructor (invalid config, restricted storage, etc.) and prevent them from crashing the whole tree.
+
+```tsx
+import { IntentErrorBoundary, PassiveIntentProvider } from '@passiveintent/react';
+
+<IntentErrorBoundary
+  fallback={(err, reset) => (
+    <div>Analytics unavailable. <button onClick={reset}>Retry</button></div>
+  )}
+>
+  <PassiveIntentProvider config={...}>
+    <App />
+  </PassiveIntentProvider>
+</IntentErrorBoundary>
+```
+
+| Prop       | Type                                             | Notes                                                                                                                                     |
+| ---------- | ------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| `fallback` | `(error: Error, reset: () => void) => ReactNode` | Optional. Custom error UI. `reset()` clears the error state and remounts children. Defaults to an accessible alert with a "Retry" button. |
+| `children` | `ReactNode`                                      | —                                                                                                                                         |
+
+> **`onError` vs `IntentErrorBoundary`:** Use `onError` to log errors and keep the tree alive (hooks silently no-op). Use `IntentErrorBoundary` to render fallback UI. You can combine both.
 
 ### `usePassiveIntent`
 
@@ -159,16 +185,28 @@ All returned methods are stable across re-renders.
 
 All hooks in this section require a `PassiveIntentProvider` ancestor.
 
-| Hook                                        | Returns                                     | Purpose                                                                                            |
-| ------------------------------------------- | ------------------------------------------- | -------------------------------------------------------------------------------------------------- |
-| `useExitIntent()`                           | `{ triggered, state, likelyNext, dismiss }` | Reacts to `exit_intent` and lets you clear the signal after showing UI.                            |
-| `useIdle()`                                 | `{ isIdle, idleMs }`                        | Tracks `user_idle` and `user_resumed`.                                                             |
-| `useAttentionReturn()`                      | `{ returned, hiddenDuration, dismiss }`     | Reacts when a user comes back after being away long enough to trigger `attention_return`.          |
-| `useSignals()`                              | `{ exitIntent, idle, attentionReturn }`     | Convenience composition of the three signal hooks above.                                           |
-| `usePropensity(targetState, options?)`      | `number`                                    | Single-hop conversion score with dwell-time friction.                                              |
-| `usePropensityScore(targetState, options?)` | `number`                                    | Same scoring model, but computed directly in `getSnapshot()` for strictly snapshot-driven updates. |
-| `usePredictiveLink(options?)`               | `{ predictions }`                           | Reads `predictNextStates()` on navigation and can inject `<link rel="prefetch">` tags.             |
-| `useEventLog(events, options?)`             | `{ log, clear }`                            | Bounded reverse-chronological log of selected engine events.                                       |
+| Hook                                                 | Returns                                                | Purpose                                                                                                                   |
+| ---------------------------------------------------- | ------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------- |
+| `useExitIntent(select?)`                             | `{ triggered, state, likelyNext, dismiss, isPending }` | Reacts to `exit_intent`. `dismiss()` is deferred via `useTransition`; `isPending` is `true` while the reset is in-flight. |
+| `useIdle(select?)`                                   | `{ isIdle, idleMs, isPending }`                        | Tracks `user_idle` and `user_resumed`. `isPending` included for interface consistency.                                    |
+| `useAttentionReturn(select?)`                        | `{ returned, hiddenDuration, dismiss, isPending }`     | Reacts when a user returns after triggering `attention_return`. `dismiss()` is deferred.                                  |
+| `useSignals()`                                       | `{ exitIntent, idle, attentionReturn }`                | Convenience composition of the three signal hooks above.                                                                  |
+| `usePropensity(targetState, options?, select?)`      | `number`                                               | Single-hop conversion score with dwell-time friction.                                                                     |
+| `usePropensityScore(targetState, options?, select?)` | `number`                                               | Same scoring model, but computed directly in `getSnapshot()` for strictly snapshot-driven updates.                        |
+| `usePredictiveLink(options?)`                        | `{ predictions }`                                      | Reads `predictNextStates()` on navigation and can inject `<link rel="prefetch">` tags.                                    |
+| `useEventLog(events, options?)`                      | `{ log, clear }`                                       | Bounded reverse-chronological log of selected engine events.                                                              |
+
+The optional `select` parameter subscribes to only a slice of the return value — the component re-renders only when the selector's output changes (via `Object.is`):
+
+```ts
+// Re-renders only when triggered flips, not on every dismiss/isPending change
+const triggered = useExitIntent((d) => d.triggered);
+
+// Re-renders only when the propensity tier changes, not on every float update
+const tier = usePropensity('/checkout', undefined, (s) =>
+  s > 0.7 ? 'high' : s > 0.4 ? 'medium' : 'low',
+);
+```
 
 ### Hook defaults
 
@@ -206,29 +244,98 @@ The package also re-exports the core items most React consumers need:
 
 ---
 
+## SSR & Framework Compatibility
+
+`@passiveintent/react` works out of the box in **Next.js (App Router + Pages Router)**, **Vite SPAs**, and **Create React App** without any extra configuration.
+
+### What's built in
+
+- No browser API (`window`, `document`, `localStorage`, etc.) is accessed at module evaluation time.
+- All engine creation is gated behind `IS_BROWSER = typeof window !== 'undefined'`.
+- Every hook returns safe zero-value defaults before the engine is live (during SSR or before hydration).
+- All three entry-point files (`index.ts`, `provider.tsx`, `hooks.ts`) carry a `'use client'` directive so **Next.js App Router** automatically treats any import from `@passiveintent/react` as a client module — no wrapper file required.
+
+### Next.js App Router
+
+Because the `'use client'` directive is already inside the library, you can import directly from a Client Component:
+
+```tsx
+// app/components/IntentTracker.tsx
+'use client'; // your own boundary — or omit if this file is already client-side
+import { usePassiveIntent } from '@passiveintent/react';
+```
+
+Or place `PassiveIntentProvider` in a dedicated providers file:
+
+```tsx
+// app/providers.tsx
+'use client';
+import { PassiveIntentProvider } from '@passiveintent/react';
+
+export function Providers({ children }: { children: React.ReactNode }) {
+  return (
+    <PassiveIntentProvider config={{ storageKey: 'my-app' }}>{children}</PassiveIntentProvider>
+  );
+}
+```
+
+```tsx
+// app/layout.tsx  (Server Component — no 'use client' needed here)
+import { Providers } from './providers';
+
+export default function RootLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <html>
+      <body>
+        <Providers>{children}</Providers>
+      </body>
+    </html>
+  );
+}
+```
+
+### Server Components and re-exports
+
+`@passiveintent/react` re-exports `IntentManager`, `MarkovGraph`, `BloomFilter`, and related helpers from `@passiveintent/core`. Because `@passiveintent/react` is a `'use client'` module, these re-exports are also part of the client bundle. **If you need any of these classes in a React Server Component, import directly from `@passiveintent/core` instead:**
+
+```ts
+// ✅ Safe in Server Components
+import { IntentManager, MarkovGraph } from '@passiveintent/core';
+
+// ❌ Not usable in Server Components (triggers the 'use client' boundary)
+import { IntentManager } from '@passiveintent/react';
+```
+
+### Next.js Pages Router and Vite / CRA
+
+No special setup needed. The `'use client'` directive is a plain string expression that non-RSC bundlers treat as a no-op. The `IS_BROWSER` guards prevent any engine creation during `getServerSideProps` or `getStaticProps` runs.
+
+---
+
 ## Runtime Guarantees
 
 - **Concurrent-safe subscriptions**: provider hooks use `useSyncExternalStore`, so snapshots stay consistent in React 18 concurrent rendering.
 - **Strict Mode safe**: provider and standalone engine creation use idempotent guards and explicit cleanup.
-- **SSR safe**: engine instances are never created server-side.
+- **SSR safe**: no browser API is touched at module load time; engine creation is gated by `IS_BROWSER`; `'use client'` directives mark the RSC boundary automatically.
 - **Stable references**: returned callbacks and provider context values are memoized for predictable dependency arrays.
 - **No silent subscription loss**: provider and standalone engine instances are created before child effects run, so descendant hooks can subscribe immediately.
 
 ---
 
-## React 18 Design Notes
+## React 18 & 19 Design Notes
 
-The React demo and wrapper use React 18 primitives only where they solve a concrete problem:
+The wrapper uses React concurrent primitives only where they solve a concrete problem:
 
 | Primitive              | Where it is used                                                                                                            | Why                                                                                                         |
 | ---------------------- | --------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
 | `useSyncExternalStore` | `useExitIntent`, `useIdle`, `useAttentionReturn`, `usePropensity`, `usePropensityScore`, `usePredictiveLink`, `useEventLog` | Eliminates tearing in Concurrent Mode and keeps subscriptions aligned with React's external-store contract. |
+| `useTransition`        | `dismiss()` in `useExitIntent` and `useAttentionReturn`                                                                     | Defers the reset update so callers can show a loading indicator via `isPending` while the UI closes.        |
+| `startTransition`      | Deferred Bloom filter bit decoding, Markov graph snapshot serialization                                                     | Pushes heavier visualization work off the urgent render path.                                               |
 | `useRef`               | Engine instance storage, hook snapshots, option refs, `notifyRef` for dismiss flows                                         | Holds mutable engine state without forcing re-renders.                                                      |
 | `useCallback`          | All `usePassiveIntent` methods and stable hook callbacks                                                                    | Safe to use in dependency arrays without churn or effect loops.                                             |
 | `useMemo`              | Provider value and object-returning hooks                                                                                   | Prevents downstream re-renders when snapshots have not changed.                                             |
 | `useReducer`           | Event log state and version counters in `useBloomFilter` / `useMarkovGraph`                                                 | Keeps reducer identity stable and updates explicit.                                                         |
-| `startTransition`      | Deferred Bloom filter bit decoding and Markov graph snapshot serialization                                                  | Pushes heavier visualization work off the urgent render path.                                               |
-| `useDebugValue`        | `useEventLog`, `useBloomFilter`, `useMarkovGraph`                                                                           | Gives better DevTools visibility without changing runtime behavior.                                         |
+| `useDebugValue`        | All domain hooks and `usePassiveIntent`                                                                                     | Gives formatted labels in React DevTools without changing runtime behavior.                                 |
 
 This package avoids the older `useState` + `useEffect` subscription pattern for external stores. Event handlers write to refs and signal React; listener cleanup is always returned from the subscription boundary. The result is no stale-closure subscription flow and no leaked-listener bookkeeping in user code.
 
@@ -293,4 +400,4 @@ Compared with wiring `@passiveintent/core` manually inside every component, the 
 
 ## Demo
 
-The live example app in [`demo-react`](../../demo-react) exercises the provider flow, event log, predictive prefetching, telemetry, and signal hooks. It is also the reference implementation for the React 18 design choices above: external-store subscriptions, stable callback identities, deferred visualization work, and SSR-safe engine wiring.
+The live example app in [`demo-react`](../../demo-react) runs on React 19 and exercises the provider flow, `IntentErrorBoundary`, `onError` logging, `isPending` dismiss indicators, event log, predictive prefetching, telemetry, and all signal hooks. It is the reference implementation for the design choices above: external-store subscriptions, stable callback identities, deferred visualization work, and SSR-safe engine wiring.

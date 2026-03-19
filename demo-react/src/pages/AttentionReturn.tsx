@@ -10,7 +10,7 @@ import PageHeader from '../components/PageHeader';
 
 export default function AttentionReturn() {
   const { track } = usePassiveIntent();
-  const { returned, hiddenDuration, dismiss } = useAttentionReturn();
+  const { returned, hiddenDuration, dismiss, isPending } = useAttentionReturn();
   const [tracked, setTracked] = useState(false);
 
   function setupNative() {
@@ -77,8 +77,13 @@ export default function AttentionReturn() {
         <div className="alert alert-success">
           <strong>attention_return</strong> fired! hidden for:{' '}
           <strong>{hiddenDuration.toLocaleString()} ms</strong>{' '}
-          <button type="button" className="btn btn-secondary" onClick={dismiss}>
-            Dismiss
+          <button
+            type="button"
+            className="btn btn-secondary"
+            onClick={dismiss}
+            disabled={isPending}
+          >
+            {isPending ? 'Dismissing…' : 'Dismiss'}
           </button>
         </div>
       )}

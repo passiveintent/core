@@ -1,5 +1,9 @@
 import React, { lazy, Suspense, useMemo, useState } from 'react';
-import { PassiveIntentProvider, MemoryStorageAdapter } from '@passiveintent/react';
+import {
+  PassiveIntentProvider,
+  MemoryStorageAdapter,
+  IntentErrorBoundary,
+} from '@passiveintent/react';
 import { LogProvider } from './LogContext';
 import { ToastProvider } from './components/Toast';
 import { SimGuardProvider } from './hooks/useSimGuard';
@@ -84,44 +88,57 @@ export default function App() {
   const memStorage = useMemo(() => new MemoryStorageAdapter(), [sessionKey]);
 
   return (
-    <PassiveIntentProvider
-      key={sessionKey}
-      config={{
-        storageKey: 'pi-react-demo',
-        botProtection: true,
-        crossTabSync: false,
-        enableBigrams: true,
-        persistThrottleMs: 200,
-        baseline: ECOMMERCE_BASELINE,
-        baselineMeanLL: -1.4,
-        baselineStdLL: 0.35,
-        graph: {
-          highEntropyThreshold: 0.72,
-          divergenceThreshold: 2.5,
-          maxStates: 500,
-          smoothingAlpha: 0.1,
-        },
-        dwellTime: { enabled: true, minSamples: 3, zScoreThreshold: 2.0 },
-      }}
-      adapters={{ storage: memStorage, timer: timerAdapter, lifecycle: lifecycleAdapter }}
+    <IntentErrorBoundary
+      fallback={(err, reset) => (
+        <div className="alert alert-error engine-error-boundary">
+          <strong>[PassiveIntent] Engine failed to initialise</strong>
+          <pre className="engine-error-message">{err.message}</pre>
+          <button type="button" onClick={reset}>
+            Retry
+          </button>
+        </div>
+      )}
     >
-      <LogProvider>
-        <ToastProvider>
-          <SimGuardProvider>
-            <Shell
-              active={active}
-              onNavigate={setActive}
-              onReset={() => setSessionKey((k) => k + 1)}
-            >
-              <ErrorBoundary key={active}>
-                <Suspense fallback={<div className="page-loading">Loading…</div>}>
-                  <ActivePage />
-                </Suspense>
-              </ErrorBoundary>
-            </Shell>
-          </SimGuardProvider>
-        </ToastProvider>
-      </LogProvider>
-    </PassiveIntentProvider>
+      <PassiveIntentProvider
+        key={sessionKey}
+        config={{
+          storageKey: 'pi-react-demo',
+          botProtection: true,
+          crossTabSync: false,
+          enableBigrams: true,
+          persistThrottleMs: 200,
+          baseline: ECOMMERCE_BASELINE,
+          baselineMeanLL: -1.4,
+          baselineStdLL: 0.35,
+          graph: {
+            highEntropyThreshold: 0.72,
+            divergenceThreshold: 2.5,
+            maxStates: 500,
+            smoothingAlpha: 0.1,
+          },
+          dwellTime: { enabled: true, minSamples: 3, zScoreThreshold: 2.0 },
+        }}
+        adapters={{ storage: memStorage, timer: timerAdapter, lifecycle: lifecycleAdapter }}
+        onError={(err) => console.error('[PassiveIntent] Engine error:', err)}
+      >
+        <LogProvider>
+          <ToastProvider>
+            <SimGuardProvider>
+              <Shell
+                active={active}
+                onNavigate={setActive}
+                onReset={() => setSessionKey((k) => k + 1)}
+              >
+                <ErrorBoundary key={active}>
+                  <Suspense fallback={<div className="page-loading">Loading…</div>}>
+                    <ActivePage />
+                  </Suspense>
+                </ErrorBoundary>
+              </Shell>
+            </SimGuardProvider>
+          </ToastProvider>
+        </LogProvider>
+      </PassiveIntentProvider>
+    </IntentErrorBoundary>
   );
 }

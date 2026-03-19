@@ -4,6 +4,7 @@
  * This source code is licensed under the AGPL-3.0-only license found in the
  * LICENSE file in the root directory of this source tree.
  */
+'use client';
 
 /**
  * Domain-specific hooks built on top of the PassiveIntentProvider context.
@@ -28,6 +29,7 @@ import {
   useRef,
   useState,
   useSyncExternalStore,
+  useTransition,
 } from 'react';
 import { BloomFilter, MarkovGraph } from '@passiveintent/core';
 import type {
@@ -54,9 +56,15 @@ export interface UseExitIntentReturn {
   likelyNext: string | null;
   /** Reset `triggered` to `false` — call after showing/hiding an overlay. */
   dismiss: () => void;
+  /**
+   * `true` while React is deferring the `dismiss()` state reset via
+   * `useTransition`. Use this to show a brief loading indicator while the
+   * overlay is collapsing.
+   */
+  isPending: boolean;
 }
 
-type ExitIntentData = Omit<UseExitIntentReturn, 'dismiss'>;
+type ExitIntentData = Omit<UseExitIntentReturn, 'dismiss' | 'isPending'>;
 const EXIT_INITIAL: ExitIntentData = { triggered: false, state: null, likelyNext: null };
 
 /**
@@ -66,6 +74,9 @@ const EXIT_INITIAL: ExitIntentData = { triggered: false, state: null, likelyNext
  * above (toward the address bar) and the Markov graph has a continuation
  * candidate with probability >= 0.4.
  *
+ * Pass an optional `select` function to subscribe to only a subset of the
+ * return shape, preventing re-renders when unrelated fields change.
+ *
  * @example
  * ```tsx
  * const { triggered, likelyNext, dismiss } = useExitIntent();
@@ -73,10 +84,18 @@ const EXIT_INITIAL: ExitIntentData = { triggered: false, state: null, likelyNext
  * if (triggered) {
  *   return <ExitOverlay suggestedPage={likelyNext} onClose={dismiss} />;
  * }
+ *
+ * // Selector — only re-renders when `triggered` changes:
+ * const triggered = useExitIntent((d) => d.triggered);
  * ```
  */
-export function useExitIntent(): UseExitIntentReturn {
+export function useExitIntent(): UseExitIntentReturn;
+export function useExitIntent<T>(select: (data: UseExitIntentReturn) => T): T;
+export function useExitIntent<T = UseExitIntentReturn>(
+  select?: (data: UseExitIntentReturn) => T,
+): UseExitIntentReturn | T {
   const ctx = useContext(PassiveIntentContext);
+  const [isPending, startExitTransition] = useTransition();
 
   const snapshotRef = useRef<ExitIntentData>(EXIT_INITIAL);
   // notifyRef captures React's onStoreChange so dismiss() can imperatively
@@ -93,6 +112,8 @@ export function useExitIntent(): UseExitIntentReturn {
         };
       const unsub = ctx.on('exit_intent', ({ state, likelyNext }) => {
         snapshotRef.current = { triggered: true, state, likelyNext };
+        // onStoreChange must be synchronous — required by useSyncExternalStore
+        // for tearing detection in Concurrent Mode.
         onStoreChange();
       });
       return () => {
@@ -107,18 +128,26 @@ export function useExitIntent(): UseExitIntentReturn {
 
   const data = useSyncExternalStore(subscribe, getSnapshot, () => EXIT_INITIAL);
 
+  // Wrap dismiss in a transition so the reset is deferrable. isPending is
+  // true briefly while React flushes the deferred update, giving callers a
+  // signal to show a loading indicator while the overlay collapses.
   const dismiss = useCallback(() => {
-    snapshotRef.current = EXIT_INITIAL;
-    notifyRef.current?.();
-  }, []);
+    startExitTransition(() => {
+      snapshotRef.current = EXIT_INITIAL;
+      notifyRef.current?.();
+    });
+  }, [startExitTransition]);
+
+  useDebugValue(data, (d) => (d.triggered ? `triggered → ${d.likelyNext ?? 'unknown'}` : 'idle'));
 
   // Throw after all hooks — required by Rules of Hooks.
   if (!ctx) throw new Error(providerError('useExitIntent'));
 
   // useMemo ensures the returned object is referentially stable between renders
-  // when neither data nor dismiss has changed, preventing downstream re-renders
-  // in consumers that use this value as a prop or effect dependency.
-  return useMemo(() => ({ ...data, dismiss }), [data, dismiss]);
+  // when none of data, dismiss, or isPending has changed.
+  const result = useMemo(() => ({ ...data, dismiss, isPending }), [data, dismiss, isPending]);
+
+  return select ? select(result) : result;
 }
 
 // ── useIdle ───────────────────────────────────────────────────────────────────
@@ -128,15 +157,24 @@ export interface UseIdleReturn {
   isIdle: boolean;
   /** Duration of the current or most recent idle period in milliseconds. */
   idleMs: number;
+  /**
+   * Exposed for API consistency with `useExitIntent` and `useAttentionReturn`.
+   * Always `false` for `useIdle` since idle/resumed state updates are driven
+   * purely by external events with no user-initiated dismiss action.
+   */
+  isPending: boolean;
 }
 
-const IDLE_INITIAL: UseIdleReturn = { isIdle: false, idleMs: 0 };
+const IDLE_INITIAL: Omit<UseIdleReturn, 'isPending'> = { isIdle: false, idleMs: 0 };
 
 /**
  * `useIdle` — reactive wrapper around the `user_idle` / `user_resumed` events.
  *
  * Returns `isIdle: true` when 2 minutes of inactivity is detected, and resets
  * to `false` on the first user interaction.
+ *
+ * Pass an optional `select` function to subscribe to only a subset of the
+ * return shape, preventing re-renders when unrelated fields change.
  *
  * @example
  * ```tsx
@@ -147,10 +185,15 @@ const IDLE_INITIAL: UseIdleReturn = { isIdle: false, idleMs: 0 };
  * }
  * ```
  */
-export function useIdle(): UseIdleReturn {
+export function useIdle(): UseIdleReturn;
+export function useIdle<T>(select: (data: UseIdleReturn) => T): T;
+export function useIdle<T = UseIdleReturn>(select?: (data: UseIdleReturn) => T): UseIdleReturn | T {
   const ctx = useContext(PassiveIntentContext);
+  // isPending is always false for useIdle — exposed for interface consistency
+  // with useExitIntent and useAttentionReturn.
+  const [isPending] = useTransition();
 
-  const snapshotRef = useRef<UseIdleReturn>(IDLE_INITIAL);
+  const snapshotRef = useRef<Omit<UseIdleReturn, 'isPending'>>(IDLE_INITIAL);
 
   const subscribe = useCallback(
     (onStoreChange: () => void) => {
@@ -173,14 +216,15 @@ export function useIdle(): UseIdleReturn {
 
   const getSnapshot = useCallback(() => snapshotRef.current, []);
 
-  // useSyncExternalStore is the last hook — throw comes after all hooks.
   const snapshot = useSyncExternalStore(subscribe, getSnapshot, () => IDLE_INITIAL);
+
+  useDebugValue(snapshot, (s) => (s.isIdle ? `idle ${s.idleMs}ms` : 'active'));
 
   if (!ctx) throw new Error(providerError('useIdle'));
 
-  // Return the snapshot directly — no spread, no added functions, so the ref
-  // value IS the return value and is already referentially stable between events.
-  return snapshot;
+  const result = useMemo(() => ({ ...snapshot, isPending }), [snapshot, isPending]);
+
+  return select ? select(result) : result;
 }
 
 // ── useAttentionReturn ────────────────────────────────────────────────────────
@@ -192,9 +236,15 @@ export interface UseAttentionReturnReturn {
   hiddenDuration: number;
   /** Reset `returned` to `false` — call after showing a "Welcome Back" modal. */
   dismiss: () => void;
+  /**
+   * `true` while React is deferring the `dismiss()` state reset via
+   * `useTransition`. Use this to show a brief loading indicator while a
+   * "Welcome Back" modal is closing.
+   */
+  isPending: boolean;
 }
 
-type AttentionData = Omit<UseAttentionReturnReturn, 'dismiss'>;
+type AttentionData = Omit<UseAttentionReturnReturn, 'dismiss' | 'isPending'>;
 const ATTENTION_INITIAL: AttentionData = { returned: false, hiddenDuration: 0 };
 
 /**
@@ -202,6 +252,9 @@ const ATTENTION_INITIAL: AttentionData = { returned: false, hiddenDuration: 0 };
  *
  * Returns `returned: true` when the user comes back to the tab after being
  * away for >= 15 seconds (the comparison-shopping threshold).
+ *
+ * Pass an optional `select` function to subscribe to only a subset of the
+ * return shape, preventing re-renders when unrelated fields change.
  *
  * @example
  * ```tsx
@@ -212,8 +265,13 @@ const ATTENTION_INITIAL: AttentionData = { returned: false, hiddenDuration: 0 };
  * }
  * ```
  */
-export function useAttentionReturn(): UseAttentionReturnReturn {
+export function useAttentionReturn(): UseAttentionReturnReturn;
+export function useAttentionReturn<T>(select: (data: UseAttentionReturnReturn) => T): T;
+export function useAttentionReturn<T = UseAttentionReturnReturn>(
+  select?: (data: UseAttentionReturnReturn) => T,
+): UseAttentionReturnReturn | T {
   const ctx = useContext(PassiveIntentContext);
+  const [isPending, startAttentionTransition] = useTransition();
 
   const snapshotRef = useRef<AttentionData>(ATTENTION_INITIAL);
   const notifyRef = useRef<(() => void) | null>(null);
@@ -227,6 +285,8 @@ export function useAttentionReturn(): UseAttentionReturnReturn {
         };
       const unsub = ctx.on('attention_return', ({ hiddenDuration }) => {
         snapshotRef.current = { returned: true, hiddenDuration };
+        // onStoreChange must be synchronous — required by useSyncExternalStore
+        // for tearing detection in Concurrent Mode.
         onStoreChange();
       });
       return () => {
@@ -241,15 +301,23 @@ export function useAttentionReturn(): UseAttentionReturnReturn {
 
   const data = useSyncExternalStore(subscribe, getSnapshot, () => ATTENTION_INITIAL);
 
+  // Wrap dismiss in a transition so the reset is deferrable. isPending is
+  // true briefly while React flushes the deferred update.
   const dismiss = useCallback(() => {
-    snapshotRef.current = ATTENTION_INITIAL;
-    notifyRef.current?.();
-  }, []);
+    startAttentionTransition(() => {
+      snapshotRef.current = ATTENTION_INITIAL;
+      notifyRef.current?.();
+    });
+  }, [startAttentionTransition]);
+
+  useDebugValue(data, (d) => (d.returned ? `returned after ${d.hiddenDuration}ms` : 'present'));
 
   // Throw after all hooks — required by Rules of Hooks.
   if (!ctx) throw new Error(providerError('useAttentionReturn'));
 
-  return useMemo(() => ({ ...data, dismiss }), [data, dismiss]);
+  const result = useMemo(() => ({ ...data, dismiss, isPending }), [data, dismiss, isPending]);
+
+  return select ? select(result) : result;
 }
 
 // ── useSignals ────────────────────────────────────────────────────────────────
@@ -299,6 +367,14 @@ export function useSignals(): UseSignalsReturn {
   const idle = useIdle();
   const attentionReturn = useAttentionReturn();
 
+  useDebugValue(
+    { exitIntent, idle, attentionReturn },
+    ({ exitIntent: ei, idle: id, attentionReturn: ar }) =>
+      [ei.triggered && 'exit_intent', id.isIdle && 'idle', ar.returned && 'attention_return']
+        .filter(Boolean)
+        .join(', ') || 'no signals',
+  );
+
   // Outer memo ensures the container object is stable when no signal has fired.
   // Each inner hook memoizes its own value, so this only allocates a new object
   // when at least one of the three sub-snapshots actually changes.
@@ -334,6 +410,10 @@ export interface UsePropensityOptions {
  *
  * Formula: `score = P(target | current) × exp(−α × max(0, z))`
  *
+ * Pass an optional `select` function as the third argument to transform the
+ * score before it is returned, or to derive a new value — the component will
+ * only re-render when the selector's output changes.
+ *
  * For multi-hop path-based propensity (BFS over the full Markov graph), use
  * `PropensityCalculator` directly with `IntentEngine`.
  *
@@ -344,9 +424,24 @@ export interface UsePropensityOptions {
  * if (score > 0.7) {
  *   showUpsellBanner();
  * }
+ *
+ * // Selector — component re-renders only when the tier changes:
+ * const tier = usePropensity('/checkout', undefined, (s) =>
+ *   s > 0.7 ? 'high' : s > 0.4 ? 'medium' : 'low'
+ * );
  * ```
  */
-export function usePropensity(targetState: string, options?: UsePropensityOptions): number {
+export function usePropensity(targetState: string, options?: UsePropensityOptions): number;
+export function usePropensity<T>(
+  targetState: string,
+  options: UsePropensityOptions | undefined,
+  select: (score: number) => T,
+): T;
+export function usePropensity<T = number>(
+  targetState: string,
+  options?: UsePropensityOptions,
+  select?: (score: number) => T,
+): number | T {
   const ctx = useContext(PassiveIntentContext);
 
   const snapshotRef = useRef(0);
@@ -397,10 +492,12 @@ export function usePropensity(targetState: string, options?: UsePropensityOption
   // never trigger re-renders — no useMemo wrapper needed for the return value.
   const score = useSyncExternalStore(subscribe, getSnapshot, () => 0);
 
+  useDebugValue(score, (s) => `propensity(${targetStateRef.current}) = ${s.toFixed(3)}`);
+
   // Throw after all hooks — required by Rules of Hooks.
   if (!ctx) throw new Error(providerError('usePropensity'));
 
-  return score;
+  return select ? select(score) : score;
 }
 
 // ── usePropensityScore ────────────────────────────────────────────────────────
@@ -467,7 +564,17 @@ export interface UsePropensityScoreOptions {
 export function usePropensityScore(
   targetState: string,
   options?: UsePropensityScoreOptions,
-): number {
+): number;
+export function usePropensityScore<T>(
+  targetState: string,
+  options: UsePropensityScoreOptions | undefined,
+  select: (score: number) => T,
+): T;
+export function usePropensityScore<T = number>(
+  targetState: string,
+  options?: UsePropensityScoreOptions,
+  select?: (score: number) => T,
+): number | T {
   const ctx = useContext(PassiveIntentContext);
 
   // Latest dwell-time friction z-score — updated by the dwell_time_anomaly
@@ -524,10 +631,12 @@ export function usePropensityScore(
   // wrapper needed; equal scores never trigger re-renders.
   const score = useSyncExternalStore(subscribe, getSnapshot, () => 0);
 
+  useDebugValue(score, (s) => `propensityScore(${targetStateRef.current}) = ${s.toFixed(3)}`);
+
   // Throw after all hooks — required by Rules of Hooks.
   if (!ctx) throw new Error(providerError('usePropensityScore'));
 
-  return score;
+  return select ? select(score) : score;
 }
 
 // ── usePredictiveLink ─────────────────────────────────────────────────────────
@@ -624,6 +733,8 @@ export function usePredictiveLink(options?: UsePredictiveLinkOptions): UsePredic
       for (const link of links) link.remove();
     };
   }, [predictions, prefetch]);
+
+  useDebugValue(predictions, (p) => `${p.length} prefetch predictions`);
 
   // Throw after all hooks — required by Rules of Hooks.
   if (!ctx) throw new Error(providerError('usePredictiveLink'));

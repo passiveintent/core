@@ -853,6 +853,17 @@ label {
   color: #ffc2ba;
 }
 
+/* ─── IntentErrorBoundary fallback ───────────────────────────────────────── */
+.engine-error-boundary {
+  margin: 24px;
+  font-family: monospace;
+}
+.engine-error-message {
+  margin: 8px 0;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
 /* ─── Event Log panel ────────────────────────────────────────────────────── */
 .utility-rail {
   min-height: 0;

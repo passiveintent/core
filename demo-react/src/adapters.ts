@@ -50,7 +50,7 @@ export class ControllableTimerAdapter implements TimerAdapter {
   }
 
   now(): number {
-    return performance.now() + this.offset;
+    return (typeof performance !== 'undefined' ? performance.now() : Date.now()) + this.offset;
   }
 
   /**
@@ -148,8 +148,10 @@ export class ControllableLifecycleAdapter implements LifecycleAdapter {
   };
 
   constructor() {
-    document.addEventListener('visibilitychange', this.visibilityHandler);
-    document.documentElement.addEventListener('mouseleave', this.exitHandler as EventListener);
+    if (typeof document !== 'undefined') {
+      document.addEventListener('visibilitychange', this.visibilityHandler);
+      document.documentElement.addEventListener('mouseleave', this.exitHandler as EventListener);
+    }
   }
 
   // ── Manual triggers (called by demo buttons) ────────────────────────────
@@ -196,8 +198,10 @@ export class ControllableLifecycleAdapter implements LifecycleAdapter {
     };
   }
   destroy() {
-    document.removeEventListener('visibilitychange', this.visibilityHandler);
-    document.documentElement.removeEventListener('mouseleave', this.exitHandler as EventListener);
+    if (typeof document !== 'undefined') {
+      document.removeEventListener('visibilitychange', this.visibilityHandler);
+      document.documentElement.removeEventListener('mouseleave', this.exitHandler as EventListener);
+    }
     this.pauseCbs = [];
     this.resumeCbs = [];
     this.interactionCbs = [];

@@ -10,7 +10,7 @@ import StatusAlert from '../components/StatusAlert';
 
 export default function IdleDetection() {
   const { track } = usePassiveIntent();
-  const { isIdle, idleMs } = useIdle();
+  const { isIdle, idleMs, isPending } = useIdle();
   const [status, setStatus] = useState<string | null>(null);
 
   function simulateIdle() {
@@ -59,7 +59,7 @@ export default function IdleDetection() {
       <div className="two-col">
         {isIdle && (
           <div className="card">
-            <div className="card-title">Currently idle</div>
+            <div className="card-title">Currently idle{isPending ? ' (updating…)' : ''}</div>
             <div
               style={{ fontFamily: 'var(--font-mono)', fontSize: 13, color: 'var(--text-muted)' }}
             >

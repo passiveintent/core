@@ -78,8 +78,8 @@ export default function MarkovPredictions() {
         <p className="demo-description">
           <strong>predictNextStates()</strong> returns the top-N destinations from the current state
           above a probability threshold. Use the <code>sanitize</code> guard to exclude sensitive
-          routes in production. The standalone <strong>useMarkovGraph()</strong> hook lets you build,
-          serialize, and restore graphs independently.
+          routes in production. The standalone <strong>useMarkovGraph()</strong> hook lets you
+          build, serialize, and restore graphs independently.
         </p>
       </div>
 

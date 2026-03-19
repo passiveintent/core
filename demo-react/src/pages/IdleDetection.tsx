@@ -70,8 +70,7 @@ export default function IdleDetection() {
             <div
               style={{ fontFamily: 'var(--font-mono)', fontSize: 13, color: 'var(--text-muted)' }}
             >
-              idleMs:{' '}
-              <span style={{ color: 'var(--green)' }}>{idleMs.toLocaleString()} ms</span>
+              idleMs: <span style={{ color: 'var(--green)' }}>{idleMs.toLocaleString()} ms</span>
             </div>
           </div>
         )}

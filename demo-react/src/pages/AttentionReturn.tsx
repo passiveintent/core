@@ -73,8 +73,10 @@ export default function AttentionReturn() {
       {returned && (
         <div className="alert alert-success">
           <strong>attention_return</strong> fired! hidden for:{' '}
-          <strong>{hiddenDuration.toLocaleString()} ms</strong>
-          {' '}<button type="button" className="btn btn-secondary" onClick={dismiss}>Dismiss</button>
+          <strong>{hiddenDuration.toLocaleString()} ms</strong>{' '}
+          <button type="button" className="btn btn-secondary" onClick={dismiss}>
+            Dismiss
+          </button>
         </div>
       )}
 

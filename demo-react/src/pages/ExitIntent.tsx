@@ -70,8 +70,10 @@ export default function ExitIntent() {
         <div className="alert alert-error" style={{ marginTop: 8 }}>
           <strong>exit_intent</strong> fired! state:{' '}
           <code style={{ fontFamily: 'var(--font-mono)' }}>{state}</code> | likelyNext:{' '}
-          <code style={{ fontFamily: 'var(--font-mono)' }}>{likelyNext ?? 'none'}</code>
-          {' '}<button type="button" className="btn btn-secondary" onClick={dismiss}>Dismiss</button>
+          <code style={{ fontFamily: 'var(--font-mono)' }}>{likelyNext ?? 'none'}</code>{' '}
+          <button type="button" className="btn btn-secondary" onClick={dismiss}>
+            Dismiss
+          </button>
         </div>
       )}
 

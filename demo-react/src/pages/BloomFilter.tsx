@@ -4,7 +4,12 @@
  * React pattern: controlled input + local state for the standalone filter demo.
  */
 import React, { useCallback, useState } from 'react';
-import { BloomFilter, computeBloomConfig, usePassiveIntent, useBloomFilter } from '@passiveintent/react';
+import {
+  BloomFilter,
+  computeBloomConfig,
+  usePassiveIntent,
+  useBloomFilter,
+} from '@passiveintent/react';
 import CodeBlock from '../components/CodeBlock';
 
 export default function BloomFilterPage() {

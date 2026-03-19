@@ -14,3 +14,5 @@ packages/security/
 PUBLISHING.md
 
 .claude
+
+tmp/

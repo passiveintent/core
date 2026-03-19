@@ -1,5 +1,5 @@
-import React, { useMemo, useState, type ReactNode } from 'react';
-import { useIntent, type LogEntry } from './IntentContext';
+import React, { useCallback, useMemo, useState, type ReactNode } from 'react';
+import { useLogContext, type LogEntry } from './LogContext';
 import IntentMeter from './components/IntentMeter';
 import type { DemoKey } from './App';
 
@@ -8,12 +8,22 @@ interface NavItem {
   label: string;
 }
 
-const NAV: Array<{ section: string; items: NavItem[] }> = [
+const NAV: Array<{ section: string; items: NavItem[]; showcase?: boolean }> = [
   {
     section: 'Start Here',
     items: [
       { key: 'overview', label: '📊 Overview & Telemetry' },
       { key: 'basic-tracking', label: '📍 Basic Tracking' },
+    ],
+  },
+  {
+    section: 'Showcases',
+    showcase: true,
+    items: [
+      { key: 'showcase-ecommerce', label: '🛒 E-Commerce Rescue' },
+      { key: 'showcase-fintech', label: '🔐 FinTech Security' },
+      { key: 'showcase-healthcare', label: '🏥 Healthcare Intake' },
+      { key: 'showcase-churn', label: '📉 SaaS Churn Prevention' },
     ],
   },
   {
@@ -54,23 +64,18 @@ const NAV: Array<{ section: string; items: NavItem[] }> = [
     section: 'Calibration',
     items: [{ key: 'byob', label: '🎯 Bring Your Own Baseline' }],
   },
-  {
-    section: 'Playground',
-    items: [{ key: 'amazon-playground', label: '🛒 E-commerce Playground' }],
-  },
 ];
 
 const QUICK_JUMPS: Array<{ key: DemoKey; label: string }> = [
   { key: 'overview', label: 'Overview' },
+  { key: 'showcase-ecommerce', label: 'E-Commerce' },
+  { key: 'showcase-fintech', label: 'FinTech' },
   { key: 'basic-tracking', label: 'Tracking' },
   { key: 'high-entropy', label: 'Entropy' },
   { key: 'dwell-time', label: 'Dwell Time' },
-  { key: 'trajectory', label: 'Trajectory' },
-  { key: 'hesitation', label: 'Hesitation' },
   { key: 'exit-intent', label: 'Exit Intent' },
   { key: 'bot-detection', label: 'Bot Detection' },
   { key: 'propensity-score', label: 'Propensity' },
-  { key: 'amazon-playground', label: 'Playground' },
   { key: 'byob', label: 'BYOB' },
 ];
 
@@ -82,13 +87,31 @@ interface Props {
 }
 
 export default function Shell({ active, onNavigate, onReset, children }: Props) {
-  const { logEntries, clearLog } = useIntent();
+  const { logEntries, clearLog } = useLogContext();
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [logOpen, setLogOpen] = useState(true);
+  const [hasNavigated, setHasNavigated] = useState(false);
+
+  const flatNav = useMemo(() => NAV.flatMap((group) => group.items), []);
 
   const activeLabel = useMemo(
-    () => NAV.flatMap((group) => group.items).find((item) => item.key === active)?.label ?? active,
-    [active],
+    () => flatNav.find((item) => item.key === active)?.label ?? active,
+    [active, flatNav],
+  );
+
+  const currentIndex = useMemo(
+    () => flatNav.findIndex((item) => item.key === active),
+    [active, flatNav],
+  );
+  const prevPage = currentIndex > 0 ? flatNav[currentIndex - 1] : null;
+  const nextPage = currentIndex < flatNav.length - 1 ? flatNav[currentIndex + 1] : null;
+
+  const handleNavigate = useCallback(
+    (key: DemoKey) => {
+      if (!hasNavigated) setHasNavigated(true);
+      onNavigate(key);
+    },
+    [hasNavigated, onNavigate],
   );
 
   return (
@@ -127,9 +150,7 @@ export default function Shell({ active, onNavigate, onReset, children }: Props) 
         </div>
       </header>
 
-      <div
-        className={`layout${sidebarOpen ? '' : ' sidebar-collapsed'}${logOpen ? '' : ' log-collapsed'}`}
-      >
+      <div className={`layout${sidebarOpen ? '' : ' sidebar-collapsed'}`}>
         <nav className={`sidebar${sidebarOpen ? '' : ' sidebar--hidden'}`}>
           <button
             className="sidebar-toggle"
@@ -139,14 +160,16 @@ export default function Shell({ active, onNavigate, onReset, children }: Props) 
             ◀
           </button>
           <div className="sidebar-inner">
-            {NAV.map(({ section, items }) => (
+            {NAV.map(({ section, items, showcase }) => (
               <React.Fragment key={section}>
-                <div className="nav-section-label">{section}</div>
+                <div className={`nav-section-label${showcase ? ' nav-section-showcase' : ''}`}>
+                  {section}
+                </div>
                 {items.map(({ key, label }) => (
                   <button
                     key={key}
                     className={`nav-item${active === key ? ' active' : ''}`}
-                    onClick={() => onNavigate(key)}
+                    onClick={() => handleNavigate(key)}
                   >
                     {label}
                   </button>
@@ -168,101 +191,140 @@ export default function Shell({ active, onNavigate, onReset, children }: Props) 
 
         <main className="content">
           <div className="content-shell">
-            <section className="lab-intro">
-              <div className="lab-intro-copy">
-                <p className="section-eyebrow">Guided lab</p>
-                <h2 className="shell-title">
-                  Explore the shipping core library through the scenarios that matter most.
-                </h2>
-                <p className="shell-copy">
-                  The React experience keeps the full feature surface, but improves first-run flow
-                  with clearer entry points, more breathable spacing, and the same shell, scenario
-                  map, and quick-entry flow as the Vanilla demo.
-                </p>
+            {!hasNavigated ? (
+              <section className="lab-intro">
+                <div className="lab-intro-copy">
+                  <p className="section-eyebrow">Guided lab</p>
+                  <h2 className="shell-title">
+                    Explore the shipping core library through the scenarios that matter most.
+                  </h2>
+                  <p className="shell-copy">
+                    The React experience keeps the full feature surface, but improves first-run flow
+                    with clearer entry points, more breathable spacing, and the same shell, scenario
+                    map, and quick-entry flow as the Vanilla demo.
+                  </p>
+                  <div className="quick-jump-bar">
+                    {QUICK_JUMPS.map((jump) => (
+                      <button
+                        key={jump.key}
+                        type="button"
+                        className={`quick-jump${active === jump.key ? ' active' : ''}`}
+                        onClick={() => handleNavigate(jump.key)}
+                      >
+                        {jump.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <div className="lab-intro-aside">
+                  <div className="shell-stat-grid">
+                    <article className="shell-stat">
+                      <span className="shell-stat-label">Coverage</span>
+                      <strong>Full lab</strong>
+                      <p>Telemetry, anomalies, lifecycle, business logic, and calibration.</p>
+                    </article>
+                    <article className="shell-stat">
+                      <span className="shell-stat-label">Best entry points</span>
+                      <strong>Overview, Exit</strong>
+                      <p>
+                        Start with the quick jumps, then use the sidebar for full scenario coverage.
+                      </p>
+                    </article>
+                    <article className="shell-stat">
+                      <span className="shell-stat-label">Shell parity</span>
+                      <strong>Vanilla + React</strong>
+                      <p>Both demos share the same layout, spacing, and guided-lab structure.</p>
+                    </article>
+                  </div>
+                </div>
+              </section>
+            ) : (
+              <div className="lab-intro-collapsed">
                 <div className="quick-jump-bar">
                   {QUICK_JUMPS.map((jump) => (
                     <button
                       key={jump.key}
                       type="button"
                       className={`quick-jump${active === jump.key ? ' active' : ''}`}
-                      onClick={() => onNavigate(jump.key)}
+                      onClick={() => handleNavigate(jump.key)}
                     >
                       {jump.label}
                     </button>
                   ))}
                 </div>
               </div>
-              <div className="lab-intro-aside">
-                <div className="shell-stat-grid">
-                  <article className="shell-stat">
-                    <span className="shell-stat-label">Coverage</span>
-                    <strong>Full lab</strong>
-                    <p>Telemetry, anomalies, lifecycle, business logic, and calibration.</p>
-                  </article>
-                  <article className="shell-stat">
-                    <span className="shell-stat-label">Best entry points</span>
-                    <strong>Overview, Exit, Playground</strong>
-                    <p>
-                      Start with the quick jumps, then use the sidebar for full scenario coverage.
-                    </p>
-                  </article>
-                  <article className="shell-stat">
-                    <span className="shell-stat-label">Shell parity</span>
-                    <strong>Vanilla + React</strong>
-                    <p>Both demos share the same layout, spacing, and guided-lab structure.</p>
-                  </article>
-                </div>
-              </div>
-            </section>
+            )}
 
             <div className="page-heading-row">
-              <div>
-                <p className="section-eyebrow section-eyebrow-muted">Current module</p>
-                <h2 className="page-heading">{activeLabel}</h2>
-              </div>
-              <p className="page-heading-copy">
-                Use the sidebar for full coverage or jump directly into the core scenarios.
-              </p>
+              <span className="page-module-label">Current module</span>
+              <strong className="page-module-value">{activeLabel}</strong>
             </div>
 
             <section className="page-surface">{children}</section>
+
+            <div className="page-nav-footer">
+              {prevPage && (
+                <button
+                  type="button"
+                  className="btn btn-ghost btn-sm"
+                  onClick={() => handleNavigate(prevPage.key)}
+                >
+                  ← {prevPage.label}
+                </button>
+              )}
+              <span style={{ flex: 1 }} />
+              {nextPage && (
+                <button
+                  type="button"
+                  className="btn btn-secondary btn-sm"
+                  onClick={() => handleNavigate(nextPage.key)}
+                >
+                  Next: {nextPage.label} →
+                </button>
+              )}
+            </div>
           </div>
         </main>
 
-        <IntentMeter />
+        <aside className="utility-rail">
+          <IntentMeter />
 
-        <aside className={`event-log${logOpen ? '' : ' event-log--hidden'}`}>
-          <div className="event-log-header">
-            <div>
-              <span className="event-log-kicker">Background telemetry</span>
-              <span>Live Event Log</span>
+          <section className={`event-log${logOpen ? '' : ' event-log--collapsed'}`}>
+            <div className="event-log-header">
+              <div>
+                <span className="event-log-kicker">Background telemetry</span>
+                <div className="event-log-title-row">
+                  <span>Live Event Log</span>
+                  <span className="event-log-count">{logEntries.length}</span>
+                </div>
+              </div>
+              <div className="event-log-actions">
+                <button className="btn btn-ghost btn-sm" onClick={clearLog}>
+                  Clear
+                </button>
+                <button
+                  className="btn btn-ghost btn-sm"
+                  onClick={() => setLogOpen((open) => !open)}
+                  aria-expanded={logOpen}
+                  title={logOpen ? 'Collapse log' : 'Expand log'}
+                >
+                  {logOpen ? 'Hide' : 'Show'}
+                </button>
+              </div>
             </div>
-            <div className="event-log-actions">
-              <button className="btn btn-ghost btn-sm" onClick={clearLog}>
-                Clear
-              </button>
-              <button
-                className="btn btn-ghost btn-sm"
-                onClick={() => setLogOpen(false)}
-                title="Collapse log"
-              >
-                ▶
-              </button>
-            </div>
-          </div>
-          <div className="event-log-entries">
-            {logEntries.length === 0 ? (
-              <div className="log-empty">Events appear here as you interact.</div>
-            ) : (
-              logEntries.map((entry, i) => <LogEntryRow key={i} entry={entry} />)
+            {logOpen && (
+              <div className="event-log-entries">
+                {logEntries.length === 0 ? (
+                  <div className="log-empty">
+                    Click any simulation button or product card — events appear here in real-time.
+                  </div>
+                ) : (
+                  logEntries.map((entry) => <LogEntryRow key={entry.id} entry={entry} />)
+                )}
+              </div>
             )}
-          </div>
+          </section>
         </aside>
-        {!logOpen && (
-          <button className="log-expand" onClick={() => setLogOpen(true)} title="Expand event log">
-            ◀ Log
-          </button>
-        )}
       </div>
     </div>
   );

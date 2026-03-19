@@ -1,18 +1,15 @@
 /**
  * Exit Intent — smart exit-intent with likelyNext Markov prediction.
  */
-import React, { useEffect, useState } from 'react';
-import { useIntent } from '../IntentContext';
+import React from 'react';
+import { usePassiveIntent, useExitIntent } from '@passiveintent/react';
+import { lifecycleAdapter } from '../adapters';
 import CodeBlock from '../components/CodeBlock';
-import type { ExitIntentPayload } from '@passiveintent/react';
+import PageHeader from '../components/PageHeader';
 
 export default function ExitIntent() {
-  const { track, on, lifecycle } = useIntent();
-  const [lastEvent, setLastEvent] = useState<ExitIntentPayload | null>(null);
-
-  useEffect(() => {
-    return on('exit_intent', (p) => setLastEvent(p as ExitIntentPayload));
-  }, [on]);
+  const { track } = usePassiveIntent();
+  const { triggered, state, likelyNext, dismiss } = useExitIntent();
 
   function buildGraph() {
     for (let i = 0; i < 10; i++) {
@@ -24,21 +21,23 @@ export default function ExitIntent() {
   }
 
   function simulateExit() {
-    lifecycle.triggerExitIntent();
+    lifecycleAdapter.triggerExitIntent();
   }
 
   return (
     <>
-      <div className="demo-header">
-        <div className="hook-callout">⚛️ on('exit_intent', handler)</div>
-        <h2 className="demo-title">Smart Exit Intent</h2>
-        <p className="demo-description">
-          Fires when the pointer moves above the viewport <em>and</em> the Markov graph has at least
-          one candidate with probability ≥ 0.4. <strong>No graph = no event</strong> — this prevents
-          spammy overlays on accidental toolbar skims. The <code>likelyNext</code> field tells you
-          exactly where the user was heading.
-        </p>
-      </div>
+      <PageHeader
+        hook="⚛️ useExitIntent()"
+        title="Smart Exit Intent"
+        description={
+          <>
+            Fires when the pointer moves above the viewport <em>and</em> the Markov graph has at
+            least one candidate with probability ≥ 0.4. <strong>No graph = no event</strong> — this
+            prevents spammy overlays on accidental toolbar skims. The <code>likelyNext</code> field
+            tells you exactly where the user was heading.
+          </>
+        }
+      />
 
       <div className="two-col">
         <div className="card">
@@ -70,28 +69,30 @@ export default function ExitIntent() {
         </div>
       </div>
 
-      {lastEvent && (
+      {triggered && (
         <div className="alert alert-error" style={{ marginTop: 8 }}>
           <strong>exit_intent</strong> fired! state:{' '}
-          <code style={{ fontFamily: 'var(--font-mono)' }}>{lastEvent.state}</code> | likelyNext:{' '}
-          <code style={{ fontFamily: 'var(--font-mono)' }}>{lastEvent.likelyNext ?? 'none'}</code>
+          <code style={{ fontFamily: 'var(--font-mono)' }}>{state}</code> | likelyNext:{' '}
+          <code style={{ fontFamily: 'var(--font-mono)' }}>{likelyNext ?? 'none'}</code>{' '}
+          <button type="button" className="btn btn-secondary" onClick={dismiss}>
+            Dismiss
+          </button>
         </div>
       )}
 
       <CodeBlock
-        label="exit_intent — last-chance offer gated on Markov confidence"
-        code={`<span class="fn">useEffect</span>(() => {
-  <span class="kw">return</span> <span class="fn">on</span>(<span class="str">'exit_intent'</span>, ({ <span class="prop">state</span>, <span class="prop">likelyNext</span> }) => {
-    <span class="kw">if</span> (state === <span class="str">'/checkout/payment'</span>) {
-      <span class="fn">showModal</span>({
-        title: <span class="str">'Wait — your cart expires in 10 min!'</span>,
-        cta:   <span class="str">'Complete Purchase'</span>,
-      });
-    }
-    <span class="cmt">// likelyNext: where they were heading → personalize the offer</span>
-    console.<span class="fn">log</span>(<span class="str">'Would have gone to:'</span>, likelyNext);
-  });
-}, [on]);`}
+        label="useExitIntent() — last-chance offer gated on Markov confidence"
+        code={`<span class="kw">const</span> { <span class="prop">triggered</span>, <span class="prop">state</span>, <span class="prop">likelyNext</span>, <span class="prop">dismiss</span> } = <span class="fn">useExitIntent</span>();
+
+<span class="kw">if</span> (triggered && state === <span class="str">'/checkout/payment'</span>) {
+  <span class="kw">return</span> (
+    &lt;<span class="fn">ExitOverlay</span>
+      title=<span class="str">"Wait — your cart expires in 10 min!"</span>
+      suggestedPage={likelyNext}
+      onClose={dismiss}
+    /&gt;
+  );
+}`}
       />
     </>
   );

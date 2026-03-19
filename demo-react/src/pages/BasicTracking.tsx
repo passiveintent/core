@@ -5,8 +5,9 @@
  * return to unsubscribe so no listener leaks occur across re-renders.
  */
 import React, { useCallback, useEffect, useState } from 'react';
-import { useIntent } from '../IntentContext';
+import { usePassiveIntent } from '@passiveintent/react';
 import CodeBlock from '../components/CodeBlock';
+import PageHeader from '../components/PageHeader';
 
 const FUNNEL = [
   '/home',
@@ -25,7 +26,7 @@ interface LastChange {
 }
 
 export default function BasicTracking() {
-  const { track, on } = useIntent();
+  const { track, on } = usePassiveIntent();
   const [customState, setCustomState] = useState('/checkout/payment');
   const [lastChange, setLastChange] = useState<LastChange | null>(null);
   const [stepIndex, setStepIndex] = useState(0);
@@ -53,15 +54,18 @@ export default function BasicTracking() {
 
   return (
     <>
-      <div className="demo-header">
-        <div className="hook-callout">⚛️ usePassiveIntent() — track() + on()</div>
-        <h2 className="demo-title">Basic Tracking</h2>
-        <p className="demo-description">
-          Every <strong>track(state)</strong> call records a Markov transition and fires
-          <strong> state_change</strong>. The event subscription below uses the idiomatic React
-          pattern — subscribe in <code>useEffect</code>, return the unsubscribe function as cleanup.
-        </p>
-      </div>
+      <PageHeader
+        hook="⚛️ usePassiveIntent() — track() + on()"
+        title="Basic Tracking"
+        description={
+          <>
+            Every <strong>track(state)</strong> call records a Markov transition and fires
+            <strong> state_change</strong>. The event subscription below uses the idiomatic React
+            pattern — subscribe in <code>useEffect</code>, return the unsubscribe function as
+            cleanup.
+          </>
+        }
+      />
 
       {lastChange && (
         <div className="alert alert-success" style={{ marginBottom: 16 }}>

@@ -5,12 +5,15 @@
  * time passing without real waiting.
  */
 import React, { useEffect, useState } from 'react';
-import { useIntent } from '../IntentContext';
+import { usePassiveIntent } from '@passiveintent/react';
+import { timerAdapter } from '../adapters';
 import CodeBlock from '../components/CodeBlock';
+import PageHeader from '../components/PageHeader';
+import StatusAlert from '../components/StatusAlert';
 import type { DwellTimeAnomalyPayload } from '@passiveintent/react';
 
 export default function DwellTime() {
-  const { track, on, timer } = useIntent();
+  const { track, on } = usePassiveIntent();
   const [status, setStatus] = useState<{
     type: 'success' | 'warning' | 'info';
     msg: string;
@@ -24,12 +27,12 @@ export default function DwellTime() {
   }, [on]);
 
   function buildBaseline() {
-    timer.reset();
+    timerAdapter.reset();
     for (let i = 0; i < 10; i++) {
       track('/products');
-      timer.fastForward(2500 + Math.random() * 1500);
+      timerAdapter.fastForward(2500 + Math.random() * 1500);
       track('/checkout/payment');
-      timer.fastForward(3000 + Math.random() * 1000);
+      timerAdapter.fastForward(3000 + Math.random() * 1000);
     }
     setStatus({
       type: 'success',
@@ -39,7 +42,7 @@ export default function DwellTime() {
 
   function simulateHesitation() {
     track('/checkout/payment');
-    timer.fastForward(5 * 60 * 1000); // 5 minutes — way above baseline
+    timerAdapter.fastForward(5 * 60 * 1000); // 5 minutes — way above baseline
     track('/checkout/confirm');
     setStatus({
       type: 'warning',
@@ -48,22 +51,24 @@ export default function DwellTime() {
   }
 
   function resetTimer() {
-    timer.reset();
+    timerAdapter.reset();
     setStatus({ type: 'info', msg: 'Timer offset reset to 0.' });
   }
 
   return (
     <>
-      <div className="demo-header">
-        <div className="hook-callout">⚛️ on('dwell_time_anomaly', handler)</div>
-        <h2 className="demo-title">Dwell Time Anomaly</h2>
-        <p className="demo-description">
-          Uses <strong>Welford's online algorithm</strong> to maintain running mean/variance per
-          state — no raw timestamps are ever stored. When the z-score of the current dwell exceeds
-          the threshold, the event fires. The controllable timer adapter lets you simulate hours of
-          dwell in a click.
-        </p>
-      </div>
+      <PageHeader
+        hook="⚛️ on('dwell_time_anomaly', handler)"
+        title="Dwell Time Anomaly"
+        description={
+          <>
+            Uses <strong>Welford's online algorithm</strong> to maintain running mean/variance per
+            state — no raw timestamps are ever stored. When the z-score of the current dwell exceeds
+            the threshold, the event fires. The controllable timer adapter lets you simulate hours
+            of dwell in a click.
+          </>
+        }
+      />
 
       <div className="card">
         <div className="card-title">Simulate hesitation</div>
@@ -90,11 +95,7 @@ export default function DwellTime() {
             ↩ Reset Timer
           </button>
         </div>
-        {status && (
-          <div className={`alert alert-${status.type}`} style={{ marginTop: 12 }}>
-            {status.msg}
-          </div>
-        )}
+        <StatusAlert status={status} style={{ marginTop: 12 }} />
       </div>
 
       {lastEvent && (

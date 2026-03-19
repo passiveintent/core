@@ -1,77 +1,43 @@
 /**
- * Conversion Tracking — trackConversion() via IntentManager directly.
- * Shows how to combine usePassiveIntent with the raw IntentManager API
- * for methods not yet exposed by the hook.
+ * Conversion Tracking — trackConversion() via usePassiveIntent hook.
  */
-import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { IntentManager } from '@passiveintent/react';
-import { MemoryStorageAdapter } from '@passiveintent/react';
-import { useIntent } from '../IntentContext';
+import React, { useCallback, useEffect, useState } from 'react';
+import { usePassiveIntent } from '@passiveintent/react';
 import CodeBlock from '../components/CodeBlock';
-import { timerAdapter, lifecycleAdapter } from '../adapters';
+import PageHeader from '../components/PageHeader';
 import type { ConversionPayload } from '@passiveintent/react';
 
 export default function Conversion() {
-  const { on } = useIntent();
-  const convManagerRef = useRef<IntentManager | null>(null);
+  const { on, trackConversion } = usePassiveIntent();
   const [type, setType] = useState('purchase');
   const [value, setValue] = useState(49.99);
   const [currency, setCurrency] = useState('USD');
   const [history, setHistory] = useState<ConversionPayload[]>([]);
 
-  // Initialize convManager lazily on mount, destroy on unmount
   useEffect(() => {
-    if (!convManagerRef.current) {
-      convManagerRef.current = new IntentManager({
-        storageKey: 'pi-conv-demo',
-        storage: new MemoryStorageAdapter(),
-        timer: timerAdapter,
-        lifecycleAdapter: lifecycleAdapter,
-      });
-    }
-
-    return () => {
-      if (convManagerRef.current) {
-        convManagerRef.current.destroy();
-        convManagerRef.current = null;
-      }
-    };
-  }, []);
-
-  useEffect(() => {
-    // Listen on the shared engine's conversion event too
     return on('conversion', (p) => {
       setHistory((h) => [p as ConversionPayload, ...h].slice(0, 10));
     });
   }, [on]);
 
-  // Also listen on the local convManager
-  useEffect(() => {
-    if (!convManagerRef.current) return;
-    return convManagerRef.current.on('conversion', (p: unknown) => {
-      setHistory((h) => [p as ConversionPayload, ...h].slice(0, 10));
-    });
-  }, []);
-
   const handleTrack = useCallback(() => {
-    if (convManagerRef.current && Number.isFinite(value)) {
-      convManagerRef.current.trackConversion({ type, value, currency });
-    }
-  }, [type, value, currency]);
+    trackConversion({ type, value, currency });
+  }, [type, value, currency, trackConversion]);
 
   return (
     <>
-      <div className="demo-header">
-        <div className="hook-callout">⚛️ IntentManager.trackConversion()</div>
-        <h2 className="demo-title">Conversion Tracking</h2>
-        <p className="demo-description">
-          <strong>trackConversion()</strong> emits a <strong>conversion</strong> event locally. The
-          payload <em>never leaves the device</em> unless your listener explicitly sends it. Use it
-          to correlate behavioral signals with revenue outcomes — entirely in-browser, fully
-          GDPR-compliant. The hook doesn't expose this method yet; use <code>IntentManager</code>
-          directly when you need it.
-        </p>
-      </div>
+      <PageHeader
+        hook="⚛️ usePassiveIntent() — trackConversion()"
+        title="Conversion Tracking"
+        description={
+          <>
+            <strong>trackConversion()</strong> emits a <strong>conversion</strong> event locally.
+            The payload <em>never leaves the device</em> unless your listener explicitly sends it.
+            Use it to correlate behavioral signals with revenue outcomes — entirely in-browser,
+            fully GDPR-compliant.
+          </>
+        }
+      />
 
       <div className="card">
         <div className="card-title">Fire a conversion event</div>
@@ -137,17 +103,16 @@ export default function Conversion() {
 
       <CodeBlock
         label="trackConversion — local-only revenue correlation"
-        code={`<span class="kw">import</span> { <span class="type">IntentManager</span> } <span class="kw">from</span> <span class="str">'@passiveintent/react'</span>;
+        code={`<span class="kw">import</span> { <span class="fn">usePassiveIntent</span> } <span class="kw">from</span> <span class="str">'@passiveintent/react'</span>;
 
-<span class="cmt">// Create a manager instance alongside usePassiveIntent</span>
-<span class="kw">const</span> manager = <span class="kw">new</span> <span class="type">IntentManager</span>({ storageKey: <span class="str">'my-app'</span> });
+<span class="kw">const</span> { <span class="prop">on</span>, <span class="prop">trackConversion</span> } = <span class="fn">usePassiveIntent</span>();
 
-manager.<span class="fn">on</span>(<span class="str">'conversion'</span>, ({ <span class="prop">type</span>, <span class="prop">value</span>, <span class="prop">currency</span> }) => {
+<span class="fn">on</span>(<span class="str">'conversion'</span>, ({ <span class="prop">type</span>, <span class="prop">value</span>, <span class="prop">currency</span> }) => {
   <span class="cmt">// You decide — the engine never sends this anywhere</span>
   <span class="kw">if</span> (type === <span class="str">'purchase'</span>) analytics.<span class="fn">revenue</span>({ value, currency });
 });
 
-manager.<span class="fn">trackConversion</span>({ type: <span class="str">'purchase'</span>, value: <span class="num">49.99</span>, currency: <span class="str">'USD'</span> });`}
+<span class="fn">trackConversion</span>({ type: <span class="str">'purchase'</span>, value: <span class="num">49.99</span>, currency: <span class="str">'USD'</span> });`}
       />
     </>
   );

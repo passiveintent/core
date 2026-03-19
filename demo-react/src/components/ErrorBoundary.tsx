@@ -26,7 +26,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
       return this.props.fallback ? (
         this.props.fallback(error, this.reset)
       ) : (
-        <div className="alert alert-error">
+        <div className="alert alert-error" role="alert" aria-live="assertive" aria-atomic="true">
           Something went wrong.{' '}
           <button type="button" onClick={this.reset}>
             Retry

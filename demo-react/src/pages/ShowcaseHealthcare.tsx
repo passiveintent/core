@@ -225,6 +225,7 @@ export default function ShowcaseHealthcare() {
           <button
             type="button"
             className="showcase-toolbar-btn"
+            disabled={simRunning}
             onClick={() => {
               setDetected(false);
               setSignal('—');

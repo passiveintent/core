@@ -1,7 +1,8 @@
-import React, { lazy, Suspense, useState } from 'react';
+import React, { lazy, Suspense, useMemo, useState } from 'react';
 import { PassiveIntentProvider, MemoryStorageAdapter } from '@passiveintent/react';
 import { LogProvider } from './LogContext';
 import { ToastProvider } from './components/Toast';
+import { SimGuardProvider } from './hooks/useSimGuard';
 import { timerAdapter, lifecycleAdapter } from './adapters';
 import { ECOMMERCE_BASELINE } from './baseline';
 import { ErrorBoundary } from './components/ErrorBoundary';
@@ -76,12 +77,11 @@ const PAGE_MAP: Record<DemoKey, React.ComponentType> = {
   'cross-tab': CrossTabSync,
 };
 
-const memStorage = new MemoryStorageAdapter();
-
 export default function App() {
   const [active, setActive] = useState<DemoKey>('overview');
   const [sessionKey, setSessionKey] = useState(0);
   const ActivePage = PAGE_MAP[active];
+  const memStorage = useMemo(() => new MemoryStorageAdapter(), [sessionKey]);
 
   return (
     <PassiveIntentProvider
@@ -107,13 +107,19 @@ export default function App() {
     >
       <LogProvider>
         <ToastProvider>
-          <Shell active={active} onNavigate={setActive} onReset={() => setSessionKey((k) => k + 1)}>
-            <ErrorBoundary key={active}>
-              <Suspense fallback={<div className="page-loading">Loading…</div>}>
-                <ActivePage />
-              </Suspense>
-            </ErrorBoundary>
-          </Shell>
+          <SimGuardProvider>
+            <Shell
+              active={active}
+              onNavigate={setActive}
+              onReset={() => setSessionKey((k) => k + 1)}
+            >
+              <ErrorBoundary key={active}>
+                <Suspense fallback={<div className="page-loading">Loading…</div>}>
+                  <ActivePage />
+                </Suspense>
+              </ErrorBoundary>
+            </Shell>
+          </SimGuardProvider>
         </ToastProvider>
       </LogProvider>
     </PassiveIntentProvider>

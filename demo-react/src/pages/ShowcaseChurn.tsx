@@ -3,7 +3,7 @@
  * The engine detects hesitation during the cancel flow and fires a retention
  * offer before the user confirms cancellation.
  */
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { usePassiveIntent } from '@passiveintent/react';
 import { timerAdapter } from '../adapters';
 import PageHeader from '../components/PageHeader';
@@ -65,22 +65,18 @@ export default function ShowcaseChurn() {
   const [churnScore, setChurnScore] = useState('—');
   const [simRunning, setSimRunning] = useState(false);
   const [currentPath, setCurrentPath] = useState('/account/settings');
-  const mountedRef = useRef(false);
 
   useEffect(() => {
     const unsubs = [
       on('trajectory_anomaly', (p) => {
-        setDetected(true);
         setSignal('trajectory_anomaly');
         setChurnScore(((p as { zScore?: number }).zScore ?? 2.9).toFixed(2));
       }),
       on('hesitation_detected', () => {
-        setDetected(true);
         setSignal('hesitation_detected');
         setChurnScore('3.5');
       }),
       on('dwell_time_anomaly', () => {
-        setDetected(true);
         setSignal('dwell_time_anomaly');
         if (churnScore === '—') setChurnScore('2.4');
       }),
@@ -95,26 +91,28 @@ export default function ShowcaseChurn() {
       setSignal('—');
       setChurnScore('—');
 
-      for (const state of BREADCRUMB_STATES) {
-        track(state);
-        setCurrentPath(state);
-        if (state.includes('cancel')) {
-          timerAdapter.fastForward(3500);
-        } else {
-          timerAdapter.fastForward(500);
+      try {
+        for (const state of BREADCRUMB_STATES) {
+          track(state);
+          setCurrentPath(state);
+          if (state.includes('cancel')) {
+            timerAdapter.fastForward(3500);
+          } else {
+            timerAdapter.fastForward(500);
+          }
+          await new Promise<void>((r) => requestAnimationFrame(() => r()));
         }
-        await new Promise<void>((r) => requestAnimationFrame(() => r()));
-      }
-      timerAdapter.fastForward(6000);
+        timerAdapter.fastForward(6000);
 
-      toast('Churn hesitation detected — retention offer triggered', 'warning');
-      setSimRunning(false);
+        setDetected(true);
+        toast('Churn hesitation detected — retention offer triggered', 'warning');
+      } finally {
+        setSimRunning(false);
+      }
     });
   }, [runGuarded, track, toast]);
 
   useEffect(() => {
-    if (mountedRef.current) return;
-    mountedRef.current = true;
     const t = setTimeout(() => runSim(), 800);
     return () => clearTimeout(t);
   }, [runSim]);
@@ -198,15 +196,6 @@ export default function ShowcaseChurn() {
 
           {/* Retention offer */}
           {detected && (
-            <div className="showcase-modal showcase-modal-churn">
-              <span className="showcase-modal-kicker">Stay & save</span>
-              <strong>Stay 3 more months free. We'll make it worth it.</strong>
-              <span className="showcase-modal-note">
-                One click to activate — no payment needed. Cancel any time after.
-              </span>
-            </div>
-          )}
-          {!detected && (
             <div className="showcase-modal showcase-modal-churn">
               <span className="showcase-modal-kicker">Stay & save</span>
               <strong>Stay 3 more months free. We'll make it worth it.</strong>

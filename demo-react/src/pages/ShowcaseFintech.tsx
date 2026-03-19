@@ -171,15 +171,6 @@ export default function ShowcaseFintech() {
               </span>
             </div>
           )}
-          {!detected && (
-            <div className="showcase-modal showcase-modal-security">
-              <span className="showcase-modal-kicker">Security Shield</span>
-              <strong>Unusual navigation patterns detected.</strong>
-              <span className="showcase-modal-note">
-                Please verify this transfer via facial recognition before proceeding.
-              </span>
-            </div>
-          )}
         </ShowcaseDevice>
 
         <ShowcaseConsole

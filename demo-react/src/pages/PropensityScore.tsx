@@ -248,6 +248,8 @@ export default function PropensityScore() {
     setNavHistory(['/home']);
     setLiveZ(0);
     if (!useManual) setManualZ(0);
+    setScoreHist([]);
+    histSeqRef.current = 0;
   }, [useManual]);
 
   const { tier, action } = tierInfo(propensity);

@@ -261,18 +261,26 @@ export default function BYOBaseline() {
     setTrackedSteps(0);
   }, [archetype]);
 
-  // Generate baseline — wrapped in startTransition so the heavy sync computation
-  // (buildBaselineGraph + computeCalibration for up to 500 sessions) is treated
-  // as a non-urgent update, keeping the button press responsive.
+  // Generate baseline — yield to the browser first so React can paint the
+  // "Generating…" pending state, then run the heavy synchronous computation
+  // (buildBaselineGraph + computeCalibration for up to 500 sessions) inside a
+  // setTimeout(0). The final state updates are wrapped in startTransition so
+  // they remain low-priority and don't block the now-visible pending UI.
   const handleGenerate = useCallback(() => {
     startTransition(() => {
+      // Mark as pending immediately so isGenerating becomes true and the button
+      // shows "Generating…" before the heavy work begins.
+    });
+    setTimeout(() => {
       const graph = buildBaselineGraph(archetype);
       const cal = computeCalibration(archetype, graph);
-      setGeneratedGraph(graph);
-      setCalibrationResult(cal);
-      setMeanLL(parseFloat(cal.meanLL.toFixed(2)));
-      setStdLL(parseFloat(cal.stdLL.toFixed(2)));
-    });
+      startTransition(() => {
+        setGeneratedGraph(graph);
+        setCalibrationResult(cal);
+        setMeanLL(parseFloat(cal.meanLL.toFixed(2)));
+        setStdLL(parseFloat(cal.stdLL.toFixed(2)));
+      });
+    }, 0);
   }, [archetype, startTransition]);
 
   // Walk the perfect path (should be normal)

@@ -225,7 +225,7 @@ export default function Shell({ active, onNavigate, onReset, children }: Props) 
                     </article>
                     <article className="shell-stat">
                       <span className="shell-stat-label">Best entry points</span>
-                      <strong>Overview, Exit, Playground</strong>
+                      <strong>Overview, Exit</strong>
                       <p>
                         Start with the quick jumps, then use the sidebar for full scenario coverage.
                       </p>

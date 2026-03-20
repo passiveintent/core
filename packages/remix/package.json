@@ -1,0 +1,54 @@
+{
+  "name": "@passiveintent/remix",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Remix/Shopify Hydrogen adapter for PassiveIntent — thin wrapper over @passiveintent/react with SSR-safe dual entry points.",
+  "main": "./dist/index.server.cjs",
+  "module": "./dist/index.client.js",
+  "types": "./dist/index.types.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.types.d.ts",
+      "node": {
+        "require": "./dist/index.server.cjs",
+        "import": "./dist/index.server.js"
+      },
+      "import": "./dist/index.client.js",
+      "require": "./dist/index.client.cjs"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "sideEffects": false,
+  "scripts": {
+    "build": "npm run clean && tsup",
+    "clean": "node -e \"require('fs').rmSync('dist',{recursive:true,force:true})\"",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc -b"
+  },
+  "peerDependencies": {
+    "@passiveintent/react": "^1.2.0",
+    "@remix-run/react": ">=2.0.0",
+    "@remix-run/server-runtime": ">=2.0.0",
+    "react": ">=18.0.0",
+    "react-dom": ">=18.0.0"
+  },
+  "peerDependenciesMeta": {
+    "@remix-run/react": {
+      "optional": true
+    },
+    "@remix-run/server-runtime": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@testing-library/react": "^16.3.2",
+    "@types/react": "^19.0.0",
+    "jsdom": "^26.1.0",
+    "tsup": "^8.5.1",
+    "typescript": "^5.6.3",
+    "vitest": "^4.0.18"
+  }
+}

@@ -1,4 +1,10 @@
-import { MarkovGraph } from '../dist/index.js';
+/**
+ * Copyright (c) 2026 Purushottam <purushottam@passiveintent.dev>
+ *
+ * This source code is licensed under the AGPL-3.0-only license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
+import { MarkovGraph } from '../packages/core/dist/index.js';
 import * as fs from 'fs';
 
 // 1. Create the E-Commerce Strict Funnel Blueprint

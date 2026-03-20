@@ -22,6 +22,8 @@
     "dev:demo": "npm run dev -w passiveintent-demo",
     "dev:react": "npm run dev -w passiveintent-demo-react",
     "build:packages": "npm run build -w @passiveintent/core && npm run build -w @passiveintent/react",
+    "build:remix": "npm run build -w @passiveintent/remix",
+    "build:adapters": "npm run build:packages && npm run build:remix",
     "dev": "npm run build:packages && concurrently \"npm run dev:demo\" \"npm run dev:react\""
   },
   "devDependencies": {

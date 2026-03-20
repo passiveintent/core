@@ -255,6 +255,8 @@ The package also re-exports the core items most React consumers need:
 - Every hook returns safe zero-value defaults before the engine is live (during SSR or before hydration).
 - All three entry-point files (`index.ts`, `provider.tsx`, `hooks.ts`) carry a `'use client'` directive so **Next.js App Router** automatically treats any import from `@passiveintent/react` as a client module — no wrapper file required.
 
+> **Server Components:** Because every file in this package carries `'use client'`, you **cannot** import `@passiveintent/react` directly from a React Server Component — doing so will throw a build-time error in Next.js App Router and Remix. Use it only inside Client Components (`'use client'` boundary). For Remix, use [`@passiveintent/remix`](../remix/README.md) which provides `ClientOnly`, `withPassiveIntent`, and `createIntentClientLoader` helpers designed for Remix's SSR/hydration model.
+
 ### Next.js App Router
 
 Because the `'use client'` directive is already inside the library, you can import directly from a Client Component:

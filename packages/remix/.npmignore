@@ -1,0 +1,18 @@
+# Source & build config
+src/
+tsconfig.json
+tsup.config.ts
+
+# Tests
+tests/
+vitest.config.ts
+
+# CI / GitHub
+.github/
+
+# Coverage output
+coverage/
+
+# Docs
+CHANGELOG.md
+CONTRIBUTING.md

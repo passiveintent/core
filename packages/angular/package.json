@@ -1,0 +1,20 @@
+{
+  "name": "@passiveintent/angular",
+  "version": "0.0.1",
+  "private": true,
+  "description": "Placeholder — Angular adapter for SAP Spartacus / Composable Storefront. Not yet implemented.",
+  "type": "module",
+  "main": "./src/index.ts",
+  "scripts": {
+    "typecheck": "tsc -b"
+  },
+  "peerDependencies": {
+    "@angular/common": ">=15.0.0",
+    "@angular/core": ">=15.0.0",
+    "@passiveintent/core": "^1.1.0",
+    "rxjs": ">=7.0.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.6.3"
+  }
+}

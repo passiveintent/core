@@ -28,16 +28,19 @@ try {
 
   // Smoke-test the server entry point (the "node" export condition).
   // We only import server-safe exports — no React, no DOM globals.
+  // createIntentClientLoader is intentionally excluded: it references
+  // @remix-run/server-runtime types and would require Remix to be installed.
   const smoke = `
-import { MemoryStorageAdapter, createIntentClientLoader } from '@passiveintent/remix';
+import { MemoryStorageAdapter } from '@passiveintent/remix';
 
 const adapter = new MemoryStorageAdapter();
-if (typeof adapter.get !== 'function' || typeof adapter.set !== 'function') {
+if (typeof adapter.getItem !== 'function' || typeof adapter.setItem !== 'function') {
   throw new Error('MemoryStorageAdapter is missing expected methods');
 }
 
-if (typeof createIntentClientLoader !== 'function') {
-  throw new Error('createIntentClientLoader is not a function');
+adapter.setItem('smoke', 'ok');
+if (adapter.getItem('smoke') !== 'ok') {
+  throw new Error('MemoryStorageAdapter round-trip failed');
 }
 
 console.log('package smoke test passed');

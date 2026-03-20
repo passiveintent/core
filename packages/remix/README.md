@@ -96,6 +96,7 @@ export default withPassiveIntent(App, {
 ```tsx
 // app/root.tsx — inside the App component
 import { useLocation } from '@remix-run/react';
+import { useEffect } from 'react';
 import { withPassiveIntent, useRoutePassiveIntent } from '@passiveintent/remix';
 
 function App() {
@@ -167,6 +168,8 @@ function ProductWithIntent() {
 ```tsx
 // app/routes/products.$handle.tsx
 import { json } from '@remix-run/node';
+import type { LoaderFunctionArgs } from '@remix-run/node';
+import { useLoaderData } from '@remix-run/react';
 import { createIntentClientLoader } from '@passiveintent/remix';
 
 // Server loader fetches product data
@@ -228,7 +231,7 @@ export default withPassiveIntent(Root, {
 
 ```tsx
 // app/routes/products.$handle.tsx
-import { ClientOnly, usePropensity } from '@passiveintent/remix';
+import { ClientOnly, usePropensity, createIntentClientLoader } from '@passiveintent/remix';
 export const clientLoader = createIntentClientLoader(true);
 
 export default function ProductPage() {
@@ -363,7 +366,7 @@ import { createIntentClientLoader } from '@passiveintent/remix';
 
 ## Architecture
 
-```
+```text
 @passiveintent/remix
 ├── index.server.ts   ← loaded by Node.js (Remix loaders/actions)
 │     Types + MemoryStorageAdapter + createIntentClientLoader

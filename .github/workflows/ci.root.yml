@@ -3,6 +3,9 @@ name: ci / root
 # Repo-wide checks that apply regardless of which package changed.
 # Package-specific CI lives in ci.<package>.yml.
 
+permissions:
+  contents: read
+
 on:
   push:
     branches: ['**']

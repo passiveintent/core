@@ -15,6 +15,8 @@
 ![CodeRabbit Pull Request Reviews](https://img.shields.io/coderabbit/prs/github/passiveintent/core)
 [![npm @passiveintent/react](https://img.shields.io/npm/v/@passiveintent/react.svg)](https://www.npmjs.com/package/@passiveintent/react)
 [![Bundle size](https://img.shields.io/bundlephobia/minzip/@passiveintent/react)](https://bundlephobia.com/package/@passiveintent/react)
+[![npm @passiveintent/remix](https://img.shields.io/npm/v/@passiveintent/remix.svg)](https://www.npmjs.com/package/@passiveintent/remix)
+[![Bundle size](https://img.shields.io/bundlephobia/minzip/@passiveintent/remix)](https://bundlephobia.com/package/@passiveintent/remix)
 [![Open Vanilla JS demo in StackBlitz](https://img.shields.io/badge/StackBlitz-Vanilla%20JS-1389FD?logo=stackblitz&logoColor=white)](https://stackblitz.com/github/passiveintent/core/tree/main/demo)
 [![Open React demo in StackBlitz](https://img.shields.io/badge/StackBlitz-React-1389FD?logo=stackblitz&logoColor=white)](https://stackblitz.com/github/passiveintent/core/tree/main/demo-react)
 
@@ -26,15 +28,17 @@ This repository is structured as an **npm workspaces monorepo** containing all P
 
 ## Packages
 
-| Package                                    | Version                                                                                                             | Description                                       |
-| ------------------------------------------ | ------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------- |
-| [`@passiveintent/core`](./packages/core)   | [![npm](https://img.shields.io/npm/v/@passiveintent/core.svg)](https://www.npmjs.com/package/@passiveintent/core)   | Privacy-first, on-device behavioral intent engine |
-| [`@passiveintent/react`](./packages/react) | [![npm](https://img.shields.io/npm/v/@passiveintent/react.svg)](https://www.npmjs.com/package/@passiveintent/react) | React 18+ hook wrapper for `@passiveintent/core`  |
+| Package                                    | Version                                                                                                             | Description                                                                          |
+| ------------------------------------------ | ------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------ |
+| [`@passiveintent/core`](./packages/core)   | [![npm](https://img.shields.io/npm/v/@passiveintent/core.svg)](https://www.npmjs.com/package/@passiveintent/core)   | Privacy-first, on-device behavioral intent engine                                    |
+| [`@passiveintent/react`](./packages/react) | [![npm](https://img.shields.io/npm/v/@passiveintent/react.svg)](https://www.npmjs.com/package/@passiveintent/react) | React 18+ hook wrapper for `@passiveintent/core`                                     |
+| [`@passiveintent/remix`](./packages/remix) | [![npm](https://img.shields.io/npm/v/@passiveintent/remix.svg)](https://www.npmjs.com/package/@passiveintent/remix) | Remix / Shopify Hydrogen adapter — SSR-safe dual entry points + `clientLoader` utils |
 
 Full documentation for each package lives inside the package directory:
 
 - **Core library** — [packages/core/README.md](./packages/core/README.md)
 - **React hook** — [packages/react/README.md](./packages/react/README.md)
+- **Remix adapter** — [packages/remix/README.md](./packages/remix/README.md)
 - **Architecture & API deep-dive** — [packages/core/docs/architecture.md](./packages/core/docs/architecture.md)
 
 ---
@@ -70,6 +74,7 @@ Full documentation for each package lives inside the package directory:
 │       ├── ci.root.yml        # format:check (all packages)
 │       ├── ci.core.yml        # build / test / perf for @passiveintent/core
 │       ├── ci.react.yml       # build / test for @passiveintent/react
+│       ├── ci.remix.yml       # build / test for @passiveintent/remix
 │       ├── release-gate.yml   # full pre-release validation gates
 │       └── perf-matrix.core.yml
 ├── demo/                      # vanilla JS demo app
@@ -77,7 +82,8 @@ Full documentation for each package lives inside the package directory:
 ├── landing/                   # landing page (passiveintent.dev)
 └── packages/
     ├── core/                  # published as @passiveintent/core
-    └── react/                 # published as @passiveintent/react
+    ├── react/                 # published as @passiveintent/react
+    └── remix/                 # published as @passiveintent/remix
 ```
 
 ---

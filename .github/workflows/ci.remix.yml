@@ -1,4 +1,4 @@
-name: ci / core
+name: ci / remix
 
 permissions:
   contents: read
@@ -7,12 +7,16 @@ on:
   push:
     branches: ['**']
     paths:
+      - 'packages/remix/**'
+      - 'packages/react/**'
       - 'packages/core/**'
       - 'tsconfig.base.json'
       - 'package.json'
       - 'package-lock.json'
   pull_request:
     paths:
+      - 'packages/remix/**'
+      - 'packages/react/**'
       - 'packages/core/**'
       - 'tsconfig.base.json'
       - 'package.json'
@@ -36,17 +40,20 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Type check
-        run: npm run typecheck -w @passiveintent/core
-
-      - name: Build
+      - name: Build @passiveintent/core
         run: npm run build -w @passiveintent/core
 
-      - name: Unit tests
-        run: npm run test:unit -w @passiveintent/core
+      - name: Build @passiveintent/react
+        run: npm run build -w @passiveintent/react
 
-      - name: Performance regression assertion
-        run: npm run test:perf:assert -w @passiveintent/core
+      - name: Type check
+        run: npm run typecheck -w @passiveintent/remix
+
+      - name: Unit tests
+        run: npm run test -w @passiveintent/remix
+
+      - name: Build
+        run: npm run build -w @passiveintent/remix
 
       - name: Package integrity
-        run: npm run verify:package -w @passiveintent/core
+        run: npm run verify:package -w @passiveintent/remix

@@ -870,6 +870,7 @@ const EMPTY_LOG: LogEntry[] = [];
 
 function logReducer(state: LogEntry[], action: LogAction): LogEntry[] {
   if (action.type === 'ADD') {
+    if (action.maxEntries <= 0) return EMPTY_LOG;
     // Pre-trim state before spreading so the spread produces the final-length
     // array directly — one allocation instead of two (spread + slice).
     return [action.entry, ...state.slice(0, action.maxEntries - 1)];

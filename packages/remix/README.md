@@ -137,7 +137,12 @@ round-trip entirely:
 
 ```tsx
 // app/routes/products.$handle.tsx
-import { ClientOnly, usePassiveIntent, createIntentClientLoader } from '@passiveintent/remix';
+import {
+  ClientOnly,
+  usePassiveIntent,
+  usePropensity,
+  createIntentClientLoader,
+} from '@passiveintent/remix';
 
 export const clientLoader = createIntentClientLoader();
 export const HydrateFallback = () => <div>Loading...</div>;
@@ -151,7 +156,8 @@ export default function ProductPage() {
 }
 
 function ProductWithIntent() {
-  const { usePropensity } = usePassiveIntent();
+  const { track, on } = usePassiveIntent();
+  const { score } = usePropensity({ targetState: '/checkout' });
   // ...
 }
 ```

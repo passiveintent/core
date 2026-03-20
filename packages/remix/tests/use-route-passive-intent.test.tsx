@@ -18,7 +18,7 @@
 
 import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { render, act, cleanup } from '@testing-library/react';
-import React, { useState } from 'react';
+import React, { useState, useReducer } from 'react';
 
 vi.mock('@passiveintent/core', () => ({
   IntentManager: vi.fn(),
@@ -65,18 +65,23 @@ afterEach(() => cleanup());
  */
 function RouteTracker({ initialPath }: { initialPath: string }) {
   const [pathname, setPathname] = useState(initialPath);
+  // Separate counter used to force a real re-render without changing pathname.
+  // setPathname(pathname) would bail out because the value is identical.
+  const [, forceUpdate] = useReducer((n: number) => n + 1, 0);
   const intent = useRoutePassiveIntent(pathname);
 
   return (
     <div>
       <span data-testid="session">{intent.getTelemetry().sessionId}</span>
-      <button data-testid="navigate" onClick={() => setPathname('/products/tee')} />
-      <button data-testid="navigate-again" onClick={() => setPathname('/cart')} />
-      <button
-        data-testid="unrelated-update"
-        // re-render without changing pathname by forcing update via key trick
-        onClick={() => setPathname(pathname)}
-      />
+      <button type="button" data-testid="navigate" onClick={() => setPathname('/products/tee')}>
+        navigate
+      </button>
+      <button type="button" data-testid="navigate-again" onClick={() => setPathname('/cart')}>
+        navigate-again
+      </button>
+      <button type="button" data-testid="unrelated-update" onClick={() => forceUpdate()}>
+        unrelated-update
+      </button>
     </div>
   );
 }

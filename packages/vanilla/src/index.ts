@@ -23,6 +23,8 @@
  *
  *  2. Wix Velo — ES module import in page code
  *     import { init, track, on } from '@passiveintent/vanilla';
+ *     // or import the singleton:
+ *     import { PassiveIntent } from '@passiveintent/vanilla';
  *
  *  3. Squarespace — Code Injection (Settings → Advanced → Code Injection → Header)
  *     <script src="https://cdn.jsdelivr.net/npm/@passiveintent/vanilla/dist/passiveintent.iife.js"></script>
@@ -86,3 +88,17 @@ export const PassiveIntent: PassiveIntentGlobal = {
 };
 
 export type { PassiveIntentGlobal, PassiveIntentVanillaConfig } from './types.js';
+
+/**
+ * Named forwarding exports — for Wix Velo and ESM consumers that prefer
+ * tree-shakeable named imports over the singleton:
+ *
+ *   import { init, track, on } from '@passiveintent/vanilla';
+ *
+ * Each is bound to the PassiveIntent singleton so `this` is correct
+ * when the real implementation replaces the stubs above.
+ */
+export const init = PassiveIntent.init.bind(PassiveIntent);
+export const track = PassiveIntent.track.bind(PassiveIntent);
+export const on = PassiveIntent.on.bind(PassiveIntent);
+export const destroy = PassiveIntent.destroy.bind(PassiveIntent);

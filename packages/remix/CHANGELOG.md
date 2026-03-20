@@ -40,12 +40,12 @@ Initial public release.
     No React hooks, no `window` references. Loaded by Node.js/Cloudflare Workers via the `"node"`
     export condition in `package.json#exports`.
 
-- **Full test suite** — 59 tests across 5 files (vitest + @testing-library/react, jsdom):
+- **Full test suite** — 57 tests across 5 files (vitest + @testing-library/react, jsdom):
   - `tests/exports.test.ts` — guards public API surface (23 tests)
   - `tests/loaders.test.ts` — `createIntentClientLoader` contracts (9 tests)
   - `tests/client-only.test.tsx` — `<ClientOnly>` SSR/hydration behaviour (7 tests)
   - `tests/with-passive-intent.test.tsx` — `withPassiveIntent` HOC contracts (11 tests)
-  - `tests/use-route-passive-intent.test.tsx` — `useRoutePassiveIntent` tracking contracts (9 tests)
+  - `tests/use-route-passive-intent.test.tsx` — `useRoutePassiveIntent` tracking contracts (7 tests)
 
 ### Peer dependencies
 

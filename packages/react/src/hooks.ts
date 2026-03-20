@@ -870,8 +870,10 @@ const EMPTY_LOG: LogEntry[] = [];
 
 function logReducer(state: LogEntry[], action: LogAction): LogEntry[] {
   if (action.type === 'ADD') {
-    // Prepend is O(1) amortized; slice drops the oldest tail entry when full.
-    return [action.entry, ...state].slice(0, action.maxEntries);
+    if (action.maxEntries <= 0) return EMPTY_LOG;
+    // Pre-trim state before spreading so the spread produces the final-length
+    // array directly — one allocation instead of two (spread + slice).
+    return [action.entry, ...state.slice(0, action.maxEntries - 1)];
   }
   if (action.type === 'CLEAR') {
     return EMPTY_LOG;
@@ -1005,7 +1007,13 @@ const VERSION_BUMP = (v: number): number => v + 1;
  * environments where `atob` is not defined (e.g. some SSR runtimes).
  */
 function decodeBits(bf: BloomFilter): boolean[] {
-  if (typeof atob === 'undefined') return [];
+  if (typeof atob === 'undefined') {
+    console.warn(
+      '[PassiveIntent] decodeBits: `atob` is not available in this environment. ' +
+        'Bit-array visualization requires a browser or Node ≥ 16.',
+    );
+    return [];
+  }
   const bytes = atob(bf.toBase64());
   const result: boolean[] = new Array(bf.bitSize);
   for (let byteIdx = 0; byteIdx < bytes.length; byteIdx++) {
@@ -1017,6 +1025,12 @@ function decodeBits(bf: BloomFilter): boolean[] {
   }
   return result;
 }
+
+// ── Standalone hooks ──────────────────────────────────────────────────────────
+// The hooks below (useBloomFilter, useMarkovGraph) are self-contained data-
+// structure wrappers. They do NOT require a PassiveIntentProvider and can be
+// used anywhere in the tree, including outside of any intent context.
+// All hooks above this line require PassiveIntentProvider to be present.
 
 // ── useBloomFilter ────────────────────────────────────────────────────────────
 

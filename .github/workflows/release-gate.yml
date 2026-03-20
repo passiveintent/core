@@ -5,6 +5,7 @@ on:
     paths:
       - 'packages/core/**'
       - 'packages/react/**'
+      - 'packages/remix/**'
       - '.github/workflows/**'
       - 'package.json'
       - 'package-lock.json'
@@ -43,3 +44,9 @@ jobs:
 
       - name: React pack dry-run
         run: npm pack --dry-run -w @passiveintent/react
+
+      - name: Verify remix package
+        run: npm run verify:package -w @passiveintent/remix
+
+      - name: Remix pack dry-run
+        run: npm pack --dry-run -w @passiveintent/remix

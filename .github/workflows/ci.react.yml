@@ -1,5 +1,8 @@
 name: ci / react
 
+permissions:
+  contents: read
+
 on:
   push:
     branches: ['**']

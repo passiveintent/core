@@ -1,0 +1,16 @@
+{
+  "name": "PassiveIntent",
+  "short_name": "PassiveIntent",
+  "description": "Privacy-first JavaScript and React SDK for in-session intent detection.",
+  "start_url": "/",
+  "display": "browser",
+  "background_color": "#f6f3ee",
+  "theme_color": "#f6f3ee",
+  "icons": [
+    {
+      "src": "./apple-touch-icon.png",
+      "sizes": "180x180",
+      "type": "image/png"
+    }
+  ]
+}

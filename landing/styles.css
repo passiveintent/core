@@ -119,6 +119,7 @@ select {
   gap: 12px;
   text-decoration: none;
   min-width: 0;
+  min-height: 48px;
 }
 
 .brand-mark {
@@ -1614,7 +1615,7 @@ select {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-height: 42px;
+  min-height: 48px;
   padding: 0 16px;
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.94);
@@ -2407,6 +2408,14 @@ select {
   flex-wrap: wrap;
   gap: 12px;
   margin-top: 24px;
+  align-items: center;
+}
+
+.demo-meta a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 48px;
+  padding: 0 4px;
 }
 
 .live-pill,
@@ -2505,6 +2514,10 @@ select {
   color: #d6e4ff;
   text-decoration: none;
   font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  min-height: 48px;
+  padding: 0 8px;
 }
 
 .demo-theater {

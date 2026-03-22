@@ -6,6 +6,7 @@
  */
 
 import type { IntentManagerConfig, MarkovGraphConfig } from '../types/events.js';
+import type { EnginePolicy } from './policies/engine-policy.js';
 import { SMOOTHING_EPSILON } from './constants.js';
 
 /**
@@ -80,6 +81,7 @@ export interface ResolvedIntentManagerOptions {
   driftMaxAnomalyRate: number;
   driftEvaluationWindowMs: number;
   hesitationCorrelationWindowMs: number;
+  plugins: EnginePolicy[];
 }
 
 /**
@@ -217,5 +219,6 @@ export function buildIntentManagerOptions(
     driftMaxAnomalyRate,
     driftEvaluationWindowMs,
     hesitationCorrelationWindowMs,
+    plugins: config.plugins ?? [],
   };
 }

@@ -12,6 +12,19 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [@passiveintent/core 1.1.1] - 2026-03-23
+
+### Added
+
+- **`plugins` config field** (`IntentManagerConfig.plugins?: EnginePolicy[]`) — inject custom `EnginePolicy` implementations into the `trackStages` pipeline without modifying core source code. Plugins are appended after all built-in policies (Drift, Dwell, Bigram, CrossTab) and execute in array order.
+- **Plugin isolation boundary** — every hook call into an external plugin is wrapped in a `try/catch`. A throwing plugin forwards to `onError` with `code: 'VALIDATION'` and never propagates to the caller or blocks subsequent plugins.
+
+### Notes
+
+- Fully backwards-compatible patch. No changes to built-in policy behaviour or existing config fields.
+
+---
+
 ## [Unreleased] – Progressive Disclosure of Complexity
 
 ### Added

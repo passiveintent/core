@@ -13,6 +13,7 @@ import type {
   StorageAdapter,
   TimerAdapter,
 } from '../adapters.js';
+import type { EnginePolicy } from '../engine/policies/engine-policy.js';
 
 export type IntentEventName =
   | 'high_entropy'
@@ -574,4 +575,13 @@ export interface IntentManagerConfig {
    * Default: `false`.
    */
   crossTabSync?: boolean;
+  /**
+   * External policy plugins appended to the built-in policy pipeline.
+   * Built-in policies (Drift, Dwell, Bigram, CrossTab) always run first;
+   * plugins are executed in array order after them.
+   *
+   * Each plugin hook is called inside a try/catch boundary — a throwing
+   * plugin is silently isolated and never propagates to the host application.
+   */
+  plugins?: EnginePolicy[];
 }

@@ -437,7 +437,9 @@ export class IntentManager {
 
       // Bigram accounting — delegated to BigramPolicy when enabled.
       for (let i = 0; i < this.policies.length; i += 1)
-        this.callPolicy(i, () => this.policies[i].onTransition?.(ctx.from!, ctx.state, this.recentTrajectory));
+        this.callPolicy(i, () =>
+          this.policies[i].onTransition?.(ctx.from!, ctx.state, this.recentTrajectory),
+        );
 
       this.persistenceCoordinator.markDirty();
       this.signalEngine.dispatch(this.signalEngine.evaluateEntropy(ctx.state));

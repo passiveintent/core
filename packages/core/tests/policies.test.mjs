@@ -510,10 +510,18 @@ test('plugins: hooks are called for each track() call', () => {
   try {
     const calls = { onTrackStart: 0, onTrackContext: 0, onTransition: 0, onAfterEvaluation: 0 };
     const plugin = {
-      onTrackStart: () => { calls.onTrackStart += 1; },
-      onTrackContext: () => { calls.onTrackContext += 1; },
-      onTransition: () => { calls.onTransition += 1; },
-      onAfterEvaluation: () => { calls.onAfterEvaluation += 1; },
+      onTrackStart: () => {
+        calls.onTrackStart += 1;
+      },
+      onTrackContext: () => {
+        calls.onTrackContext += 1;
+      },
+      onTransition: () => {
+        calls.onTransition += 1;
+      },
+      onAfterEvaluation: () => {
+        calls.onAfterEvaluation += 1;
+      },
     };
 
     const manager = new IntentManager({
@@ -531,7 +539,11 @@ test('plugins: hooks are called for each track() call', () => {
     assert.strictEqual(calls.onTrackStart, 2, 'onTrackStart called once per track()');
     assert.strictEqual(calls.onTrackContext, 2, 'onTrackContext called once per track()');
     assert.strictEqual(calls.onTransition, 1, 'onTransition called only when a transition exists');
-    assert.strictEqual(calls.onAfterEvaluation, 1, 'onAfterEvaluation called only when a transition exists');
+    assert.strictEqual(
+      calls.onAfterEvaluation,
+      1,
+      'onAfterEvaluation called only when a transition exists',
+    );
 
     manager.destroy();
   } finally {
@@ -543,7 +555,9 @@ test('plugins: onCounterIncrement is called when incrementCounter() is used', ()
   const storage = new MemoryStorage();
   const calls = [];
   const plugin = {
-    onCounterIncrement: (key, by) => { calls.push({ key, by }); },
+    onCounterIncrement: (key, by) => {
+      calls.push({ key, by });
+    },
   };
 
   const manager = new IntentManager({
@@ -566,7 +580,11 @@ test('plugins: onCounterIncrement is called when incrementCounter() is used', ()
 test('plugins: destroy() is called on plugin when manager is destroyed', () => {
   const storage = new MemoryStorage();
   let destroyed = false;
-  const plugin = { destroy: () => { destroyed = true; } };
+  const plugin = {
+    destroy: () => {
+      destroyed = true;
+    },
+  };
 
   const manager = new IntentManager({
     storageKey: 'plugins-destroy',
@@ -588,12 +606,20 @@ test('plugins: plugin hooks run after all built-in policy hooks in call order', 
     // Use two plugins to verify they also run in array order relative to each other.
     const order = [];
     const pluginA = {
-      onTrackStart: () => { order.push('A-start'); },
-      onTransition: () => { order.push('A-transition'); },
+      onTrackStart: () => {
+        order.push('A-start');
+      },
+      onTransition: () => {
+        order.push('A-transition');
+      },
     };
     const pluginB = {
-      onTrackStart: () => { order.push('B-start'); },
-      onTransition: () => { order.push('B-transition'); },
+      onTrackStart: () => {
+        order.push('B-start');
+      },
+      onTransition: () => {
+        order.push('B-transition');
+      },
     };
 
     const manager = new IntentManager({
@@ -609,13 +635,17 @@ test('plugins: plugin hooks run after all built-in policy hooks in call order', 
     manager.track('Y'); // first transition
 
     // onTrackStart fires for every track() call, in plugins order
-    assert.ok(order.indexOf('A-start') < order.indexOf('B-start'),
-      'pluginA.onTrackStart runs before pluginB.onTrackStart');
+    assert.ok(
+      order.indexOf('A-start') < order.indexOf('B-start'),
+      'pluginA.onTrackStart runs before pluginB.onTrackStart',
+    );
     // onTransition fires only for the second track(); both plugins must appear
     // after the built-in DriftProtectionPolicy (no observable hook, but the
     // array guarantees plugins come after built-ins by construction).
-    assert.ok(order.indexOf('A-transition') < order.indexOf('B-transition'),
-      'pluginA.onTransition runs before pluginB.onTransition');
+    assert.ok(
+      order.indexOf('A-transition') < order.indexOf('B-transition'),
+      'pluginA.onTransition runs before pluginB.onTransition',
+    );
 
     manager.destroy();
   } finally {
@@ -631,7 +661,9 @@ test('plugins: throwing onTrackStart is isolated — track() completes and onErr
   try {
     const errors = [];
     const plugin = {
-      onTrackStart: () => { throw new Error('boom-start'); },
+      onTrackStart: () => {
+        throw new Error('boom-start');
+      },
     };
 
     const manager = new IntentManager({
@@ -669,10 +701,14 @@ test('plugins: throwing onTransition is isolated — subsequent hooks still run'
     const errors = [];
     const afterEvalCalls = [];
     const throwingPlugin = {
-      onTransition: () => { throw new Error('boom-transition'); },
+      onTransition: () => {
+        throw new Error('boom-transition');
+      },
     };
     const secondPlugin = {
-      onAfterEvaluation: (from, to) => { afterEvalCalls.push({ from, to }); },
+      onAfterEvaluation: (from, to) => {
+        afterEvalCalls.push({ from, to });
+      },
     };
 
     const manager = new IntentManager({
@@ -692,7 +728,11 @@ test('plugins: throwing onTransition is isolated — subsequent hooks still run'
     assert.strictEqual(errors[0].code, 'VALIDATION');
     assert.ok(errors[0].message.includes('plugin[0]'));
     // secondPlugin's onAfterEvaluation must still have been called
-    assert.strictEqual(afterEvalCalls.length, 1, 'second plugin hook still runs after first throws');
+    assert.strictEqual(
+      afterEvalCalls.length,
+      1,
+      'second plugin hook still runs after first throws',
+    );
 
     manager.destroy();
   } finally {
@@ -707,7 +747,9 @@ test('plugins: throwing plugin with no onError set fails silently', () => {
   globalThis.performance.now = () => mockTime;
   try {
     const plugin = {
-      onTrackStart: () => { throw new Error('silent-boom'); },
+      onTrackStart: () => {
+        throw new Error('silent-boom');
+      },
     };
 
     const manager = new IntentManager({

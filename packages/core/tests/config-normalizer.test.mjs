@@ -645,3 +645,20 @@ test('graph.targetFPR: NaN falls back to undefined divergenceThreshold (does not
   const opts = buildIntentManagerOptions({ graph: { targetFPR: NaN } });
   assert.equal(opts.graphConfig.divergenceThreshold, undefined);
 });
+
+// ─── plugins passthrough ──────────────────────────────────────────────────────
+
+test('plugins: config.plugins is passed through as-is to resolved options', () => {
+  const pluginA = { onTrackStart: () => {} };
+  const pluginB = { onTransition: () => {} };
+  const opts = buildIntentManagerOptions({ plugins: [pluginA, pluginB] });
+  assert.strictEqual(opts.plugins.length, 2);
+  assert.strictEqual(opts.plugins[0], pluginA);
+  assert.strictEqual(opts.plugins[1], pluginB);
+});
+
+test('plugins: defaults to an empty array when config.plugins is undefined', () => {
+  const opts = buildIntentManagerOptions({});
+  assert.ok(Array.isArray(opts.plugins), 'plugins must be an array');
+  assert.strictEqual(opts.plugins.length, 0);
+});

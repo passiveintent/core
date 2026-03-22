@@ -59,6 +59,8 @@ export class IntentManager {
 
   /* Pluggable feature policies (deterministic order) */
   private readonly policies: EnginePolicy[];
+  /** Index at which external plugin policies begin in `this.policies`. */
+  private readonly pluginStartIndex: number;
 
   /* Collaborators */
   private readonly signalEngine: SignalEngine;
@@ -178,7 +180,8 @@ export class IntentManager {
       );
     }
 
-    this.policies = policies;
+    this.pluginStartIndex = policies.length;
+    this.policies = [...policies, ...opts.plugins];
 
     // ── LifecycleCoordinator ──────────────────────────────────────────────────
     this.lifecycleCoordinator = new LifecycleCoordinator({
@@ -220,6 +223,29 @@ export class IntentManager {
       this.runGraphAndSignalStage,
       this.runEmitAndPersistStage,
     ];
+  }
+
+  /**
+   * Invoke `fn` for policy at index `i`.  Calls from built-in policies
+   * (index < pluginStartIndex) run unwrapped; external plugins are wrapped in
+   * a try/catch so a throwing plugin never propagates into the host application.
+   */
+  private callPolicy(i: number, fn: () => void): void {
+    if (i < this.pluginStartIndex) {
+      fn();
+    } else {
+      try {
+        fn();
+      } catch (err) {
+        if (this.onError) {
+          this.onError({
+            code: 'VALIDATION',
+            message: `IntentManager: plugin[${i - this.pluginStartIndex}] threw: ${err instanceof Error ? err.message : String(err)}`,
+            originalError: err,
+          });
+        }
+      }
+    }
   }
 
   on<K extends keyof IntentEventMap>(
@@ -336,7 +362,8 @@ export class IntentManager {
     const trackStart = this.benchmark.now();
 
     // Advance drift-protection rolling window via policy hooks (O(1), no allocations)
-    for (let i = 0; i < this.policies.length; i += 1) this.policies[i].onTrackStart?.(now);
+    for (let i = 0; i < this.policies.length; i += 1)
+      this.callPolicy(i, () => this.policies[i].onTrackStart?.(now));
 
     const ctx: TrackContext = {
       state,
@@ -373,7 +400,8 @@ export class IntentManager {
     this.previousState = ctx.state;
 
     // Dwell-time measurement — delegated to DwellTimePolicy when enabled.
-    for (let i = 0; i < this.policies.length; i += 1) this.policies[i].onTrackContext?.(ctx);
+    for (let i = 0; i < this.policies.length; i += 1)
+      this.callPolicy(i, () => this.policies[i].onTrackContext?.(ctx));
 
     // CONTRACT: this reset MUST remain unconditional and MUST happen after all
     // onTrackContext hooks.  DwellTimePolicy reads previousStateEnteredAt inside
@@ -409,7 +437,9 @@ export class IntentManager {
 
       // Bigram accounting — delegated to BigramPolicy when enabled.
       for (let i = 0; i < this.policies.length; i += 1)
-        this.policies[i].onTransition?.(ctx.from, ctx.state, this.recentTrajectory);
+        this.callPolicy(i, () =>
+          this.policies[i].onTransition?.(ctx.from!, ctx.state, this.recentTrajectory),
+        );
 
       this.persistenceCoordinator.markDirty();
       this.signalEngine.dispatch(this.signalEngine.evaluateEntropy(ctx.state));
@@ -419,7 +449,7 @@ export class IntentManager {
 
       // Cross-tab broadcast — delegated to CrossTabSyncPolicy when enabled.
       for (let i = 0; i < this.policies.length; i += 1)
-        this.policies[i].onAfterEvaluation?.(ctx.from, ctx.state);
+        this.callPolicy(i, () => this.policies[i].onAfterEvaluation?.(ctx.from!, ctx.state));
 
       return;
     }
@@ -531,7 +561,8 @@ export class IntentManager {
     this.persistenceCoordinator.close(); // prevent post-destroy timer re-arm
     this.emitter.removeAll();
     this.lifecycleCoordinator.destroy();
-    for (let i = 0; i < this.policies.length; i += 1) this.policies[i].destroy?.();
+    for (let i = 0; i < this.policies.length; i += 1)
+      this.callPolicy(i, () => this.policies[i].destroy?.());
   }
 
   /**
@@ -636,7 +667,7 @@ export class IntentManager {
     this.counters.set(key, next);
     // Broadcast the increment to other tabs via CrossTabSyncPolicy.
     for (let i = 0; i < this.policies.length; i += 1)
-      this.policies[i].onCounterIncrement?.(key, by);
+      this.callPolicy(i, () => this.policies[i].onCounterIncrement?.(key, by));
     return next;
   }
 

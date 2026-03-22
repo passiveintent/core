@@ -499,6 +499,304 @@ test('eventCooldownMs still throttles dwell_time_anomaly through DwellTimePolicy
 });
 
 /* ================================================================== */
+/*  External plugins — injection, hook invocation, isolation          */
+/* ================================================================== */
+
+test('plugins: hooks are called for each track() call', () => {
+  const storage = new MemoryStorage();
+  let mockTime = 0;
+  const originalNow = globalThis.performance.now;
+  globalThis.performance.now = () => mockTime;
+  try {
+    const calls = { onTrackStart: 0, onTrackContext: 0, onTransition: 0, onAfterEvaluation: 0 };
+    const plugin = {
+      onTrackStart: () => {
+        calls.onTrackStart += 1;
+      },
+      onTrackContext: () => {
+        calls.onTrackContext += 1;
+      },
+      onTransition: () => {
+        calls.onTransition += 1;
+      },
+      onAfterEvaluation: () => {
+        calls.onAfterEvaluation += 1;
+      },
+    };
+
+    const manager = new IntentManager({
+      storageKey: 'plugins-hooks',
+      storage,
+      botProtection: false,
+      plugins: [plugin],
+    });
+
+    mockTime += 100;
+    manager.track('A');
+    mockTime += 100;
+    manager.track('B'); // first transition: A → B
+
+    assert.strictEqual(calls.onTrackStart, 2, 'onTrackStart called once per track()');
+    assert.strictEqual(calls.onTrackContext, 2, 'onTrackContext called once per track()');
+    assert.strictEqual(calls.onTransition, 1, 'onTransition called only when a transition exists');
+    assert.strictEqual(
+      calls.onAfterEvaluation,
+      1,
+      'onAfterEvaluation called only when a transition exists',
+    );
+
+    manager.destroy();
+  } finally {
+    globalThis.performance.now = originalNow;
+  }
+});
+
+test('plugins: onCounterIncrement is called when incrementCounter() is used', () => {
+  const storage = new MemoryStorage();
+  const calls = [];
+  const plugin = {
+    onCounterIncrement: (key, by) => {
+      calls.push({ key, by });
+    },
+  };
+
+  const manager = new IntentManager({
+    storageKey: 'plugins-counter',
+    storage,
+    botProtection: false,
+    plugins: [plugin],
+  });
+
+  manager.incrementCounter('views', 1);
+  manager.incrementCounter('views', 3);
+
+  assert.strictEqual(calls.length, 2);
+  assert.deepEqual(calls[0], { key: 'views', by: 1 });
+  assert.deepEqual(calls[1], { key: 'views', by: 3 });
+
+  manager.destroy();
+});
+
+test('plugins: destroy() is called on plugin when manager is destroyed', () => {
+  const storage = new MemoryStorage();
+  let destroyed = false;
+  const plugin = {
+    destroy: () => {
+      destroyed = true;
+    },
+  };
+
+  const manager = new IntentManager({
+    storageKey: 'plugins-destroy',
+    storage,
+    botProtection: false,
+    plugins: [plugin],
+  });
+
+  manager.destroy();
+  assert.ok(destroyed, 'plugin.destroy() must be called when the manager is destroyed');
+});
+
+test('plugins: plugin hooks run after all built-in policy hooks in call order', () => {
+  const storage = new MemoryStorage();
+  let mockTime = 0;
+  const originalNow = globalThis.performance.now;
+  globalThis.performance.now = () => mockTime;
+  try {
+    // Use two plugins to verify they also run in array order relative to each other.
+    const order = [];
+    const pluginA = {
+      onTrackStart: () => {
+        order.push('A-start');
+      },
+      onTransition: () => {
+        order.push('A-transition');
+      },
+    };
+    const pluginB = {
+      onTrackStart: () => {
+        order.push('B-start');
+      },
+      onTransition: () => {
+        order.push('B-transition');
+      },
+    };
+
+    const manager = new IntentManager({
+      storageKey: 'plugins-order',
+      storage,
+      botProtection: false,
+      plugins: [pluginA, pluginB],
+    });
+
+    mockTime += 100;
+    manager.track('X');
+    mockTime += 100;
+    manager.track('Y'); // first transition
+
+    // onTrackStart fires for every track() call, in plugins order
+    assert.ok(
+      order.indexOf('A-start') < order.indexOf('B-start'),
+      'pluginA.onTrackStart runs before pluginB.onTrackStart',
+    );
+    // onTransition fires only for the second track(); both plugins must appear
+    // after the built-in DriftProtectionPolicy (no observable hook, but the
+    // array guarantees plugins come after built-ins by construction).
+    assert.ok(
+      order.indexOf('A-transition') < order.indexOf('B-transition'),
+      'pluginA.onTransition runs before pluginB.onTransition',
+    );
+
+    manager.destroy();
+  } finally {
+    globalThis.performance.now = originalNow;
+  }
+});
+
+test('plugins: throwing onTrackStart is isolated — track() completes and onError is called', () => {
+  const storage = new MemoryStorage();
+  let mockTime = 0;
+  const originalNow = globalThis.performance.now;
+  globalThis.performance.now = () => mockTime;
+  try {
+    const errors = [];
+    const plugin = {
+      onTrackStart: () => {
+        throw new Error('boom-start');
+      },
+    };
+
+    const manager = new IntentManager({
+      storageKey: 'plugins-throw-start',
+      storage,
+      botProtection: false,
+      plugins: [plugin],
+      onError: (e) => errors.push(e),
+    });
+
+    const stateChanges = [];
+    manager.on('state_change', (p) => stateChanges.push(p));
+
+    mockTime += 100;
+    assert.doesNotThrow(() => manager.track('A'));
+    assert.strictEqual(stateChanges.length, 1, 'state_change still fires despite plugin throw');
+    assert.strictEqual(errors.length, 1, 'onError is called once');
+    assert.strictEqual(errors[0].code, 'VALIDATION');
+    assert.ok(errors[0].message.includes('plugin[0]'), 'error message identifies plugin index');
+    assert.ok(errors[0].originalError instanceof Error);
+    assert.strictEqual(errors[0].originalError.message, 'boom-start');
+
+    manager.destroy();
+  } finally {
+    globalThis.performance.now = originalNow;
+  }
+});
+
+test('plugins: throwing onTransition is isolated — subsequent hooks still run', () => {
+  const storage = new MemoryStorage();
+  let mockTime = 0;
+  const originalNow = globalThis.performance.now;
+  globalThis.performance.now = () => mockTime;
+  try {
+    const errors = [];
+    const afterEvalCalls = [];
+    const throwingPlugin = {
+      onTransition: () => {
+        throw new Error('boom-transition');
+      },
+    };
+    const secondPlugin = {
+      onAfterEvaluation: (from, to) => {
+        afterEvalCalls.push({ from, to });
+      },
+    };
+
+    const manager = new IntentManager({
+      storageKey: 'plugins-throw-transition',
+      storage,
+      botProtection: false,
+      plugins: [throwingPlugin, secondPlugin],
+      onError: (e) => errors.push(e),
+    });
+
+    mockTime += 100;
+    manager.track('A');
+    mockTime += 100;
+    manager.track('B');
+
+    assert.strictEqual(errors.length, 1, 'onError called for the throwing plugin');
+    assert.strictEqual(errors[0].code, 'VALIDATION');
+    assert.ok(errors[0].message.includes('plugin[0]'));
+    // secondPlugin's onAfterEvaluation must still have been called
+    assert.strictEqual(
+      afterEvalCalls.length,
+      1,
+      'second plugin hook still runs after first throws',
+    );
+
+    manager.destroy();
+  } finally {
+    globalThis.performance.now = originalNow;
+  }
+});
+
+test('plugins: throwing plugin with no onError set fails silently', () => {
+  const storage = new MemoryStorage();
+  let mockTime = 0;
+  const originalNow = globalThis.performance.now;
+  globalThis.performance.now = () => mockTime;
+  try {
+    const plugin = {
+      onTrackStart: () => {
+        throw new Error('silent-boom');
+      },
+    };
+
+    const manager = new IntentManager({
+      storageKey: 'plugins-throw-silent',
+      storage,
+      botProtection: false,
+      plugins: [plugin],
+      // no onError provided
+    });
+
+    assert.doesNotThrow(() => manager.track('A'), 'throw must never propagate to caller');
+
+    manager.destroy();
+  } finally {
+    globalThis.performance.now = originalNow;
+  }
+});
+
+test('plugins: empty plugins array is a no-op', () => {
+  const storage = new MemoryStorage();
+  let mockTime = 0;
+  const originalNow = globalThis.performance.now;
+  globalThis.performance.now = () => mockTime;
+  try {
+    const manager = new IntentManager({
+      storageKey: 'plugins-empty',
+      storage,
+      botProtection: false,
+      plugins: [],
+    });
+
+    const stateChanges = [];
+    manager.on('state_change', (p) => stateChanges.push(p));
+
+    mockTime += 100;
+    manager.track('A');
+    mockTime += 100;
+    manager.track('B');
+
+    assert.strictEqual(stateChanges.length, 2, 'state_change fires normally with empty plugins');
+    manager.destroy();
+  } finally {
+    globalThis.performance.now = originalNow;
+  }
+});
+
+/* ================================================================== */
 /*  Telemetry / assignmentGroup preserved                              */
 /* ================================================================== */
 

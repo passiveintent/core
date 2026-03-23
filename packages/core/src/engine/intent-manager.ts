@@ -636,6 +636,7 @@ export class IntentManager {
    * @returns   The new counter value after incrementing.
    */
   incrementCounter(key: string, by = 1): number {
+    if (typeof by !== 'number' || !Number.isFinite(by)) return 0;
     if (key === '') {
       if (this.onError) {
         this.onError({
@@ -644,15 +645,6 @@ export class IntentManager {
         });
       }
       return 0;
-    }
-    if (!Number.isFinite(by)) {
-      if (this.onError) {
-        this.onError({
-          code: 'VALIDATION',
-          message: `IntentManager.incrementCounter(): 'by' must be a finite number, got ${by}`,
-        });
-      }
-      return this.counters.get(key) ?? 0;
     }
     if (!this.counters.has(key) && this.counters.size >= 50) {
       if (this.onError) {

@@ -121,9 +121,11 @@ export type { IntentEngineConfig } from './types/microkernel.js';
 /**
  * `createBrowserIntent` — primary entry point for standard web applications.
  *
- * Automatically wires `ContinuousGraphModel`, `LocalStorageAdapter`,
- * `BrowserLifecycleAdapter`, and `MouseKinematicsAdapter` into a new
- * `IntentEngine` and returns it ready to use.
+ * Returns a fully configured `IntentManager` instance with browser adapters
+ * wired in (storage, lifecycle, timers). Route tracking is **not** automatic —
+ * call `IntentManager.track(pathname)` explicitly on every client-side route
+ * change. Register `engine.on(…)` listeners before the first `track()` call so
+ * the synchronous `state_change` event is not missed.
  *
  * ```ts
  * import { createBrowserIntent } from '@passiveintent/core';
@@ -131,6 +133,7 @@ export type { IntentEngineConfig } from './types/microkernel.js';
  * const intent = createBrowserIntent({ storageKey: 'my-app' });
  * intent.on('high_entropy', ({ state }) => showHelpWidget(state));
  * intent.on('exit_intent',  ({ likelyNext }) => prefetch(likelyNext));
+ * intent.track(window.location.pathname); // required — not auto-detected
  * ```
  */
 export { createBrowserIntent } from './factory.js';

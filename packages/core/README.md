@@ -174,9 +174,9 @@ npm install @passiveintent/core
 
 ### Standard web — one line (recommended)
 
-`createBrowserIntent` is the Layer 3 factory. It wires all standard web plugins
-(`MouseKinematicsAdapter`, `BrowserLifecycleAdapter`, `ContinuousGraphModel`,
-`LocalStorageAdapter`) into a raw `IntentEngine` and returns it ready to use.
+`createBrowserIntent` is the Layer 3 factory. It returns a fully configured
+`IntentManager` with browser-standard adapters wired in — ready to use with the
+complete public API (`track`, `on`, `getTelemetry`, `predictNextStates`, counters, etc.).
 
 ```ts
 import { createBrowserIntent } from '@passiveintent/core';
@@ -653,7 +653,7 @@ without touching the core algorithms.
 ```text
 Layer 1 — Core algorithms      MarkovGraph, BloomFilter       pure math, no I/O
 Layer 2 — Microkernel          IntentEngine                   adapter interfaces only
-Layer 3 — Web factory          createBrowserIntent()          progressive disclosure
+Layer 3 — Web factory          createBrowserIntent()          returns IntentManager
 Layer 4 — Framework SDKs       usePassiveIntent (React hook)  wraps IntentManager
 ```
 

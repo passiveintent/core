@@ -10,14 +10,13 @@
  * --------------------------------------------------------
  * The 90 % use-case entry point for standard web applications.
  *
- * This factory wires all standard web plugins (BrowserLifecycleAdapter,
- * MouseKinematicsAdapter, ContinuousGraphModel, LocalStorageAdapter) into a
- * raw IntentEngine and returns the fully operational instance.
+ * Returns a fully configured `IntentManager` with browser-standard adapters
+ * (`BrowserStorageAdapter`, `BrowserTimerAdapter`, `BrowserLifecycleAdapter`)
+ * wired in automatically.  Callers get the complete public API (`track`, `on`,
+ * `getTelemetry`, `predictNextStates`, counters, etc.) with zero boilerplate.
  *
- * Callers see ONE config object with no adapter boilerplate.  The dependency-
- * injection complexity that powers the microkernel's plug-and-play flexibility
- * is invisible here — it exists for the 10 % who need React Native, Electron,
- * or custom fintech/food-delivery adapters via `new IntentEngine({…})` directly.
+ * For custom platforms (React Native, Electron, food-delivery/dating domains),
+ * use `new IntentEngine({…})` directly with injected adapter interfaces.
  *
  * ```ts
  * // Standard web — one line:
@@ -26,7 +25,7 @@
  * intent.on('high_entropy', ({ state }) => showHelpWidget(state));
  * intent.on('exit_intent',  ({ likelyNext }) => prefetch(likelyNext));
  *
- * // Manual tracking alongside automatic kinematics:
+ * // Manual route tracking (push-state SPAs):
  * intent.track('/checkout/review');
  *
  * // SPA teardown:
@@ -38,14 +37,10 @@
  *   Layer 1 — Core algorithms  : MarkovGraph, BloomFilter      (pure, no I/O)
  *   Layer 2 — Microkernel      : IntentEngine                  (adapter interfaces)
  *   Layer 3 — Web factory  ← YOU ARE HERE                      (progressive disclosure)
- *   Layer 4 — Framework SDKs   : usePassiveIntent (React hook) (wraps IntentManager)
+ *   Layer 4 — Framework SDKs   : usePassiveIntent (React hook)
  */
 
-import { IntentEngine } from './engine/intent-engine.js';
-import { BrowserLifecycleAdapter } from './plugins/web/BrowserLifecycleAdapter.js';
-import { MouseKinematicsAdapter } from './plugins/web/MouseKinematicsAdapter.js';
-import { ContinuousGraphModel } from './plugins/web/ContinuousGraphModel.js';
-import { LocalStorageAdapter } from './plugins/web/LocalStorageAdapter.js';
+import { IntentManager } from './engine/intent-manager.js';
 import type { MarkovGraphConfig, BloomFilterConfig } from './types/events.js';
 import type { SerializedMarkovGraph } from './core/markov.js';
 
@@ -127,16 +122,13 @@ export interface BrowserConfig {
 /* ------------------------------------------------------------------ */
 
 /**
- * Create a fully wired `IntentEngine` for standard browser environments.
+ * Create a fully configured `IntentManager` for standard browser environments.
  *
- * Automatically instantiates and injects:
- *   - `ContinuousGraphModel`    — Markov graph + Bloom filter state model
- *   - `LocalStorageAdapter`     — `window.localStorage` persistence
- *   - `BrowserLifecycleAdapter` — Page Visibility API lifecycle events
- *   - `MouseKinematicsAdapter`  — URL navigation + scroll-depth + mouse-velocity input
+ * Uses built-in browser adapters (`BrowserStorageAdapter`, `BrowserTimerAdapter`,
+ * `BrowserLifecycleAdapter`) — all SSR-safe and no-op when browser globals are absent.
  *
  * @param config  Optional tuning parameters.  Every field has a sensible default.
- * @returns       A live `IntentEngine` instance, ready to receive `on()` subscriptions
+ * @returns       A live `IntentManager` instance, ready to receive `on()` subscriptions
  *                and `track()` calls.  Call `destroy()` in SPA teardown paths.
  *
  * @example Minimal setup
@@ -156,23 +148,12 @@ export interface BrowserConfig {
  * });
  * ```
  */
-export function createBrowserIntent(config: BrowserConfig = {}): IntentEngine {
-  const stateModel = new ContinuousGraphModel({
+export function createBrowserIntent(config: BrowserConfig = {}): IntentManager {
+  return new IntentManager({
+    storageKey: config.storageKey ?? 'passive-intent-engine',
+    baseline: config.baseline,
     graph: config.graph,
     bloom: config.bloom,
-    baseline: config.baseline,
-  });
-
-  const persistence = new LocalStorageAdapter();
-  const lifecycle = new BrowserLifecycleAdapter();
-  const input = new MouseKinematicsAdapter();
-
-  return new IntentEngine({
-    stateModel,
-    persistence,
-    lifecycle,
-    input,
-    storageKey: config.storageKey,
     stateNormalizer: config.stateNormalizer,
     onError: config.onError,
   });

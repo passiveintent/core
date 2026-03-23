@@ -1297,7 +1297,9 @@ plug-and-play adapter without modifying the core algorithms.
 ├─────────────────────────────────────────────────────────────────┤
 │  Layer 3 — Web Factory (createBrowserIntent)                    │
 │  src/factory.ts                                                 │
-│  Instantiates and injects all standard web plugins.             │
+│  Returns a fully configured IntentManager with browser defaults.│
+│  SPA route sync is not automatic: call track(pathname) on each  │
+│  client-side route change (or use useRouteTracker in React).    │
 │  Progressive disclosure: one call for the 90 % use-case.       │
 ├─────────────────────────────────────────────────────────────────┤
 │  Layer 4 — Framework SDKs                                       │
@@ -1338,8 +1340,15 @@ interface IntentEngineConfig {
 
 #### Standard Web Plugins
 
-`src/plugins/web/` ships four concrete implementations that power the default
-browser experience wired by `createBrowserIntent`:
+`src/plugins/web/` ships four concrete implementations for the microkernel
+`IntentEngine`. These adapters are **browser-specific** — they depend on
+`document`, `window.localStorage`, and browser navigation APIs. They are
+suitable only for standard browser environments. Non-browser hosts such as
+React Native or Electron (when using a native shell rather than a web view)
+require custom adapter implementations that satisfy the same four interfaces
+(`IInputAdapter`, `ILifecycleAdapter`, `IStateModel`, `IPersistenceAdapter`)
+using platform-native APIs — the `src/plugins/web/` adapters cannot be
+reused on those platforms.
 
 | File                         | Implements            | Mechanism                                                                                                                                                                                              |
 | ---------------------------- | --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |

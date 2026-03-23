@@ -12,6 +12,21 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [@passiveintent/core 1.2.0] + [@passiveintent/react 1.3.0] - 2026-03-23
+
+### @passiveintent/core
+
+- **`createBrowserIntent()` returns `IntentManager`** — the factory now exposes the full 13-method public API (`getTelemetry`, `predictNextStates`, `hasSeen`, counters, `exportGraph`, etc.) instead of the 3-method `IntentEngine` microkernel. Additive at runtime; TypeScript return type widens from `IntentEngine` to `IntentManager`.
+- **`MouseKinematicsAdapter` removed from factory** — URL tracking is now always explicit via `engine.track(pathname)`, consistent with `useRouteTracker` in the React SDK.
+- **`BigramPolicy` separator changed to `\x00`** — collision-safe NUL separator replaces the U+2192 arrow; existing bigram edges in persisted graphs will be ignored and relearned within one session.
+- **`incrementCounter()` guard unified** — single `typeof by !== 'number' || !Number.isFinite(by)` early return replaces the previous split check that could fire `onError` twice.
+
+### @passiveintent/react
+
+- **`useRouteTracker(pathname)`** — new hook for syncing push-state SPA navigation into the engine. Compatible with Next.js App Router (`usePathname()`), React Router v6 (`useLocation().pathname`), and any framework that surfaces the current route as a string.
+
+---
+
 ## [@passiveintent/core 1.1.1] - 2026-03-23
 
 ### Added

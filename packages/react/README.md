@@ -187,6 +187,7 @@ All hooks in this section require a `PassiveIntentProvider` ancestor.
 
 | Hook                                                 | Returns                                                | Purpose                                                                                                                   |
 | ---------------------------------------------------- | ------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------- |
+| `useRouteTracker(pathname)`                          | `void`                                                 | Syncs the current route into the engine on every pathname change. Drop into your root layout for push-state SPAs.         |
 | `useExitIntent(select?)`                             | `{ triggered, state, likelyNext, dismiss, isPending }` | Reacts to `exit_intent`. `dismiss()` is deferred via `useTransition`; `isPending` is `true` while the reset is in-flight. |
 | `useIdle(select?)`                                   | `{ isIdle, idleMs, isPending }`                        | Tracks `user_idle` and `user_resumed`. `isPending` included for interface consistency.                                    |
 | `useAttentionReturn(select?)`                        | `{ returned, hiddenDuration, dismiss, isPending }`     | Reacts when a user returns after triggering `attention_return`. `dismiss()` is deferred.                                  |
@@ -195,6 +196,42 @@ All hooks in this section require a `PassiveIntentProvider` ancestor.
 | `usePropensityScore(targetState, options?, select?)` | `number`                                               | Same scoring model, but computed directly in `getSnapshot()` for strictly snapshot-driven updates.                        |
 | `usePredictiveLink(options?)`                        | `{ predictions }`                                      | Reads `predictNextStates()` on navigation and can inject `<link rel="prefetch">` tags.                                    |
 | `useEventLog(events, options?)`                      | `{ log, clear }`                                       | Bounded reverse-chronological log of selected engine events.                                                              |
+
+### `useRouteTracker`
+
+For push-state SPAs (Next.js App Router, React Router v6, Remix) where `history.pushState` is not intercepted automatically, drop `useRouteTracker` into your root layout:
+
+```tsx
+// Next.js App Router — app/layout.tsx
+'use client';
+import { usePathname } from 'next/navigation';
+import { PassiveIntentProvider, useRouteTracker } from '@passiveintent/react';
+
+function RouteSync() {
+  useRouteTracker(usePathname());
+  return null;
+}
+
+export default function RootLayout({ children }) {
+  return (
+    <PassiveIntentProvider storageKey="my-app">
+      <RouteSync />
+      {children}
+    </PassiveIntentProvider>
+  );
+}
+```
+
+```tsx
+// React Router v6
+import { useLocation } from 'react-router-dom';
+import { useRouteTracker } from '@passiveintent/react';
+
+function RouteSync() {
+  useRouteTracker(useLocation().pathname);
+  return null;
+}
+```
 
 The optional `select` parameter subscribes to only a slice of the return value — the component re-renders only when the selector's output changes (via `Object.is`):
 

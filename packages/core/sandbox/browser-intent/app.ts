@@ -13,9 +13,9 @@
  * Event log items are written to `#event-log` for DOM assertions.
  */
 
-import { createBrowserIntent, type IntentEngine } from '../../src/index.js';
+import { createBrowserIntent } from '../../src/index.js';
 
-const engine: IntentEngine = createBrowserIntent({
+const engine = createBrowserIntent({
   storageKey: 'passive-intent-browser-test',
   // Low divergence threshold so trajectory_anomaly can fire easily in tests
   // when a baseline is provided.  No baseline here — just testing the factory
@@ -51,6 +51,12 @@ engine.on('trajectory_anomaly', ({ zScore }) => {
   appendEvent('trajectory_anomaly', String(zScore));
 });
 
+// Track the initial page load explicitly — IntentManager does not wire
+// MouseKinematicsAdapter, so route tracking is always manual (same as
+// useRouteTracker in the React SDK).  Must come AFTER event subscriptions
+// so the synchronous state_change event is captured by the DOM logger.
+engine.track(window.location.pathname);
+
 /* ── Expose for Cypress ───────────────────────────────────────────────── */
 
-(window as typeof window & { __engine: IntentEngine }).__engine = engine;
+(window as typeof window & { __engine: typeof engine }).__engine = engine;

@@ -164,7 +164,7 @@ test('BigramPolicy: bigram transitions recorded when enableBigrams=true', () => 
 
     const json = manager.exportGraph();
     // Look for bigram states (containing →)
-    const bigramStates = json.states.filter((s) => s.includes('\u2192'));
+    const bigramStates = json.states.filter((s) => s.includes('\x00'));
     assert.ok(bigramStates.length > 0, 'Bigram states should be recorded');
     manager.destroy();
   } finally {
@@ -193,7 +193,7 @@ test('BigramPolicy: no bigram transitions when enableBigrams=false (default)', (
     }
 
     const json = manager.exportGraph();
-    const bigramStates = json.states.filter((s) => s.includes('\u2192'));
+    const bigramStates = json.states.filter((s) => s.includes('\x00'));
     assert.strictEqual(bigramStates.length, 0, 'No bigram states should exist');
     manager.destroy();
   } finally {
@@ -391,7 +391,7 @@ test('All policies enabled: same events fire under same input trace', () => {
 
     // Check bigrams exist
     const json = manager.exportGraph();
-    const bigramStates = json.states.filter((s) => s.includes('\u2192'));
+    const bigramStates = json.states.filter((s) => s.includes('\x00'));
     assert.ok(bigramStates.length > 0, 'Bigram states should be recorded');
 
     manager.destroy();
@@ -434,7 +434,7 @@ test('All policies disabled: state_change still fires, no feature events', () =>
     assert.strictEqual(dwellEvents.length, 0, 'No dwell anomaly when disabled');
 
     const json = manager.exportGraph();
-    const bigramStates = json.states.filter((s) => s.includes('\u2192'));
+    const bigramStates = json.states.filter((s) => s.includes('\x00'));
     assert.strictEqual(bigramStates.length, 0, 'No bigram states when disabled');
 
     manager.destroy();

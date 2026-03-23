@@ -1110,7 +1110,7 @@ test('bigrams are recorded when enableBigrams is true and threshold met', () => 
 
     // Export and check for bigram-style keys (contain →)
     const exported = manager.exportGraph();
-    const bigramStates = exported.states.filter((s) => s.includes('\u2192'));
+    const bigramStates = exported.states.filter((s) => s.includes('\x00'));
     assert.ok(
       bigramStates.length > 0,
       `Expected bigram state names in graph, found states: ${JSON.stringify(exported.states.slice(0, 10))}`,
@@ -1146,7 +1146,7 @@ test('bigrams are NOT recorded when enableBigrams is false (default)', () => {
     }
 
     const exported = manager.exportGraph();
-    const bigramStates = exported.states.filter((s) => s.includes('\u2192'));
+    const bigramStates = exported.states.filter((s) => s.includes('\x00'));
     assert.strictEqual(
       bigramStates.length,
       0,
@@ -1184,7 +1184,7 @@ test('bigrams are not recorded when unigram threshold is not met', () => {
     }
 
     const exported = manager.exportGraph();
-    const bigramStates = exported.states.filter((s) => s.includes('\u2192'));
+    const bigramStates = exported.states.filter((s) => s.includes('\x00'));
     assert.strictEqual(bigramStates.length, 0, 'No bigram states when threshold is not met');
 
     manager.flushNow();
@@ -2443,7 +2443,7 @@ test('incrementCounter: empty key is rejected with onError and returns 0', () =>
   manager.flushNow();
 });
 
-test('incrementCounter: NaN by is rejected with onError and returns current counter value', () => {
+test('incrementCounter: NaN by is rejected silently and returns 0', () => {
   storage.clear();
   const errors = [];
   const manager = new IntentManager({
@@ -2455,22 +2455,13 @@ test('incrementCounter: NaN by is rejected with onError and returns current coun
 
   manager.incrementCounter('score', 5);
   const result = manager.incrementCounter('score', NaN);
-  assert.equal(result, 5, 'must return current counter value without incrementing');
+  assert.equal(result, 0, 'must return 0 for invalid by');
   assert.equal(manager.getCounter('score'), 5, 'counter must not change');
-  assert.equal(errors.length, 1);
-  assert.equal(
-    errors[0].code,
-    'VALIDATION',
-    `Expected code 'VALIDATION', got: '${errors[0].code}'`,
-  );
-  assert.ok(
-    errors[0].message.includes('finite'),
-    `Expected 'finite' in error message, got: "${errors[0].message}"`,
-  );
+  assert.equal(errors.length, 0, 'no onError for invalid by');
   manager.flushNow();
 });
 
-test('incrementCounter: Infinity by is rejected with onError and returns current counter value', () => {
+test('incrementCounter: Infinity by is rejected silently and returns 0', () => {
   storage.clear();
   const errors = [];
   const manager = new IntentManager({
@@ -2482,22 +2473,13 @@ test('incrementCounter: Infinity by is rejected with onError and returns current
 
   manager.incrementCounter('score', 3);
   const result = manager.incrementCounter('score', Infinity);
-  assert.equal(result, 3, 'must return current counter value without incrementing');
+  assert.equal(result, 0, 'must return 0 for invalid by');
   assert.equal(manager.getCounter('score'), 3, 'counter must not change');
-  assert.equal(errors.length, 1);
-  assert.equal(
-    errors[0].code,
-    'VALIDATION',
-    `Expected code 'VALIDATION', got: '${errors[0].code}'`,
-  );
-  assert.ok(
-    errors[0].message.includes('finite'),
-    `Expected 'finite' in error message, got: "${errors[0].message}"`,
-  );
+  assert.equal(errors.length, 0, 'no onError for invalid by');
   manager.flushNow();
 });
 
-test('incrementCounter: -Infinity by is rejected with onError and returns current counter value', () => {
+test('incrementCounter: -Infinity by is rejected silently and returns 0', () => {
   storage.clear();
   const errors = [];
   const manager = new IntentManager({
@@ -2509,18 +2491,29 @@ test('incrementCounter: -Infinity by is rejected with onError and returns curren
 
   manager.incrementCounter('score', 7);
   const result = manager.incrementCounter('score', -Infinity);
-  assert.equal(result, 7, 'must return current counter value without incrementing');
+  assert.equal(result, 0, 'must return 0 for invalid by');
   assert.equal(manager.getCounter('score'), 7, 'counter must not change');
-  assert.equal(errors.length, 1);
-  assert.equal(
-    errors[0].code,
-    'VALIDATION',
-    `Expected code 'VALIDATION', got: '${errors[0].code}'`,
-  );
-  assert.ok(
-    errors[0].message.includes('finite'),
-    `Expected 'finite' in error message, got: "${errors[0].message}"`,
-  );
+  assert.equal(errors.length, 0, 'no onError for invalid by');
+  manager.flushNow();
+});
+
+test('incrementCounter: non-number by is rejected silently and returns 0', () => {
+  storage.clear();
+  const errors = [];
+  const manager = new IntentManager({
+    storageKey: 'counter-non-number-by-test',
+    storage,
+    botProtection: false,
+    onError: (err) => errors.push(err),
+  });
+
+  manager.incrementCounter('score', 4);
+  // JS callers can bypass TypeScript and pass non-numeric values
+  assert.equal(manager.incrementCounter('score', /** @type {any} */ ('five')), 0);
+  assert.equal(manager.incrementCounter('score', /** @type {any} */ (null)), 0);
+  assert.equal(manager.incrementCounter('score', /** @type {any} */ ({})), 0);
+  assert.equal(manager.getCounter('score'), 4, 'counter must not change');
+  assert.equal(errors.length, 0, 'no onError for non-number by');
   manager.flushNow();
 });
 

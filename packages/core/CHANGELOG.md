@@ -12,6 +12,25 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [1.2.0] - 2026-03-23
+
+### Changed
+
+- **`createBrowserIntent()` now returns `IntentManager`** — the factory previously returned `IntentEngine` (the microkernel with only `track`, `on`, `destroy`). It now returns the full `IntentManager` instance, giving vanilla-JS callers immediate access to the complete public API: `getTelemetry`, `predictNextStates`, `hasSeen`, `incrementCounter`, `getCounter`, `resetCounter`, `trackConversion`, `flushNow`, `exportGraph`, `resetSession`, `getPerformanceReport`, and more — with zero extra configuration.
+  - The `BrowserConfig` type and all its fields (`storageKey`, `baseline`, `graph`, `bloom`, `stateNormalizer`, `onError`) are unchanged.
+  - **Additive at runtime** — `IntentManager` is a strict superset of the old return type; all existing `engine.track()` / `engine.on()` / `engine.destroy()` call sites continue to work.
+  - **TypeScript:** the return type widens from `IntentEngine` to `IntentManager`. Code with an explicit `: IntentEngine` annotation on the `createBrowserIntent()` result should remove the annotation or widen it to `IntentManager`.
+  - **`MouseKinematicsAdapter` removed from the factory** — this adapter auto-tracked `popstate` / `hashchange` URL changes and was only injectable via the old microkernel path. `IntentManager` does not expose an `IInputAdapter` injection point, so URL tracking is now always explicit via `engine.track(pathname)` — the same pattern used by `useRouteTracker` in `@passiveintent/react`. History `pushState` was never intercepted by the adapter (by design), so the practical change only affects `popstate`/`hashchange` SPA navigation.
+
+- **`BigramPolicy` separator changed from `→` (U+2192) to `\x00` (NUL)** — bigram state keys are encoded as `"prev\x00from"` → `"from\x00to"`. The previous arrow character, while visually readable, could theoretically appear in non-URL state labels supplied via custom `stateNormalizer`. NUL cannot appear in valid URL paths, making it a guaranteed collision-resistant separator.
+  - **Impact:** bigram edge data in existing `localStorage` persisted graphs will not be recognised as bigrams after this update (keys use the old format). Unigram transitions are unaffected. The graph relearns bigrams from fresh navigation within one session.
+
+### Fixed
+
+- **`incrementCounter()` non-finite guard** — the previous implementation had two separate checks for `key === ''` and `!Number.isFinite(by)` that could both trigger an `onError` call on a single invalid invocation. The guard is now a single unified check (`typeof by !== 'number' || !Number.isFinite(by)`) that returns early before the key check, emitting at most one error per invalid call.
+
+---
+
 ## [1.1.1] - 2026-03-23
 
 ### Added

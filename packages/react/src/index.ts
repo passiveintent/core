@@ -78,6 +78,7 @@ export {
   useEventLog,
   useBloomFilter,
   useMarkovGraph,
+  useRouteTracker,
 } from './hooks.js';
 export type {
   UseExitIntentReturn,

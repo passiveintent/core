@@ -993,6 +993,60 @@ export function useEventLog(
   return useMemo(() => ({ log, clear }), [log, clear]);
 }
 
+// ── useRouteTracker ───────────────────────────────────────────────────────────
+
+/**
+ * `useRouteTracker` — manually syncs route changes into the engine for
+ * push-state SPAs (Next.js App Router, React Router v6, Vue Router, etc.)
+ * where `history.pushState` is not intercepted by `MouseKinematicsAdapter`.
+ *
+ * Drop this into your root layout and pass the current pathname string.
+ * Each change triggers the full signal-evaluation pipeline (entropy,
+ * trajectory anomaly, exit-intent prefetch, bigram recording, persistence).
+ *
+ * A `useRef` guards against redundant `track()` calls on re-renders unrelated
+ * to route changes, and prevents duplicate events under React Strict Mode's
+ * double-invoke behaviour.
+ *
+ * @example Next.js App Router
+ * ```tsx
+ * 'use client';
+ * import { usePathname } from 'next/navigation';
+ * import { useRouteTracker } from '@passiveintent/react';
+ *
+ * export default function Layout({ children }: { children: React.ReactNode }) {
+ *   useRouteTracker(usePathname());
+ *   return <>{children}</>;
+ * }
+ * ```
+ *
+ * @example React Router v6
+ * ```tsx
+ * import { useLocation } from 'react-router-dom';
+ * import { useRouteTracker } from '@passiveintent/react';
+ *
+ * function RouteTracker() {
+ *   useRouteTracker(useLocation().pathname);
+ *   return null;
+ * }
+ * ```
+ */
+export function useRouteTracker(currentRoute: string): void {
+  const ctx = useContext(PassiveIntentContext);
+  const prevRouteRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (!ctx || prevRouteRef.current === currentRoute) return;
+    prevRouteRef.current = currentRoute;
+    ctx.track(currentRoute);
+  }, [ctx, currentRoute]);
+
+  useDebugValue(currentRoute, (r) => `tracking: ${r}`);
+
+  // Throw after all hooks — required by Rules of Hooks.
+  if (!ctx) throw new Error(providerError('useRouteTracker'));
+}
+
 // ── Shared helpers for standalone data-structure hooks ────────────────────────
 
 /**

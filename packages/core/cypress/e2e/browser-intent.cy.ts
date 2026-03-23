@@ -8,11 +8,11 @@
 /**
  * E2E spec for createBrowserIntent() — Layer 3 factory.
  *
- * These tests verify that the factory correctly wires all four web plugins
- * into a live IntentEngine and that real browser events produce the expected
- * intent signals.  They complement the unit tests in microkernel.test.mjs,
- * which mock every adapter; here everything is real: actual DOM events,
- * actual localStorage, actual MouseKinematicsAdapter URL tracking.
+ * These tests verify that the factory returns a fully configured IntentManager
+ * with browser-standard adapters and that real browser interactions produce the
+ * expected intent signals.  They complement the unit tests in
+ * microkernel.test.mjs, which mock every adapter; here everything is real:
+ * actual DOM, actual localStorage, actual event plumbing.
  *
  * Sandbox: sandbox/browser-intent/index.html
  * Engine exposed at: window.__engine
@@ -23,14 +23,15 @@
 export {};
 
 // Extend the Window type so TypeScript is happy accessing __engine
-interface IntentEngineLike {
+interface IntentManagerLike {
   track(state: string): void;
   destroy(): void;
+  getTelemetry(): { sessionId: string; transitionsEvaluated: number };
 }
 
 declare global {
   interface Window {
-    __engine: IntentEngineLike;
+    __engine: IntentManagerLike;
   }
 }
 
@@ -42,8 +43,8 @@ describe('createBrowserIntent() — Layer 3 browser integration', () => {
       },
     });
 
-    // Wait until the ESM module has loaded and MouseKinematicsAdapter has
-    // fired the initial state — this guarantees window.__engine is ready.
+    // Wait until the ESM module has loaded and the sandbox's explicit
+    // engine.track(pathname) has fired — this guarantees window.__engine is ready.
     cy.get('[data-cy="event-log"] [data-event="state_change"]').should('have.length.at.least', 1);
   });
 
@@ -51,8 +52,8 @@ describe('createBrowserIntent() — Layer 3 browser integration', () => {
   // Factory wiring
   // =========================================================================
 
-  it('emits an initial state_change via MouseKinematicsAdapter on page load', () => {
-    // MouseKinematicsAdapter calls onState(window.location.pathname) on subscribe().
+  it('emits an initial state_change from the explicit track() on page load', () => {
+    // The sandbox calls engine.track(window.location.pathname) after construction.
     // Read the actual pathname at runtime so the assertion is not coupled to the
     // sandbox's file path or the dev-server's base URL configuration.
     cy.location('pathname').then((pathname) => {
@@ -81,7 +82,7 @@ describe('createBrowserIntent() — Layer 3 browser integration', () => {
       win.__engine.track('/product/detail');
       win.__engine.track('/cart');
     });
-    // Initial state from page load + 3 manual tracks = at least 4
+    // 1 initial track() on page load + 3 manual tracks = at least 4
     cy.get('[data-cy="event-log"] [data-event="state_change"]').should('have.length.at.least', 4);
     cy.get('[data-cy="event-log"] [data-event="state_change"]')
       .last()
@@ -89,20 +90,15 @@ describe('createBrowserIntent() — Layer 3 browser integration', () => {
   });
 
   // =========================================================================
-  // MouseKinematicsAdapter — navigation events
+  // Full IntentManager API surface
   // =========================================================================
 
-  it('popstate event triggers a state_change via MouseKinematicsAdapter', () => {
-    // history.pushState() does NOT fire popstate by itself; we dispatch it
-    // manually so MouseKinematicsAdapter.handleNavigation() runs against the
-    // updated window.location.pathname.
+  it('getTelemetry() returns a valid telemetry snapshot', () => {
     cy.window().then((win) => {
-      win.history.pushState({}, '', '/shop');
-      win.dispatchEvent(new win.PopStateEvent('popstate'));
+      const telemetry = win.__engine.getTelemetry();
+      expect(telemetry).to.have.property('sessionId').that.is.a('string');
+      expect(telemetry).to.have.property('transitionsEvaluated').that.is.a('number');
     });
-    cy.get('[data-cy="event-log"] [data-event="state_change"]')
-      .last()
-      .should('contain.text', '/shop');
   });
 
   // =========================================================================
@@ -132,18 +128,16 @@ describe('createBrowserIntent() — Layer 3 browser integration', () => {
     });
   });
 
-  it('after destroy(), popstate events no longer add state_change entries', () => {
+  it('after destroy(), track() calls no longer add state_change entries', () => {
     cy.window().then((win) => {
       win.__engine.destroy();
 
       // Record the log length right after destroy.
       const countBefore = win.document.querySelectorAll('[data-event="state_change"]').length;
 
-      // Trigger a navigation event — the unsubscribed listener must NOT fire.
-      win.history.pushState({}, '', '/after-destroy');
-      win.dispatchEvent(new win.PopStateEvent('popstate'));
+      // track() after destroy — the removed listeners must NOT fire.
+      win.__engine.track('/after-destroy');
 
-      // dispatchEvent is synchronous so the count is stable immediately.
       const countAfter = win.document.querySelectorAll('[data-event="state_change"]').length;
 
       expect(countAfter).to.equal(countBefore);

@@ -5,6 +5,29 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [1.3.0] - 2026-03-23
+
+### Added
+
+- **`useRouteTracker(currentRoute: string): void`** — drop-in hook that syncs the current route into the engine on every render where `currentRoute` changes. Designed for push-state SPAs (Next.js App Router, React Router v6, Remix) where `history.pushState` is not intercepted automatically. Place it in the root layout and pass the framework's pathname primitive:
+
+  ```ts
+  // Next.js App Router
+  import { usePathname } from 'next/navigation';
+  useRouteTracker(usePathname());
+
+  // React Router v6
+  useRouteTracker(useLocation().pathname);
+  ```
+
+  Throws a descriptive error when used outside `PassiveIntentProvider`. Skips the initial `track()` call if the engine is not yet live (SSR / missing Provider).
+
+### Notes
+
+- Requires `@passiveintent/core@^1.2.0` — `createBrowserIntent()` now returns `IntentManager`, which is the same type the React Provider wraps internally. No API changes on the React side.
+
+---
+
 ## [1.2.0] - 2026-03-20
 
 ### Added

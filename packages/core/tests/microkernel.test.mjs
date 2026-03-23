@@ -1174,9 +1174,9 @@ test('MouseKinematicsAdapter: destroy() prevents further state emissions after p
   }
 });
 
-test('createBrowserIntent: listener registered after construction receives initial state_change via microtask', async () => {
+test('createBrowserIntent: returns IntentManager with full public API', () => {
   const store = new Map();
-  const mockWin = makeMockWindow('/factory-deferred');
+  const mockWin = makeMockWindow('/factory-full-api');
   mockWin.localStorage = {
     getItem: (k) => store.get(k) ?? null,
     setItem: (k, v) => store.set(k, v),
@@ -1190,14 +1190,25 @@ test('createBrowserIntent: listener registered after construction receives initi
   global.window = mockWin;
   global.document = mockWin.document;
   try {
-    const engine = createBrowserIntent({ storageKey: 'test-microtask-deferred' });
+    const engine = createBrowserIntent({ storageKey: 'test-full-api' });
+    // Full IntentManager API is accessible — not just the 3-method microkernel surface
+    assert.equal(typeof engine.track, 'function', 'track must be available');
+    assert.equal(typeof engine.on, 'function', 'on must be available');
+    assert.equal(typeof engine.destroy, 'function', 'destroy must be available');
+    assert.equal(typeof engine.getTelemetry, 'function', 'getTelemetry must be available');
+    assert.equal(
+      typeof engine.predictNextStates,
+      'function',
+      'predictNextStates must be available',
+    );
+    assert.equal(typeof engine.hasSeen, 'function', 'hasSeen must be available');
+    assert.equal(typeof engine.incrementCounter, 'function', 'incrementCounter must be available');
+    // state_change fires when track() is called explicitly
     const events = [];
     engine.on('state_change', (e) => events.push(e));
-    // Synchronously: no events yet — deferred to microtask
-    assert.equal(events.length, 0, 'state_change must not fire synchronously after construction');
-    await Promise.resolve();
-    assert.equal(events.length, 1, 'state_change must fire after microtask boundary');
-    assert.equal(events[0].to, '/factory-deferred');
+    engine.track('/factory-full-api');
+    assert.equal(events.length, 1, 'state_change fires synchronously on track()');
+    assert.equal(events[0].to, '/factory-full-api');
     engine.destroy();
   } finally {
     delete global.window;

@@ -16,9 +16,9 @@ import type { MarkovGraph } from '../../core/markov.js';
  * When this policy is **not** instantiated (because `enableBigrams` is
  * `false`), no bigram accounting executes at all.
  *
- * Bigram states are encoded as `"prev→from"` → `"from→to"` using U+2192
- * as a collision-resistant separator that will not appear in normal URL-based
- * state labels.
+ * Bigram states are encoded as `"prev\x00from"` → `"from\x00to"` using \x00
+ * (NUL) as a collision-resistant separator that will never appear in
+ * URL-based state labels.
  *
  * The frequency-threshold guard prevents sparse bigram pollution during the
  * early learning phase: bigrams are only recorded when the *unigram* source
@@ -38,8 +38,8 @@ export class BigramPolicy implements EnginePolicy {
     if (trajectory.length < 3) return;
 
     const prev2 = trajectory[trajectory.length - 3];
-    const bigramFrom = `${prev2}\u2192${from}`;
-    const bigramTo = `${from}\u2192${to}`;
+    const bigramFrom = `${prev2}\x00${from}`;
+    const bigramTo = `${from}\x00${to}`;
 
     // Only record when the unigram source has enough outgoing transitions.
     if (this.graph.rowTotal(from) >= this.bigramFrequencyThreshold) {

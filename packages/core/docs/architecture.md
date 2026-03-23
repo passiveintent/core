@@ -1297,7 +1297,7 @@ plug-and-play adapter without modifying the core algorithms.
 ├─────────────────────────────────────────────────────────────────┤
 │  Layer 3 — Web Factory (createBrowserIntent)                    │
 │  src/factory.ts                                                 │
-│  Instantiates and injects all standard web plugins.             │
+│  Returns a fully configured IntentManager with browser defaults.│
 │  Progressive disclosure: one call for the 90 % use-case.       │
 ├─────────────────────────────────────────────────────────────────┤
 │  Layer 4 — Framework SDKs                                       │
@@ -1338,8 +1338,9 @@ interface IntentEngineConfig {
 
 #### Standard Web Plugins
 
-`src/plugins/web/` ships four concrete implementations that power the default
-browser experience wired by `createBrowserIntent`:
+`src/plugins/web/` ships four concrete implementations for the microkernel
+`IntentEngine`. These are used when constructing an `IntentEngine` directly
+for custom-platform use cases (React Native, Electron, etc.):
 
 | File                         | Implements            | Mechanism                                                                                                                                                                                              |
 | ---------------------------- | --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |

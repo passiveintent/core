@@ -27,6 +27,7 @@ import {
   useAttentionReturn,
   usePropensity,
   usePredictiveLink,
+  useRouteTracker,
   PassiveIntentProvider,
 } from '../src/index';
 import { IntentManager } from '@passiveintent/core';
@@ -641,6 +642,86 @@ describe('Domain hooks', () => {
       expect(document.querySelector('link[href="/old-page"]')).toBeNull();
       expect(document.querySelector('link[href="/new-page"]')).not.toBeNull();
 
+      unmount();
+    });
+  });
+
+  // ── useRouteTracker ───────────────────────────────────────────────────────
+
+  describe('useRouteTracker', () => {
+    it('throws when called outside a Provider', () => {
+      expect(() => renderHook(() => useRouteTracker('/home'))).toThrow('PassiveIntentProvider');
+    });
+
+    it('calls track() with the initial route on mount', () => {
+      const { unmount } = renderHook(() => useRouteTracker('/home'), {
+        wrapper: ({ children }) => withProvider(children),
+      });
+
+      expect(fakeInstance.track).toHaveBeenCalledTimes(1);
+      expect(fakeInstance.track).toHaveBeenCalledWith('/home');
+      unmount();
+    });
+
+    it('calls track() again when the route changes', () => {
+      const { rerender, unmount } = renderHook(
+        ({ route }: { route: string }) => useRouteTracker(route),
+        {
+          initialProps: { route: '/home' },
+          wrapper: ({ children }) => withProvider(children),
+        },
+      );
+
+      expect(fakeInstance.track).toHaveBeenCalledTimes(1);
+
+      act(() => {
+        rerender({ route: '/products' });
+      });
+
+      expect(fakeInstance.track).toHaveBeenCalledTimes(2);
+      expect(fakeInstance.track).toHaveBeenLastCalledWith('/products');
+      unmount();
+    });
+
+    it('does not call track() again when re-rendered with the same route', () => {
+      const { rerender, unmount } = renderHook(
+        ({ route }: { route: string }) => useRouteTracker(route),
+        {
+          initialProps: { route: '/home' },
+          wrapper: ({ children }) => withProvider(children),
+        },
+      );
+
+      expect(fakeInstance.track).toHaveBeenCalledTimes(1);
+
+      act(() => {
+        rerender({ route: '/home' });
+      });
+
+      expect(fakeInstance.track).toHaveBeenCalledTimes(1);
+      unmount();
+    });
+
+    it('tracks each distinct route in sequence', () => {
+      const { rerender, unmount } = renderHook(
+        ({ route }: { route: string }) => useRouteTracker(route),
+        {
+          initialProps: { route: '/home' },
+          wrapper: ({ children }) => withProvider(children),
+        },
+      );
+
+      act(() => {
+        rerender({ route: '/products' });
+      });
+      act(() => {
+        rerender({ route: '/checkout' });
+      });
+
+      expect(fakeInstance.track).toHaveBeenCalledTimes(3);
+      expect(fakeInstance.track).toHaveBeenNthCalledWith(1, '/home');
+      expect(fakeInstance.track).toHaveBeenNthCalledWith(2, '/products');
+      expect(fakeInstance.track).toHaveBeenNthCalledWith(3, '/checkout');
       unmount();
     });
   });

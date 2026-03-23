@@ -121,9 +121,8 @@ export type { IntentEngineConfig } from './types/microkernel.js';
 /**
  * `createBrowserIntent` — primary entry point for standard web applications.
  *
- * Automatically wires `ContinuousGraphModel`, `LocalStorageAdapter`,
- * `BrowserLifecycleAdapter`, and `MouseKinematicsAdapter` into a new
- * `IntentEngine` and returns it ready to use.
+ * Returns a fully configured `IntentManager` instance ready to use with all
+ * browser adapters wired in.
  *
  * ```ts
  * import { createBrowserIntent } from '@passiveintent/core';

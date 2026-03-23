@@ -150,7 +150,7 @@ export interface BrowserConfig {
  */
 export function createBrowserIntent(config: BrowserConfig = {}): IntentManager {
   return new IntentManager({
-    storageKey: config.storageKey,
+    storageKey: config.storageKey ?? 'passive-intent-engine',
     baseline: config.baseline,
     graph: config.graph,
     bloom: config.bloom,

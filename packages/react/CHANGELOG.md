@@ -20,7 +20,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   useRouteTracker(useLocation().pathname);
   ```
 
-  Throws a descriptive error when used outside `PassiveIntentProvider`. Skips the initial `track()` call if the engine is not yet live (SSR / missing Provider).
+  Throws a descriptive error when invoked outside a `PassiveIntentProvider`. When the `PassiveIntentProvider` is present but the engine is not yet live (e.g. during SSR), `useRouteTracker` skips the `track()` call rather than throwing — the skip applies only to that in-between state, not to a missing provider.
 
 ### Notes
 

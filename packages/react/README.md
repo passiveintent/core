@@ -214,7 +214,7 @@ function RouteSync() {
 
 export default function RootLayout({ children }) {
   return (
-    <PassiveIntentProvider storageKey="my-app">
+    <PassiveIntentProvider config={{ storageKey: 'my-app' }}>
       <RouteSync />
       {children}
     </PassiveIntentProvider>

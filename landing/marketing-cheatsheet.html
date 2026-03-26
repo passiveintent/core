@@ -1,0 +1,200 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Marketing Cheat Sheet | PassiveIntent</title>
+    <meta
+      name="description"
+      content="PassiveIntent marketing cheat sheet — messaging, positioning, and intent signal reference for growth, CX, and sales teams."
+    />
+    <meta name="robots" content="noindex,nofollow" />
+    <meta name="theme-color" content="#f6f3ee" />
+    <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Manrope:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="./styles.css" />
+    <link rel="stylesheet" href="./marketing-cheatsheet.css" />
+  </head>
+  <body class="cheatsheet-page">
+    <div class="page-orb page-orb-a"></div>
+    <div class="page-orb page-orb-b"></div>
+
+    <header class="site-header" id="site-header">
+      <div class="header-inner">
+        <a class="brand" href="./index.html">
+          <span class="brand-mark" aria-hidden="true"></span>
+          <span class="brand-copy">
+            <strong>PassiveIntent</strong>
+            <span>Behavioral Intent Engine</span>
+          </span>
+        </a>
+        <nav class="site-nav" aria-label="Cheat sheet page">
+          <a href="./index.html#pricing">Pricing</a>
+          <a href="./privacy.html">Privacy</a>
+          <a href="./terms.html">Terms</a>
+        </nav>
+        <a class="header-cta" href="./index.html#demo">Try the live demo</a>
+      </div>
+    </header>
+
+    <main>
+      <!-- Hero + intro card — same pattern as privacy/terms -->
+      <div class="legal-main">
+        <section class="legal-hero">
+          <nav class="legal-back-nav">
+            <a href="./index.html">← Back to Home</a>
+            <a href="./index.html#pricing">See pricing →</a>
+          </nav>
+          <p class="eyebrow">Growth &amp; CX</p>
+          <h1>Marketing Cheat Sheet</h1>
+          <p class="legal-summary">
+            Intent signal reference for growth, CX, and sales teams. Map behavioral signals to the
+            right intervention at the right moment.
+          </p>
+          <div class="legal-meta">
+            <span class="legal-meta-item">Behavioral Topography Matrix</span>
+            <span class="legal-meta-item">9 intent states</span>
+            <span class="legal-meta-item">PassiveIntent Core</span>
+          </div>
+        </section>
+
+        <article class="legal-page">
+          <h2>Calibration Mandate</h2>
+          <p>
+            The Propensity to Convert values below are not universal constants. A 3-page checkout
+            funnel and a 40-page discovery catalog have entirely different structural probabilities.
+          </p>
+          <p>
+            The thresholds below assume a calibrated baseline. If you are not using a pre-calculated
+            Blueprint JSON, the engine defaults to raw Markov probabilities until it observes enough
+            organic traffic.
+          </p>
+          <p>
+            Always run <code>PassiveIntent.calibrate()</code> or inject a Blueprint for immediate
+            accuracy.
+          </p>
+        </article>
+      </div>
+
+      <!-- Full-width table outside the narrow legal-page card -->
+      <div class="cs-table-section">
+        <h2>Behavioral Topography Matrix</h2>
+        <div class="cs-table-wrap">
+          <table class="cs-table">
+            <thead>
+              <tr>
+                <th>State / Intensity</th>
+                <th>Psychological Profile</th>
+                <th>SDK Event Fired</th>
+                <th>Engine Math &amp; Developer Check</th>
+                <th>Propensity</th>
+                <th>The Business Action (UI Intervention)</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>Low</strong></td>
+                <td>The Conviction Buyer. Decisive, linear path.</td>
+                <td><code>(None)</code></td>
+                <td>Trajectory Z-Score: &lt; 1.5. No anomalies detected.</td>
+                <td>&gt; 0.85</td>
+                <td>Protect Margin. Suppress all popups and discount codes. Let them buy.</td>
+              </tr>
+              <tr>
+                <td><strong>Mild</strong></td>
+                <td>The Window Shopper. Browsing, exploring options.</td>
+                <td><code>high_entropy</code></td>
+                <td>
+                  Normalized Entropy: &gt; 0.75. Check <code>payload.normalizedEntropy</code>.
+                </td>
+                <td>0.40 – 0.84</td>
+                <td>
+                  Nudge. Do not discount yet. Show social proof such as "15 people bought this
+                  today."
+                </td>
+              </tr>
+              <tr>
+                <td><strong>High</strong></td>
+                <td>Cognitive Friction. Stuck reading fine print.</td>
+                <td><code>dwell_time_anomaly</code></td>
+                <td>
+                  Dwell Z-Score: &gt; 2.5. Check <code>payload.zScore &gt; 0</code> so it is slow,
+                  not fast.
+                </td>
+                <td>0.15 – 0.39</td>
+                <td>
+                  Incentivize. Trigger the margin-saving intervention. Fire a "Free Shipping" popup.
+                </td>
+              </tr>
+              <tr>
+                <td><strong>Critical</strong></td>
+                <td>Anxiety / Frustration. Looping, lost, or erratic.</td>
+                <td><code>trajectory_anomaly</code></td>
+                <td>Trajectory Z-Score: &gt; 3.5. Check <code>payload.confidence</code>.</td>
+                <td>&lt; 0.15</td>
+                <td>Rescue. Trigger an immediate customer support modal or live chat.</td>
+              </tr>
+              <tr>
+                <td><strong>Compound</strong></td>
+                <td>Confirmed Hesitation. Frozen and confused.</td>
+                <td><code>hesitation_detected</code></td>
+                <td>Correlation: trajectory and dwell triggered within 30s of each other.</td>
+                <td>&lt; 0.39</td>
+                <td>
+                  The Kill Shot. Highest-confidence intervention. Fire your absolute best discount
+                  offer.
+                </td>
+              </tr>
+              <tr>
+                <td><strong>Leaving</strong></td>
+                <td>Exit Intent. Mouse moving to close tab.</td>
+                <td><code>exit_intent</code></td>
+                <td>
+                  Kinematics + math: mouseleave toward chrome plus
+                  <code>likelyNext &gt;= 0.4</code>.
+                </td>
+                <td>Any</td>
+                <td>
+                  Last Chance. Trigger a targeted retention overlay using
+                  <code>payload.likelyNext</code> to personalize the message.
+                </td>
+              </tr>
+              <tr>
+                <td><strong>Ghost</strong></td>
+                <td>Attention Return. Tab hidden, then refocused.</td>
+                <td><code>attention_return</code></td>
+                <td>Time away: &gt;= 15s. Check <code>payload.hiddenDuration</code>.</td>
+                <td>Any</td>
+                <td>Re-engage. "Welcome back! Still thinking about [Last Product]?"</td>
+              </tr>
+              <tr>
+                <td><strong>Idle</strong></td>
+                <td>Mentally Gone. Tab open, user AFK.</td>
+                <td><code>user_idle</code></td>
+                <td>Inactivity: &gt; 120s. Check <code>payload.idleMs</code>.</td>
+                <td>Any</td>
+                <td>
+                  Reactivate. Pulse the tab title or trigger a soft visual nudge to draw the eye
+                  back.
+                </td>
+              </tr>
+              <tr>
+                <td><strong>Back</strong></td>
+                <td>Resumed. User moves mouse after idle.</td>
+                <td><code>user_resumed</code></td>
+                <td>Return from idle: event fires with total <code>payload.idleMs</code>.</td>
+                <td>Any</td>
+                <td>Welcome Back. Resume UI state where they left off.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </main>
+  </body>
+</html>

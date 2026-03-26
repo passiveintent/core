@@ -12,6 +12,32 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [1.2.2] - 2026-03-26
+
+### Fixed
+
+- **Fixed declaration artifact glob** — `files` in `package.json` was `dist/*.d.ts` (top-level only), causing all subdirectory declaration files (`dist/types/`, `dist/engine/`, etc.) to be excluded from the published package. Changed to `dist/**/*.d.ts` so the full declaration tree ships and `CoreInterfaces` resolves correctly for consumers.
+
+---
+
+## [1.2.1] - 2026-03-25
+
+### Added
+
+- **`CoreInterfaces.EnginePolicy` and `CoreInterfaces.PolicyTrackContext` now exported** — these plugin contracts were previously internal types not included in the published artifact. Enterprise packages building custom `IntentManager` plugins (injected via `IntentManagerConfig.plugins`) can now properly type their implementations without duplicating the interfaces or falling back to `any`.
+
+  ```ts
+  import type { CoreInterfaces } from '@passiveintent/core';
+
+  class MyPlugin implements CoreInterfaces.EnginePolicy {
+    onTrackContext(ctx: CoreInterfaces.PolicyTrackContext): void { ... }
+  }
+  ```
+
+  Both types are re-exported through the existing `CoreInterfaces` namespace (sourced from `./engine/policies/engine-policy`). No runtime changes — type-only export.
+
+---
+
 ## [1.2.0] - 2026-03-23
 
 ### Changed

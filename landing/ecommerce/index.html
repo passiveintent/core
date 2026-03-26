@@ -53,7 +53,10 @@
       content="PassiveIntent for E-Commerce - zero-egress cart recovery intent engine"
     />
     <meta name="theme-color" content="#f6f3ee" />
+    <link rel="sitemap" type="application/xml" href="/sitemap.xml" />
     <link rel="icon" type="image/svg+xml" href="../favicon.svg" />
+    <link rel="apple-touch-icon" href="../apple-touch-icon.png" />
+    <link rel="manifest" href="../site.webmanifest" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -100,6 +103,23 @@
               "availability": "https://schema.org/InStock",
               "url": "https://passiveintent.dev/ecommerce#shadow-mode"
             }
+          },
+          {
+            "@type": "BreadcrumbList",
+            "itemListElement": [
+              {
+                "@type": "ListItem",
+                "position": 1,
+                "name": "Home",
+                "item": "https://passiveintent.dev/"
+              },
+              {
+                "@type": "ListItem",
+                "position": 2,
+                "name": "E-Commerce",
+                "item": "https://passiveintent.dev/ecommerce"
+              }
+            ]
           },
           {
             "@type": "FAQPage",

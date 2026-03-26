@@ -1,6 +1,7 @@
 <!doctype html>
 <html lang="en">
   <head>
+    <meta name="google-site-verification" content="0MEGurumf_77I0x8HPZLvA5_kgyEQX_efF7e9gf6nIc" />
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>PassiveIntent | Privacy-First Intent SDK</title>
@@ -41,6 +42,7 @@
     <meta name="twitter:image" content="https://passiveintent.dev/social-preview.png" />
     <meta name="twitter:image:alt" content="PassiveIntent - The Privacy-First User Intent Engine" />
     <meta name="theme-color" content="#f6f3ee" />
+    <link rel="sitemap" type="application/xml" href="/sitemap.xml" />
     <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
     <link rel="apple-touch-icon" href="./apple-touch-icon.png" />
     <link rel="manifest" href="./site.webmanifest" />
@@ -55,6 +57,17 @@
       {
         "@context": "https://schema.org",
         "@graph": [
+          {
+            "@type": "WebSite",
+            "@id": "https://passiveintent.dev/#website",
+            "url": "https://passiveintent.dev/",
+            "name": "PassiveIntent",
+            "description": "Privacy-first JavaScript and React SDK for in-session intent detection",
+            "publisher": {
+              "@id": "https://passiveintent.dev/#organization"
+            },
+            "inLanguage": "en-US"
+          },
           {
             "@type": "Organization",
             "@id": "https://passiveintent.dev/#organization",
@@ -1197,7 +1210,9 @@
                     <span class="playground-state-button-body">
                       Dwell + trajectory. Fire the best offer.
                     </span>
-                    <span class="playground-state-button-meta">hesitation_detected • &lt; 0.39</span>
+                    <span class="playground-state-button-meta"
+                      >hesitation_detected • &lt; 0.39</span
+                    >
                   </button>
                   <button class="playground-state-button" type="button" data-state="leaving">
                     <span class="playground-state-button-top">

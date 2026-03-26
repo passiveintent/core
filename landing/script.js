@@ -323,8 +323,7 @@ const BEHAVIORAL_TOPOGRAPHY_STATES = [
     event: 'dwell_time_anomaly',
     developerCheck: 'Dwell Z-Score: > 2.5. Check payload.zScore > 0 so it is slow, not fast.',
     actionTitle: 'Incentivize',
-    actionDescription:
-      'Trigger the margin-saving intervention. Fire a "Free Shipping" popup.',
+    actionDescription: 'Trigger the margin-saving intervention. Fire a "Free Shipping" popup.',
     actionChip: 'Offer free shipping',
     mathChip: 'Dwell Z-Score > 2.5',
     codeLabel: 'margin-saving offer',
@@ -456,8 +455,7 @@ const BEHAVIORAL_TOPOGRAPHY_STATES = [
     event: 'hesitation_detected',
     developerCheck: 'Trajectory and dwell triggered within 30s of each other.',
     actionTitle: 'The Kill Shot',
-    actionDescription:
-      'Highest-confidence intervention. Fire your absolute best discount offer.',
+    actionDescription: 'Highest-confidence intervention. Fire your absolute best discount offer.',
     actionChip: 'Deploy best offer',
     mathChip: 'Trajectory + Dwell within 30s',
     codeLabel: 'offer ladder',
@@ -522,8 +520,7 @@ const BEHAVIORAL_TOPOGRAPHY_STATES = [
     summary: 'Mouse moving to close tab.',
     detailTitle: 'Decision is escaping the session right now',
     event: 'exit_intent',
-    developerCheck:
-      'Mouseleave toward browser chrome plus payload.likelyNext >= 0.4.',
+    developerCheck: 'Mouseleave toward browser chrome plus payload.likelyNext >= 0.4.',
     actionTitle: 'Last Chance',
     actionDescription:
       'Trigger a targeted retention overlay using payload.likelyNext to personalize the message.',
@@ -591,8 +588,7 @@ const BEHAVIORAL_TOPOGRAPHY_STATES = [
     event: 'attention_return',
     developerCheck: 'Time Away: >= 15s. Check payload.hiddenDuration.',
     actionTitle: 'Re-engage',
-    actionDescription:
-      'Welcome them back with the last product or decision context still visible.',
+    actionDescription: 'Welcome them back with the last product or decision context still visible.',
     actionChip: 'Welcome back prompt',
     mathChip: 'Hidden >= 15s',
     codeLabel: 'welcome back',
@@ -656,8 +652,7 @@ const BEHAVIORAL_TOPOGRAPHY_STATES = [
     event: 'user_idle',
     developerCheck: 'Inactivity: > 120s. Check payload.idleMs.',
     actionTitle: 'Reactivate',
-    actionDescription:
-      'Pulse the tab title or trigger a soft visual nudge to draw the eye back.',
+    actionDescription: 'Pulse the tab title or trigger a soft visual nudge to draw the eye back.',
     actionChip: 'Soft visual nudge',
     mathChip: 'Inactivity > 120s',
     codeLabel: 'reactivation',
@@ -927,8 +922,7 @@ const MARKETING_CHEATSHEET = {
       profileTitle: 'Confirmed Hesitation',
       profileSummary: 'Frozen and confused.',
       event: 'hesitation_detected',
-      developerCheck:
-        'Correlation: trajectory and dwell triggered within 30s of each other.',
+      developerCheck: 'Correlation: trajectory and dwell triggered within 30s of each other.',
       propensity: '< 0.39',
       actionTitle: 'The Kill Shot.',
       actionSummary: 'Highest-confidence intervention. Fire your absolute best discount offer.',
@@ -939,8 +933,7 @@ const MARKETING_CHEATSHEET = {
       profileTitle: 'Exit Intent',
       profileSummary: 'Mouse moving to close tab.',
       event: 'exit_intent',
-      developerCheck:
-        'Kinematics + math: mouseleave toward chrome plus likelyNext >= 0.4.',
+      developerCheck: 'Kinematics + math: mouseleave toward chrome plus likelyNext >= 0.4.',
       propensity: 'Any',
       actionTitle: 'Last Chance.',
       actionSummary:
@@ -1413,7 +1406,9 @@ function setupBehavioralPlayground() {
   };
 
   const advanceState = () => {
-    const currentIndex = BEHAVIORAL_TOPOGRAPHY_STATES.findIndex((state) => state.id === activeStateId);
+    const currentIndex = BEHAVIORAL_TOPOGRAPHY_STATES.findIndex(
+      (state) => state.id === activeStateId,
+    );
     const nextIndex = (currentIndex + 1) % BEHAVIORAL_TOPOGRAPHY_STATES.length;
     activeStateId = BEHAVIORAL_TOPOGRAPHY_STATES[nextIndex].id;
     render();
@@ -1508,8 +1503,9 @@ function setupMarketingCheatSheet() {
   ].join('\n');
   const whatsappText = `${MARKETING_CHEATSHEET.whatsappIntro}\n${publicCheatSheetUrl}`;
 
-  const cardsMarkup = MARKETING_CHEATSHEET.rows.map(
-    (row) => `
+  const cardsMarkup = MARKETING_CHEATSHEET.rows
+    .map(
+      (row) => `
       <article class="cheatsheet-card cheatsheet-card-${row.id}">
         <div class="cheatsheet-card-head">
           <span class="cheatsheet-card-state">
@@ -1542,7 +1538,8 @@ function setupMarketingCheatSheet() {
         </dl>
       </article>
     `,
-  ).join('');
+    )
+    .join('');
 
   roots.forEach((root) => {
     root.querySelectorAll('[data-cheatsheet-grid]').forEach((element) => {
@@ -1577,10 +1574,7 @@ function setupMarketingCheatSheet() {
     });
 
     root.querySelectorAll('[data-cheatsheet-whatsapp]').forEach((element) => {
-      element.setAttribute(
-        'href',
-        `https://wa.me/?text=${encodeURIComponent(whatsappText)}`,
-      );
+      element.setAttribute('href', `https://wa.me/?text=${encodeURIComponent(whatsappText)}`);
     });
 
     root.querySelectorAll('[data-cheatsheet-print]').forEach((element) => {

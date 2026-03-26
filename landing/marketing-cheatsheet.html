@@ -196,17 +196,27 @@
                 <td><strong>Mild</strong></td>
                 <td>The Window Shopper. Browsing, exploring options.</td>
                 <td><code>high_entropy</code></td>
-                <td>Normalized Entropy: &gt; 0.75. Check <code>payload.normalizedEntropy</code>.</td>
+                <td>
+                  Normalized Entropy: &gt; 0.75. Check <code>payload.normalizedEntropy</code>.
+                </td>
                 <td>0.40 – 0.84</td>
-                <td>Nudge. Do not discount yet. Show social proof such as "15 people bought this today."</td>
+                <td>
+                  Nudge. Do not discount yet. Show social proof such as "15 people bought this
+                  today."
+                </td>
               </tr>
               <tr>
                 <td><strong>High</strong></td>
                 <td>Cognitive Friction. Stuck reading fine print.</td>
                 <td><code>dwell_time_anomaly</code></td>
-                <td>Dwell Z-Score: &gt; 2.5. Check <code>payload.zScore &gt; 0</code> so it is slow, not fast.</td>
+                <td>
+                  Dwell Z-Score: &gt; 2.5. Check <code>payload.zScore &gt; 0</code> so it is slow,
+                  not fast.
+                </td>
                 <td>0.15 – 0.39</td>
-                <td>Incentivize. Trigger the margin-saving intervention. Fire a "Free Shipping" popup.</td>
+                <td>
+                  Incentivize. Trigger the margin-saving intervention. Fire a "Free Shipping" popup.
+                </td>
               </tr>
               <tr>
                 <td><strong>Critical</strong></td>
@@ -222,15 +232,24 @@
                 <td><code>hesitation_detected</code></td>
                 <td>Correlation: trajectory and dwell triggered within 30s of each other.</td>
                 <td>&lt; 0.39</td>
-                <td>The Kill Shot. Highest-confidence intervention. Fire your absolute best discount offer.</td>
+                <td>
+                  The Kill Shot. Highest-confidence intervention. Fire your absolute best discount
+                  offer.
+                </td>
               </tr>
               <tr>
                 <td><strong>Leaving</strong></td>
                 <td>Exit Intent. Mouse moving to close tab.</td>
                 <td><code>exit_intent</code></td>
-                <td>Kinematics + math: mouseleave toward chrome plus <code>likelyNext &gt;= 0.4</code>.</td>
+                <td>
+                  Kinematics + math: mouseleave toward chrome plus
+                  <code>likelyNext &gt;= 0.4</code>.
+                </td>
                 <td>Any</td>
-                <td>Last Chance. Trigger a targeted retention overlay using <code>payload.likelyNext</code> to personalize the message.</td>
+                <td>
+                  Last Chance. Trigger a targeted retention overlay using
+                  <code>payload.likelyNext</code> to personalize the message.
+                </td>
               </tr>
               <tr>
                 <td><strong>Ghost</strong></td>
@@ -246,7 +265,10 @@
                 <td><code>user_idle</code></td>
                 <td>Inactivity: &gt; 120s. Check <code>payload.idleMs</code>.</td>
                 <td>Any</td>
-                <td>Reactivate. Pulse the tab title or trigger a soft visual nudge to draw the eye back.</td>
+                <td>
+                  Reactivate. Pulse the tab title or trigger a soft visual nudge to draw the eye
+                  back.
+                </td>
               </tr>
               <tr>
                 <td><strong>Back</strong></td>

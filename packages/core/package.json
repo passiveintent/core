@@ -1,6 +1,6 @@
 {
   "name": "@passiveintent/core",
-  "version": "1.2.0",
+  "version": "1.2.2",
   "description": "Privacy-first, SSR-safe intent detection engine using local Markov-chain inference and Bloom filters.",
   "keywords": [
     "intent",
@@ -56,8 +56,8 @@
     "dist/*.js.map",
     "dist/*.cjs",
     "dist/*.cjs.map",
-    "dist/*.d.ts",
-    "dist/*.d.ts.map"
+    "dist/**/*.d.ts",
+    "dist/**/*.d.ts.map"
   ],
   "sideEffects": false,
   "scripts": {

@@ -1251,6 +1251,7 @@ function setupBehavioralPlayground() {
   const autoplayButton = document.getElementById('playground-autoplay');
   const revealToggle = document.getElementById('playground-reveal-toggle');
   const revealPanel = document.getElementById('playground-reveal');
+  const statusNode = document.getElementById('playground-status');
   const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   const elements = {
@@ -1306,7 +1307,7 @@ function setupBehavioralPlayground() {
     if (!revealToggle || !revealPanel) return;
 
     revealPanel.hidden = !open;
-    revealPanel.classList.toggle('is-open', open);
+    if (!reducedMotion) revealPanel.classList.toggle('is-open', open);
     revealToggle.setAttribute('aria-expanded', open ? 'true' : 'false');
     revealToggle.textContent = open ? 'Hide decision model' : 'Reveal decision model';
   };
@@ -1326,7 +1327,7 @@ function setupBehavioralPlayground() {
     root.style.setProperty('--playground-accent', state.color);
     root.style.setProperty('--playground-accent-rgb', state.rgb);
 
-    if (hasRendered) {
+    if (hasRendered && !reducedMotion) {
       root.classList.remove('is-refreshing');
       window.clearTimeout(refreshTimer);
       window.requestAnimationFrame(() => {
@@ -1394,6 +1395,10 @@ function setupBehavioralPlayground() {
     setBarScale(elements.barLikelyNext, stateMode.metrics.likelyNext.scale);
     setBarScale(elements.barAway, stateMode.metrics.away.scale);
 
+    if (hasRendered && statusNode) {
+      statusNode.textContent = `${scene.chapter}: ${state.label}. Response: ${state.actionTitle}.`;
+    }
+
     hasRendered = true;
   };
 
@@ -1401,6 +1406,7 @@ function setupBehavioralPlayground() {
     if (autoplayTimer) {
       window.clearInterval(autoplayTimer);
       autoplayTimer = null;
+      if (statusNode) statusNode.textContent = 'Autoplay stopped.';
     }
     if (autoplayButton) autoplayButton.setAttribute('aria-pressed', 'false');
   };
@@ -1418,6 +1424,7 @@ function setupBehavioralPlayground() {
     if (reducedMotion || autoplayTimer) return;
     autoplayTimer = window.setInterval(advanceState, 4200);
     if (autoplayButton) autoplayButton.setAttribute('aria-pressed', 'true');
+    if (statusNode) statusNode.textContent = 'Autoplay started.';
   };
 
   stateButtons.forEach((button) => {
@@ -1503,61 +1510,7 @@ function setupMarketingCheatSheet() {
   ].join('\n');
   const whatsappText = `${MARKETING_CHEATSHEET.whatsappIntro}\n${publicCheatSheetUrl}`;
 
-  const cardsMarkup = MARKETING_CHEATSHEET.rows
-    .map(
-      (row) => `
-      <article class="cheatsheet-card cheatsheet-card-${row.id}">
-        <div class="cheatsheet-card-head">
-          <span class="cheatsheet-card-state">
-            <span class="cheatsheet-card-tone" aria-hidden="true"></span>
-            ${escapeHtml(row.state)}
-          </span>
-          <span class="cheatsheet-card-propensity">${escapeHtml(row.propensity)}</span>
-        </div>
-        <div class="cheatsheet-card-copy">
-          <h3>${escapeHtml(row.profileTitle)}</h3>
-          <p class="cheatsheet-card-summary">${escapeHtml(row.profileSummary)}</p>
-        </div>
-        <dl class="cheatsheet-card-list">
-          <div>
-            <dt>SDK event</dt>
-            <dd>${escapeHtml(row.event)}</dd>
-          </div>
-          <div>
-            <dt>Engine math + developer check</dt>
-            <dd>${escapeHtml(row.developerCheck)}</dd>
-          </div>
-          <div>
-            <dt>Propensity</dt>
-            <dd>${escapeHtml(row.propensity)}</dd>
-          </div>
-          <div>
-            <dt>Business action</dt>
-            <dd><strong>${escapeHtml(row.actionTitle)}</strong> ${escapeHtml(row.actionSummary)}</dd>
-          </div>
-        </dl>
-      </article>
-    `,
-    )
-    .join('');
-
   roots.forEach((root) => {
-    root.querySelectorAll('[data-cheatsheet-grid]').forEach((element) => {
-      element.innerHTML = cardsMarkup;
-    });
-
-    root.querySelectorAll('[data-cheatsheet-mandate-title]').forEach((element) => {
-      element.textContent = MARKETING_CHEATSHEET.mandateTitle;
-    });
-
-    root.querySelectorAll('[data-cheatsheet-mandate-summary]').forEach((element) => {
-      element.textContent = MARKETING_CHEATSHEET.mandateSummary;
-    });
-
-    root.querySelectorAll('[data-cheatsheet-mandate-detail]').forEach((element) => {
-      element.textContent = MARKETING_CHEATSHEET.mandateDetail;
-    });
-
     root.querySelectorAll('[data-cheatsheet-page-link]').forEach((element) => {
       element.setAttribute('href', localCheatSheetUrl.toString());
     });

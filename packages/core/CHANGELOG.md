@@ -12,6 +12,14 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [1.2.2] - 2026-03-26
+
+### Fixed
+
+- **Fixed declaration artifact glob** — `files` in `package.json` was `dist/*.d.ts` (top-level only), causing all subdirectory declaration files (`dist/types/`, `dist/engine/`, etc.) to be excluded from the published package. Changed to `dist/**/*.d.ts` so the full declaration tree ships and `CoreInterfaces` resolves correctly for consumers.
+
+---
+
 ## [1.2.1] - 2026-03-25
 
 ### Added

@@ -2086,7 +2086,7 @@ select {
   display: grid;
   gap: 16px;
   margin-top: 24px;
-  align-items: start;
+  align-items: stretch;
 }
 
 .difference-grid,
@@ -4420,6 +4420,12 @@ select {
 
 .price-card {
   position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+.price-card .btn {
+  margin-top: auto;
 }
 
 .price {
@@ -4430,8 +4436,8 @@ select {
 }
 
 .price-custom {
-  font-size: 2rem;
-  letter-spacing: -0.04em;
+  font-size: 2.35rem;
+  letter-spacing: -0.06em;
 }
 
 .price span {

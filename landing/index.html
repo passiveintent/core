@@ -888,7 +888,24 @@
             </button>
           </div>
 
-          <article class="playground-stage playground-stage-hero" aria-live="polite">
+          <div
+            id="playground-status"
+            aria-live="polite"
+            aria-atomic="true"
+            style="
+              position: absolute;
+              width: 1px;
+              height: 1px;
+              padding: 0;
+              margin: -1px;
+              overflow: hidden;
+              clip: rect(0, 0, 0, 0);
+              white-space: nowrap;
+              border: 0;
+            "
+          ></div>
+
+          <article class="playground-stage playground-stage-hero">
             <div class="playground-hero-copy">
               <span class="playground-hero-chapter" id="playground-story-chapter"
                 >Chapter 01 • Conviction</span
@@ -1300,7 +1317,7 @@
               >
               <a
                 class="btn btn-secondary"
-                href="./marketing-cheatsheet.md"
+                href="./marketing-cheatsheet.html"
                 target="_blank"
                 rel="noopener noreferrer"
                 data-cheatsheet-markdown-link
@@ -1315,12 +1332,329 @@
 
           <div class="cheatsheet-mandate">
             <span class="cheatsheet-mandate-label">Calibration mandate</span>
-            <h3 data-cheatsheet-mandate-title></h3>
-            <p data-cheatsheet-mandate-summary></p>
-            <p data-cheatsheet-mandate-detail></p>
+            <h3 data-cheatsheet-mandate-title>
+              Propensity thresholds are not universal constants.
+            </h3>
+            <p data-cheatsheet-mandate-summary>
+              A 3-page checkout funnel and a 40-page discovery catalog have entirely different
+              structural probabilities.
+            </p>
+            <p data-cheatsheet-mandate-detail>
+              The thresholds below assume a calibrated baseline. If you are not using a
+              pre-calculated Blueprint JSON, the engine defaults to raw Markov probabilities until
+              it observes enough organic traffic. Always run PassiveIntent.calibrate() or inject a
+              Blueprint for immediate accuracy.
+            </p>
           </div>
 
-          <div class="cheatsheet-grid" data-cheatsheet-grid></div>
+          <div class="cheatsheet-grid" data-cheatsheet-grid>
+            <article class="cheatsheet-card cheatsheet-card-low">
+              <div class="cheatsheet-card-head">
+                <span class="cheatsheet-card-state">
+                  <span class="cheatsheet-card-tone" aria-hidden="true"></span>
+                  Low
+                </span>
+                <span class="cheatsheet-card-propensity">&gt; 0.85</span>
+              </div>
+              <div class="cheatsheet-card-copy">
+                <h3>The Conviction Buyer</h3>
+                <p class="cheatsheet-card-summary">Decisive, linear path.</p>
+              </div>
+              <dl class="cheatsheet-card-list">
+                <div>
+                  <dt>SDK event</dt>
+                  <dd>(None)</dd>
+                </div>
+                <div>
+                  <dt>Engine math + developer check</dt>
+                  <dd>Trajectory Z-Score: &lt; 1.5. No anomalies detected.</dd>
+                </div>
+                <div>
+                  <dt>Propensity</dt>
+                  <dd>&gt; 0.85</dd>
+                </div>
+                <div>
+                  <dt>Business action</dt>
+                  <dd>
+                    <strong>Protect Margin.</strong> Suppress all popups and discount codes. Let
+                    them buy.
+                  </dd>
+                </div>
+              </dl>
+            </article>
+            <article class="cheatsheet-card cheatsheet-card-mild">
+              <div class="cheatsheet-card-head">
+                <span class="cheatsheet-card-state">
+                  <span class="cheatsheet-card-tone" aria-hidden="true"></span>
+                  Mild
+                </span>
+                <span class="cheatsheet-card-propensity">0.40 - 0.84</span>
+              </div>
+              <div class="cheatsheet-card-copy">
+                <h3>The Window Shopper</h3>
+                <p class="cheatsheet-card-summary">Browsing, exploring options.</p>
+              </div>
+              <dl class="cheatsheet-card-list">
+                <div>
+                  <dt>SDK event</dt>
+                  <dd>high_entropy</dd>
+                </div>
+                <div>
+                  <dt>Engine math + developer check</dt>
+                  <dd>Normalized Entropy: &gt; 0.75. Check payload.normalizedEntropy.</dd>
+                </div>
+                <div>
+                  <dt>Propensity</dt>
+                  <dd>0.40 - 0.84</dd>
+                </div>
+                <div>
+                  <dt>Business action</dt>
+                  <dd>
+                    <strong>Nudge.</strong> Do not discount yet. Show social proof such as &#34;15
+                    people bought this today.&#34;
+                  </dd>
+                </div>
+              </dl>
+            </article>
+            <article class="cheatsheet-card cheatsheet-card-high">
+              <div class="cheatsheet-card-head">
+                <span class="cheatsheet-card-state">
+                  <span class="cheatsheet-card-tone" aria-hidden="true"></span>
+                  High
+                </span>
+                <span class="cheatsheet-card-propensity">0.15 - 0.39</span>
+              </div>
+              <div class="cheatsheet-card-copy">
+                <h3>Cognitive Friction</h3>
+                <p class="cheatsheet-card-summary">Stuck reading fine print.</p>
+              </div>
+              <dl class="cheatsheet-card-list">
+                <div>
+                  <dt>SDK event</dt>
+                  <dd>dwell_time_anomaly</dd>
+                </div>
+                <div>
+                  <dt>Engine math + developer check</dt>
+                  <dd>
+                    Dwell Z-Score: &gt; 2.5. Check payload.zScore &gt; 0 to verify it is slow, not
+                    fast.
+                  </dd>
+                </div>
+                <div>
+                  <dt>Propensity</dt>
+                  <dd>0.15 - 0.39</dd>
+                </div>
+                <div>
+                  <dt>Business action</dt>
+                  <dd>
+                    <strong>Incentivize.</strong> Trigger the margin-saving intervention. Fire a
+                    &#34;Free Shipping&#34; popup.
+                  </dd>
+                </div>
+              </dl>
+            </article>
+            <article class="cheatsheet-card cheatsheet-card-critical">
+              <div class="cheatsheet-card-head">
+                <span class="cheatsheet-card-state">
+                  <span class="cheatsheet-card-tone" aria-hidden="true"></span>
+                  Critical
+                </span>
+                <span class="cheatsheet-card-propensity">&lt; 0.15</span>
+              </div>
+              <div class="cheatsheet-card-copy">
+                <h3>Anxiety / Frustration</h3>
+                <p class="cheatsheet-card-summary">Looping, lost, or erratic.</p>
+              </div>
+              <dl class="cheatsheet-card-list">
+                <div>
+                  <dt>SDK event</dt>
+                  <dd>trajectory_anomaly</dd>
+                </div>
+                <div>
+                  <dt>Engine math + developer check</dt>
+                  <dd>Trajectory Z-Score: &gt; 3.5. Check payload.confidence.</dd>
+                </div>
+                <div>
+                  <dt>Propensity</dt>
+                  <dd>&lt; 0.15</dd>
+                </div>
+                <div>
+                  <dt>Business action</dt>
+                  <dd>
+                    <strong>Rescue.</strong> Trigger an immediate customer support modal or live
+                    chat.
+                  </dd>
+                </div>
+              </dl>
+            </article>
+            <article class="cheatsheet-card cheatsheet-card-compound">
+              <div class="cheatsheet-card-head">
+                <span class="cheatsheet-card-state">
+                  <span class="cheatsheet-card-tone" aria-hidden="true"></span>
+                  Compound
+                </span>
+                <span class="cheatsheet-card-propensity">&lt; 0.39</span>
+              </div>
+              <div class="cheatsheet-card-copy">
+                <h3>Confirmed Hesitation</h3>
+                <p class="cheatsheet-card-summary">Frozen and confused.</p>
+              </div>
+              <dl class="cheatsheet-card-list">
+                <div>
+                  <dt>SDK event</dt>
+                  <dd>hesitation_detected</dd>
+                </div>
+                <div>
+                  <dt>Engine math + developer check</dt>
+                  <dd>Correlation: trajectory and dwell triggered within 30s of each other.</dd>
+                </div>
+                <div>
+                  <dt>Propensity</dt>
+                  <dd>&lt; 0.39</dd>
+                </div>
+                <div>
+                  <dt>Business action</dt>
+                  <dd>
+                    <strong>The Kill Shot.</strong> Highest-confidence intervention. Fire your
+                    absolute best discount offer.
+                  </dd>
+                </div>
+              </dl>
+            </article>
+            <article class="cheatsheet-card cheatsheet-card-leaving">
+              <div class="cheatsheet-card-head">
+                <span class="cheatsheet-card-state">
+                  <span class="cheatsheet-card-tone" aria-hidden="true"></span>
+                  Leaving
+                </span>
+                <span class="cheatsheet-card-propensity">Any</span>
+              </div>
+              <div class="cheatsheet-card-copy">
+                <h3>Exit Intent</h3>
+                <p class="cheatsheet-card-summary">Mouse moving to close tab.</p>
+              </div>
+              <dl class="cheatsheet-card-list">
+                <div>
+                  <dt>SDK event</dt>
+                  <dd>exit_intent</dd>
+                </div>
+                <div>
+                  <dt>Engine math + developer check</dt>
+                  <dd>Kinematics + math: mouseleave toward chrome plus likelyNext &gt;= 0.4.</dd>
+                </div>
+                <div>
+                  <dt>Propensity</dt>
+                  <dd>Any</dd>
+                </div>
+                <div>
+                  <dt>Business action</dt>
+                  <dd>
+                    <strong>Last Chance.</strong> Trigger a targeted retention overlay using
+                    payload.likelyNext to personalize the message.
+                  </dd>
+                </div>
+              </dl>
+            </article>
+            <article class="cheatsheet-card cheatsheet-card-ghost">
+              <div class="cheatsheet-card-head">
+                <span class="cheatsheet-card-state">
+                  <span class="cheatsheet-card-tone" aria-hidden="true"></span>
+                  Ghost
+                </span>
+                <span class="cheatsheet-card-propensity">Any</span>
+              </div>
+              <div class="cheatsheet-card-copy">
+                <h3>Attention Return</h3>
+                <p class="cheatsheet-card-summary">Tab hidden, then refocused.</p>
+              </div>
+              <dl class="cheatsheet-card-list">
+                <div>
+                  <dt>SDK event</dt>
+                  <dd>attention_return</dd>
+                </div>
+                <div>
+                  <dt>Engine math + developer check</dt>
+                  <dd>Time away: &gt;= 15s. Check payload.hiddenDuration.</dd>
+                </div>
+                <div>
+                  <dt>Propensity</dt>
+                  <dd>Any</dd>
+                </div>
+                <div>
+                  <dt>Business action</dt>
+                  <dd>
+                    <strong>Re-engage.</strong> &#34;Welcome back! Still thinking about [Last
+                    Product]?&#34;
+                  </dd>
+                </div>
+              </dl>
+            </article>
+            <article class="cheatsheet-card cheatsheet-card-idle">
+              <div class="cheatsheet-card-head">
+                <span class="cheatsheet-card-state">
+                  <span class="cheatsheet-card-tone" aria-hidden="true"></span>
+                  Idle
+                </span>
+                <span class="cheatsheet-card-propensity">Any</span>
+              </div>
+              <div class="cheatsheet-card-copy">
+                <h3>Mentally Gone</h3>
+                <p class="cheatsheet-card-summary">Tab open, user AFK.</p>
+              </div>
+              <dl class="cheatsheet-card-list">
+                <div>
+                  <dt>SDK event</dt>
+                  <dd>user_idle</dd>
+                </div>
+                <div>
+                  <dt>Engine math + developer check</dt>
+                  <dd>Inactivity: &gt; 120s. Check payload.idleMs.</dd>
+                </div>
+                <div>
+                  <dt>Propensity</dt>
+                  <dd>Any</dd>
+                </div>
+                <div>
+                  <dt>Business action</dt>
+                  <dd>
+                    <strong>Reactivate.</strong> Pulse the tab title or trigger a soft visual nudge
+                    to draw the eye back.
+                  </dd>
+                </div>
+              </dl>
+            </article>
+            <article class="cheatsheet-card cheatsheet-card-back">
+              <div class="cheatsheet-card-head">
+                <span class="cheatsheet-card-state">
+                  <span class="cheatsheet-card-tone" aria-hidden="true"></span>
+                  Back
+                </span>
+                <span class="cheatsheet-card-propensity">Any</span>
+              </div>
+              <div class="cheatsheet-card-copy">
+                <h3>Resumed</h3>
+                <p class="cheatsheet-card-summary">User moves mouse after idle.</p>
+              </div>
+              <dl class="cheatsheet-card-list">
+                <div>
+                  <dt>SDK event</dt>
+                  <dd>user_resumed</dd>
+                </div>
+                <div>
+                  <dt>Engine math + developer check</dt>
+                  <dd>Return from idle: event fires with total payload.idleMs.</dd>
+                </div>
+                <div>
+                  <dt>Propensity</dt>
+                  <dd>Any</dd>
+                </div>
+                <div>
+                  <dt>Business action</dt>
+                  <dd><strong>Welcome Back.</strong> Resume UI state where they left off.</dd>
+                </div>
+              </dl>
+            </article>
+          </div>
         </div>
       </section>
 
@@ -1537,7 +1871,8 @@
             <h3>Enterprise</h3>
             <p class="price price-custom">Custom</p>
             <p>
-              Custom sales terms for larger teams, procurement review, and broader commercial use.
+              Premium Intent Catalog, custom engineering sprints, and Zero-Trust BYOC for Fortune
+              500 scale.
             </p>
             <a
               class="btn btn-secondary"
@@ -1613,12 +1948,27 @@
                 <tr>
                   <th scope="row">Enterprise</th>
                   <td>Custom</td>
-                  <td>Multi-org deployments, procurement-heavy teams, custom internal rollouts</td>
                   <td>
-                    Custom internal commercial scope, legal review, architecture consultation. OEM /
-                    Agency and wrapped-product cases require a separate license.
+                    Multi-org deployments, highly regulated industries (Fintech/Healthcare), and
+                    massive retail operations.
                   </td>
-                  <td>Custom scoped support hours. No 24/7 or weekend coverage by default.</td>
+                  <td>
+                    Unlimited scope. Includes AGPL commercial exemption, OEM wrapping rights, and
+                    white-labeling.
+                  </td>
+                  <td>
+                    <strong>Premium Intent Catalog:</strong> Access the private
+                    @passiveintent/enterprise NPM package (Fraud, VIP Whale, Rage-Quit detection —
+                    subject to request).<br />
+                    <strong>Custom Integration Sprints:</strong> We build domain-specific kinematic
+                    adapters for your exact UI.<br />
+                    <strong>Zero-Trust BYOC:</strong> Custom telemetry egress adapters routed
+                    directly to your private AWS/Azure/GCP VPC, bypassing third-party analytics.<br />
+                    <strong>Support:</strong> Dedicated private Slack Connect channel — direct line
+                    to the engineer who built this. Priority issue triage before all other tiers.
+                    Quarterly roadmap review call included. Weekend/24-7 coverage available upon
+                    request at additional cost.
+                  </td>
                 </tr>
               </tbody>
             </table>

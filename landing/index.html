@@ -150,6 +150,7 @@
           <a href="./ecommerce/index.html">E-Commerce</a>
           <a href="#why-different">Why</a>
           <a href="#how">How</a>
+          <a href="#playground">Playground</a>
           <a href="#demo">Demo</a>
           <a href="#pricing">Pricing</a>
           <a href="#articles">Articles</a>
@@ -809,6 +810,502 @@
             <span class="architecture-note">Keeps the model close to the moment</span>
             <span class="architecture-note">Lets your product own the response</span>
           </div>
+        </div>
+      </section>
+
+      <section id="playground" class="section reveal">
+        <div class="playground-shell" id="behavioral-playground">
+          <div class="playground-head">
+            <div>
+              <p class="eyebrow playground-eyebrow">Behavioral Topography Matrix</p>
+              <h2>Know when to help. Know when to stay out of the way.</h2>
+            </div>
+            <div class="playground-head-copy">
+              <p>
+                PassiveIntent reads the moment beneath the motion. It turns raw session math into a
+                product decision your buyer can feel immediately.
+              </p>
+              <p class="playground-head-note">
+                Lead with the psychological state. Reveal the model only when the team wants to look
+                under the glass.
+              </p>
+            </div>
+          </div>
+
+          <div class="playground-story-rail" role="group" aria-label="Intent story moments">
+            <button
+              class="playground-story-step is-active"
+              type="button"
+              data-story-state="low"
+              aria-pressed="true"
+            >
+              Conviction
+            </button>
+            <button
+              class="playground-story-step"
+              type="button"
+              data-story-state="mild"
+              aria-pressed="false"
+            >
+              Curiosity
+            </button>
+            <button
+              class="playground-story-step"
+              type="button"
+              data-story-state="high"
+              aria-pressed="false"
+            >
+              Friction
+            </button>
+            <button
+              class="playground-story-step"
+              type="button"
+              data-story-state="critical"
+              aria-pressed="false"
+            >
+              Anxiety
+            </button>
+            <button
+              class="playground-story-step"
+              type="button"
+              data-story-state="compound"
+              aria-pressed="false"
+            >
+              Hesitation
+            </button>
+          </div>
+
+          <article class="playground-stage playground-stage-hero" aria-live="polite">
+            <div class="playground-hero-copy">
+              <span class="playground-hero-chapter" id="playground-story-chapter"
+                >Chapter 01 • Conviction</span
+              >
+              <h3 id="playground-hero-title">Know when to stay out of the way.</h3>
+              <p class="playground-hero-summary" id="playground-hero-summary">
+                A decisive buyer does not need a popup. The best experience is momentum.
+              </p>
+
+              <div class="playground-hero-outcome">
+                <span class="playground-action-label">Recommended response</span>
+                <strong id="playground-action-title">Protect Margin</strong>
+                <p id="playground-action-description">
+                  Suppress all popups and discount codes. Let them buy.
+                </p>
+              </div>
+
+              <div class="playground-glance-row">
+                <div class="playground-glance-pill">
+                  <span>Psychological profile</span>
+                  <strong id="playground-profile-title">The Conviction Buyer</strong>
+                </div>
+                <div class="playground-glance-pill">
+                  <span>Propensity</span>
+                  <strong id="playground-propensity-label">&gt; 0.85</strong>
+                </div>
+              </div>
+            </div>
+
+            <div class="playground-stage-visual">
+              <div class="playground-stage-top">
+                <span class="playground-state-badge" id="playground-intensity-badge"
+                  >Low intensity</span
+                >
+                <span class="playground-event-badge" id="playground-event-badge"
+                  >No event fired</span
+                >
+              </div>
+
+              <div class="playground-stage-core">
+                <div class="playground-stage-rings" aria-hidden="true">
+                  <span class="playground-stage-ring playground-stage-ring-a"></span>
+                  <span class="playground-stage-ring playground-stage-ring-b"></span>
+                  <span class="playground-stage-ring playground-stage-ring-c"></span>
+                </div>
+                <div class="playground-stage-center">
+                  <span class="playground-stage-kicker" id="playground-stage-eyebrow"
+                    >When confidence is intact</span
+                  >
+                  <strong id="playground-stage-title">Restraint is the intervention.</strong>
+                  <p id="playground-profile-summary">Decisive, linear path.</p>
+                </div>
+                <div
+                  class="playground-stage-chip playground-stage-chip-math"
+                  id="playground-math-chip"
+                >
+                  Trajectory Z-Score: &lt; 1.5
+                </div>
+                <div
+                  class="playground-stage-chip playground-stage-chip-action"
+                  id="playground-action-chip"
+                >
+                  Protect margin
+                </div>
+                <div
+                  class="playground-stage-chip playground-stage-chip-propensity"
+                  id="playground-propensity-chip"
+                >
+                  Propensity &gt; 0.85
+                </div>
+              </div>
+
+              <div class="playground-stage-meter-panel">
+                <div class="playground-stage-meter-head">
+                  <span>Propensity to convert</span>
+                  <strong>&nbsp;</strong>
+                </div>
+                <div class="playground-stage-meter" aria-hidden="true">
+                  <span class="playground-stage-meter-fill" id="playground-propensity-fill"></span>
+                </div>
+                <p class="playground-stage-meter-note" id="playground-mode-note">
+                  Calibrated mode is using your Blueprint or site-specific baseline.
+                </p>
+                <p class="playground-stage-whisper" id="playground-stage-whisper">
+                  No popup. No coupon. No friction added.
+                </p>
+              </div>
+            </div>
+          </article>
+
+          <div class="playground-disclosure">
+            <div class="playground-disclosure-copy">
+              <span class="playground-disclosure-label">See the model</span>
+              <p>
+                The full matrix, calibration controls, developer checks, payloads, and
+                implementation sketch live just beneath the story.
+              </p>
+            </div>
+            <button
+              class="playground-reveal-toggle"
+              id="playground-reveal-toggle"
+              type="button"
+              aria-expanded="false"
+              aria-controls="playground-reveal"
+            >
+              Reveal decision model
+            </button>
+          </div>
+
+          <div class="playground-reveal" id="playground-reveal" hidden>
+            <div class="playground-mandate">
+              <div class="playground-mandate-copy">
+                <span class="playground-mandate-label">Calibration mandate</span>
+                <p>
+                  The threshold is portable. The calibration is not. A 3-page checkout funnel and a
+                  40-page discovery catalog do not share the same structural probabilities.
+                </p>
+              </div>
+              <div class="playground-mandate-actions">
+                <p class="playground-mandate-note" id="playground-mandate-note">
+                  If you are not using a pre-calculated Blueprint JSON, the engine stays in raw
+                  Markov mode until it observes enough organic traffic. Calibrate the baseline or
+                  inject a Blueprint before you ship hard thresholds.
+                </p>
+                <div class="playground-control-row">
+                  <div class="playground-toggle-group" role="tablist" aria-label="Calibration mode">
+                    <button
+                      class="playground-toggle is-active"
+                      type="button"
+                      data-calibration-mode="calibrated"
+                      aria-selected="true"
+                    >
+                      Calibrated baseline
+                    </button>
+                    <button
+                      class="playground-toggle"
+                      type="button"
+                      data-calibration-mode="raw"
+                      aria-selected="false"
+                    >
+                      Raw Markov fallback
+                    </button>
+                  </div>
+                  <button
+                    class="playground-autoplay"
+                    id="playground-autoplay"
+                    type="button"
+                    aria-pressed="false"
+                  >
+                    Auto-play matrix
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div class="playground-main">
+              <div class="playground-console">
+                <article class="playground-console-card">
+                  <div class="playground-console-head">
+                    <div>
+                      <span class="playground-console-label">Developer checks</span>
+                      <h3>Inspect the same outputs your product reads.</h3>
+                    </div>
+                    <span class="playground-console-status" id="playground-console-status"
+                      >Blueprint active</span
+                    >
+                  </div>
+
+                  <div class="playground-metric-grid">
+                    <div class="playground-metric">
+                      <div class="playground-metric-top">
+                        <span>Trajectory Z</span>
+                        <strong id="playground-metric-trajectory">0.9</strong>
+                      </div>
+                      <div class="playground-metric-bar">
+                        <span id="playground-bar-trajectory"></span>
+                      </div>
+                    </div>
+                    <div class="playground-metric">
+                      <div class="playground-metric-top">
+                        <span>Dwell Z</span>
+                        <strong id="playground-metric-dwell">0.2</strong>
+                      </div>
+                      <div class="playground-metric-bar">
+                        <span id="playground-bar-dwell"></span>
+                      </div>
+                    </div>
+                    <div class="playground-metric">
+                      <div class="playground-metric-top">
+                        <span>Normalized entropy</span>
+                        <strong id="playground-metric-entropy">0.18</strong>
+                      </div>
+                      <div class="playground-metric-bar">
+                        <span id="playground-bar-entropy"></span>
+                      </div>
+                    </div>
+                    <div class="playground-metric">
+                      <div class="playground-metric-top">
+                        <span>Confidence</span>
+                        <strong id="playground-metric-confidence">0.97</strong>
+                      </div>
+                      <div class="playground-metric-bar">
+                        <span id="playground-bar-confidence"></span>
+                      </div>
+                    </div>
+                    <div class="playground-metric">
+                      <div class="playground-metric-top">
+                        <span>Likely next</span>
+                        <strong id="playground-metric-likely-next">0.91</strong>
+                      </div>
+                      <div class="playground-metric-bar">
+                        <span id="playground-bar-likely-next"></span>
+                      </div>
+                    </div>
+                    <div class="playground-metric">
+                      <div class="playground-metric-top">
+                        <span>Away / idle</span>
+                        <strong id="playground-metric-away">0s</strong>
+                      </div>
+                      <div class="playground-metric-bar">
+                        <span id="playground-bar-away"></span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="playground-console-detail-grid">
+                    <div class="playground-detail-card">
+                      <span class="playground-detail-label">SDK event</span>
+                      <strong id="playground-detail-event">(None)</strong>
+                      <p id="playground-detail-check">
+                        Trajectory Z-Score: &lt; 1.5. No anomalies detected.
+                      </p>
+                    </div>
+                    <div class="playground-detail-card">
+                      <span class="playground-detail-label">Why it matters</span>
+                      <strong id="playground-detail-psychology">Buyer confidence is intact</strong>
+                      <p id="playground-detail-why">Decisive, linear path.</p>
+                    </div>
+                  </div>
+
+                  <div class="playground-console-block">
+                    <div class="playground-console-block-head">
+                      <span>Payload preview</span>
+                      <strong id="playground-payload-mode">calibrated</strong>
+                    </div>
+                    <pre class="playground-console-code" id="playground-payload"></pre>
+                  </div>
+
+                  <div class="playground-console-block">
+                    <div class="playground-console-block-head">
+                      <span>Implementation sketch</span>
+                      <strong id="playground-code-label">business rule</strong>
+                    </div>
+                    <pre class="playground-console-code" id="playground-code"></pre>
+                  </div>
+                </article>
+              </div>
+              <article class="playground-matrix-card">
+                <div class="playground-matrix-head">
+                  <span class="playground-console-label">Full matrix</span>
+                  <h3>Every behavioral state, one click away.</h3>
+                  <p>
+                    Once the story lands, this becomes the Rosetta Stone: raw engine output,
+                    psychological meaning, and the Go-To-Market response in one place.
+                  </p>
+                </div>
+
+                <div class="playground-state-grid" id="playground-state-grid">
+                  <button class="playground-state-button is-active" type="button" data-state="low">
+                    <span class="playground-state-button-top">
+                      <span class="playground-state-tone"></span>
+                      <strong>Low</strong>
+                      <span>The Conviction Buyer</span>
+                    </span>
+                    <span class="playground-state-button-body">No anomaly. Let them convert.</span>
+                    <span class="playground-state-button-meta">(None) • Propensity &gt; 0.85</span>
+                  </button>
+                  <button class="playground-state-button" type="button" data-state="mild">
+                    <span class="playground-state-button-top">
+                      <span class="playground-state-tone"></span>
+                      <strong>Mild</strong>
+                      <span>The Window Shopper</span>
+                    </span>
+                    <span class="playground-state-button-body">
+                      Entropy spikes. Nudge, do not discount.
+                    </span>
+                    <span class="playground-state-button-meta">high_entropy • 0.40 - 0.84</span>
+                  </button>
+                  <button class="playground-state-button" type="button" data-state="high">
+                    <span class="playground-state-button-top">
+                      <span class="playground-state-tone"></span>
+                      <strong>High</strong>
+                      <span>Cognitive Friction</span>
+                    </span>
+                    <span class="playground-state-button-body">
+                      Long dwell. Offer margin-saving help.
+                    </span>
+                    <span class="playground-state-button-meta">
+                      dwell_time_anomaly • 0.15 - 0.39
+                    </span>
+                  </button>
+                  <button class="playground-state-button" type="button" data-state="critical">
+                    <span class="playground-state-button-top">
+                      <span class="playground-state-tone"></span>
+                      <strong>Critical</strong>
+                      <span>Anxiety / Frustration</span>
+                    </span>
+                    <span class="playground-state-button-body">
+                      Trajectory breaks. Rescue the session.
+                    </span>
+                    <span class="playground-state-button-meta">trajectory_anomaly • &lt; 0.15</span>
+                  </button>
+                  <button class="playground-state-button" type="button" data-state="compound">
+                    <span class="playground-state-button-top">
+                      <span class="playground-state-tone"></span>
+                      <strong>Compound</strong>
+                      <span>Confirmed Hesitation</span>
+                    </span>
+                    <span class="playground-state-button-body">
+                      Dwell + trajectory. Fire the best offer.
+                    </span>
+                    <span class="playground-state-button-meta">hesitation_detected • &lt; 0.39</span>
+                  </button>
+                  <button class="playground-state-button" type="button" data-state="leaving">
+                    <span class="playground-state-button-top">
+                      <span class="playground-state-tone"></span>
+                      <strong>Leaving</strong>
+                      <span>Exit Intent</span>
+                    </span>
+                    <span class="playground-state-button-body">
+                      Mouse heads for chrome. Personalize retention.
+                    </span>
+                    <span class="playground-state-button-meta">exit_intent • Any</span>
+                  </button>
+                  <button class="playground-state-button" type="button" data-state="ghost">
+                    <span class="playground-state-button-top">
+                      <span class="playground-state-tone"></span>
+                      <strong>Ghost</strong>
+                      <span>Attention Return</span>
+                    </span>
+                    <span class="playground-state-button-body">
+                      They came back. Re-engage with context.
+                    </span>
+                    <span class="playground-state-button-meta">attention_return • Any</span>
+                  </button>
+                  <button class="playground-state-button" type="button" data-state="idle">
+                    <span class="playground-state-button-top">
+                      <span class="playground-state-tone"></span>
+                      <strong>Idle</strong>
+                      <span>Mentally Gone</span>
+                    </span>
+                    <span class="playground-state-button-body">User is AFK. Use a soft nudge.</span>
+                    <span class="playground-state-button-meta">user_idle • Any</span>
+                  </button>
+                  <button class="playground-state-button" type="button" data-state="back">
+                    <span class="playground-state-button-top">
+                      <span class="playground-state-tone"></span>
+                      <strong>Back</strong>
+                      <span>Resumed</span>
+                    </span>
+                    <span class="playground-state-button-body">
+                      Interaction returns. Restore the flow.
+                    </span>
+                    <span class="playground-state-button-meta">user_resumed • Any</span>
+                  </button>
+                </div>
+              </article>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="cheatsheet" class="section reveal">
+        <div class="cheatsheet-shell" data-cheatsheet-root>
+          <div class="section-head section-head-wide cheatsheet-head">
+            <div>
+              <p class="eyebrow">Customer Cheat Sheet</p>
+              <h2>Share the math-to-marketing playbook in one clean handout.</h2>
+            </div>
+            <p class="section-copy">
+              A customer-friendly version of the Behavioral Topography Matrix for sales follow-ups,
+              onboarding packets, email handoffs, WhatsApp shares, and save-as-PDF exports.
+            </p>
+          </div>
+
+          <div class="cheatsheet-toolbar">
+            <div class="cheatsheet-actions">
+              <a
+                class="btn btn-primary"
+                href="./cheatsheet.html"
+                target="_blank"
+                rel="noopener noreferrer"
+                data-cheatsheet-page-link
+                >Open printable sheet</a
+              >
+              <button class="btn btn-secondary" type="button" data-cheatsheet-print>
+                Print / save PDF
+              </button>
+              <a class="btn btn-secondary" href="#" data-cheatsheet-email>Email it</a>
+              <a
+                class="btn btn-secondary"
+                href="#"
+                target="_blank"
+                rel="noopener noreferrer"
+                data-cheatsheet-whatsapp
+                >WhatsApp</a
+              >
+              <a
+                class="btn btn-secondary"
+                href="./marketing-cheatsheet.md"
+                target="_blank"
+                rel="noopener noreferrer"
+                data-cheatsheet-markdown-link
+                >Open markdown</a
+              >
+            </div>
+            <p class="cheatsheet-toolbar-note">
+              Same model, lighter packaging: ready to share with growth, CX, or a customer in one
+              click.
+            </p>
+          </div>
+
+          <div class="cheatsheet-mandate">
+            <span class="cheatsheet-mandate-label">Calibration mandate</span>
+            <h3 data-cheatsheet-mandate-title></h3>
+            <p data-cheatsheet-mandate-summary></p>
+            <p data-cheatsheet-mandate-detail></p>
+          </div>
+
+          <div class="cheatsheet-grid" data-cheatsheet-grid></div>
         </div>
       </section>
 

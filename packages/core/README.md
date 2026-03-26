@@ -748,8 +748,42 @@ class CapacitorStorageAdapter implements CoreInterfaces.IPersistenceAdapter {
 }
 ```
 
-All four interfaces, plus `EntropyResult`, `TrajectoryResult`, and
-`IntentEngineConfig`, are exported under the `CoreInterfaces` namespace.
+All four interfaces, plus `EntropyResult`, `TrajectoryResult`,
+`IntentEngineConfig`, `EnginePolicy`, and `PolicyTrackContext`, are exported
+under the `CoreInterfaces` namespace.
+
+To build a custom plugin for `IntentManager`, implement `CoreInterfaces.EnginePolicy` and pass it via `IntentManagerConfig.plugins`:
+
+```ts
+import type { CoreInterfaces } from '@passiveintent/core';
+import { IntentManager } from '@passiveintent/core';
+
+class PremiumConversionPolicy implements CoreInterfaces.EnginePolicy {
+  onTrackContext(ctx: CoreInterfaces.PolicyTrackContext): void {
+    // ctx.state — the route just tracked
+    // ctx.from  — the previous route (null on first track)
+    // ctx.now   — current monotonic timestamp (ms)
+    if (ctx.state === '/checkout' && ctx.from === '/pricing') {
+      myPremiumAnalytics.record('pricing_to_checkout', ctx.now);
+    }
+  }
+
+  onAfterEvaluation(from: string, to: string): void {
+    myPremiumAnalytics.flush(from, to);
+  }
+
+  destroy(): void {
+    myPremiumAnalytics.teardown();
+  }
+}
+
+const intent = new IntentManager({
+  storageKey: 'my-app',
+  plugins: [new PremiumConversionPolicy()],
+});
+```
+
+Each plugin hook is isolated in a `try/catch` — a throwing plugin forwards to `onError` and never interrupts the `track()` pipeline.
 
 ---
 

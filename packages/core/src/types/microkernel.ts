@@ -16,6 +16,8 @@
  * `localStorage`.  All I/O flows through these injected adapters.
  */
 
+export type { EnginePolicy, PolicyTrackContext } from '../engine/policies/engine-policy.js';
+
 /* ------------------------------------------------------------------ */
 /*  IInputAdapter                                                      */
 /* ------------------------------------------------------------------ */

@@ -176,5 +176,7 @@ export type { BrowserConfig } from './factory.js';
  *   - `IntentEngineConfig`  — full constructor config shape
  *   - `EntropyResult`       — return type of `IStateModel.evaluateEntropy`
  *   - `TrajectoryResult`    — return type of `IStateModel.evaluateTrajectory`
+ *   - `EnginePolicy`        — implement to create a custom IntentManager plugin
+ *   - `PolicyTrackContext`  — read-only context slice passed to `onTrackContext`
  */
 export type * as CoreInterfaces from './types/microkernel.js';

@@ -61,7 +61,7 @@ PassiveIntent is developed and maintained by a solo founder. The following terms
 
 ### Business Hours
 
-All support is provided asynchronously by the core engineering team. Support hours are **Monday through Friday, 10:00 AM to 6:00 PM Indian Standard Time (IST)**, excluding Indian public holidays. We do not currently offer 24/7 coverage, weekend support, or guaranteed on-call SLAs.
+All support is provided asynchronously by the core engineering team. Support hours are **Monday through Friday, 10:00 AM to 6:00 PM Indian Standard Time (IST)**, excluding Indian public holidays. We do not currently offer 24/7 coverage, weekend support, or guaranteed on-call SLAs for Startup or Growth tiers. Enterprise customers may purchase weekend/24-7 coverage upon request at additional cost.
 
 ### Best-Effort Disclaimer
 

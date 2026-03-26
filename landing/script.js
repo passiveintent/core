@@ -1349,7 +1349,7 @@ function setupBehavioralPlayground() {
     modeButtons.forEach((button) => {
       const active = button.dataset.calibrationMode === mode;
       button.classList.toggle('is-active', active);
-      button.setAttribute('aria-selected', active ? 'true' : 'false');
+      button.setAttribute('aria-pressed', active ? 'true' : 'false');
     });
 
     elements.mandateNote.textContent = modeMeta.mandateNote;
@@ -1516,7 +1516,9 @@ function setupMarketingCheatSheet() {
     });
 
     root.querySelectorAll('[data-cheatsheet-markdown-link]').forEach((element) => {
-      element.setAttribute('href', localMarkdownUrl);
+      if (!element.getAttribute('href').endsWith('.html')) {
+        element.setAttribute('href', localMarkdownUrl);
+      }
     });
 
     root.querySelectorAll('[data-cheatsheet-email]').forEach((element) => {

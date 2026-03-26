@@ -1274,7 +1274,8 @@ select {
   font-size: 0.82rem;
   line-height: 1.6;
   white-space: pre-wrap;
-  word-break: break-word;
+  overflow-wrap: anywhere;
+  word-break: normal;
 }
 
 .playground-state-grid {
@@ -1332,7 +1333,6 @@ select {
 .playground-state-button-body,
 .playground-state-button-meta {
   overflow-wrap: anywhere;
-  word-break: break-word;
 }
 
 .playground-state-tone {
@@ -1952,7 +1952,6 @@ select {
   font-size: 0.96rem;
   line-height: 1.5;
   overflow-wrap: anywhere;
-  word-break: break-word;
 }
 
 .cheatsheet-card-list dd strong {

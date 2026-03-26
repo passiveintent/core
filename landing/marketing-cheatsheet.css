@@ -41,7 +41,7 @@
   background: var(--surface-dark);
   color: #e8eaf0;
   white-space: nowrap;
-  font-family: 'Manrope', sans-serif;
+  font-family: Manrope, sans-serif;
   font-size: 0.78rem;
   letter-spacing: 0.01em;
 }

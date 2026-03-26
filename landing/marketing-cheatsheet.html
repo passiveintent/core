@@ -18,96 +18,9 @@
       rel="stylesheet"
     />
     <link rel="stylesheet" href="./styles.css" />
-    <style>
-      /* Keep header opaque on this page — no hero behind it */
-      .site-header .header-inner {
-        background: rgba(255, 255, 255, 0.92);
-        border-color: rgba(19, 22, 31, 0.08);
-        box-shadow: 0 10px 34px rgba(17, 20, 29, 0.08);
-        -webkit-backdrop-filter: blur(18px);
-        backdrop-filter: blur(18px);
-      }
-
-      .cs-table-section {
-        max-width: 1200px;
-        margin: 0 auto;
-        padding: 0 24px 96px;
-      }
-
-      .cs-table-section h2 {
-        font-size: 1.18rem;
-        font-weight: 700;
-        margin: 0 0 1rem;
-        letter-spacing: -0.02em;
-      }
-
-      .cs-table-wrap {
-        overflow-x: auto;
-        border-radius: var(--radius-md);
-        border: 1px solid var(--line-strong);
-        background: rgba(255, 255, 255, 0.74);
-        box-shadow: var(--shadow-card);
-      }
-
-      .cs-table {
-        width: 100%;
-        border-collapse: collapse;
-        font-size: 0.82rem;
-        min-width: 900px;
-      }
-
-      .cs-table th {
-        text-align: left;
-        font-weight: 700;
-        padding: 0.7rem 1rem;
-        background: var(--surface-dark);
-        color: #e8eaf0;
-        white-space: nowrap;
-        font-family: 'Manrope', sans-serif;
-        font-size: 0.78rem;
-        letter-spacing: 0.01em;
-      }
-
-      .cs-table th:first-child {
-        border-radius: var(--radius-md) 0 0 0;
-      }
-
-      .cs-table th:last-child {
-        border-radius: 0 var(--radius-md) 0 0;
-      }
-
-      .cs-table td {
-        padding: 0.7rem 1rem;
-        border-bottom: 1px solid var(--line);
-        vertical-align: top;
-        color: var(--muted);
-        line-height: 1.5;
-      }
-
-      .cs-table tbody tr:last-child td {
-        border-bottom: none;
-      }
-
-      .cs-table tbody tr:hover td {
-        background: rgba(21, 111, 247, 0.03);
-      }
-
-      .cs-table td strong {
-        color: var(--text);
-        font-weight: 700;
-      }
-
-      .cs-table td code {
-        font-family: 'IBM Plex Mono', monospace;
-        font-size: 0.78rem;
-        background: var(--accent-soft);
-        color: var(--accent-strong);
-        padding: 0.1em 0.4em;
-        border-radius: 6px;
-      }
-    </style>
+    <link rel="stylesheet" href="./marketing-cheatsheet.css" />
   </head>
-  <body>
+  <body class="cheatsheet-page">
     <div class="page-orb page-orb-a"></div>
     <div class="page-orb page-orb-b"></div>
 

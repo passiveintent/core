@@ -19,121 +19,91 @@
     />
     <link rel="stylesheet" href="./styles.css" />
     <style>
-      .md-shell {
-        max-width: 960px;
+      /* Keep header opaque on this page — no hero behind it */
+      .site-header .header-inner {
+        background: rgba(255, 255, 255, 0.92);
+        border-color: rgba(19, 22, 31, 0.08);
+        box-shadow: 0 10px 34px rgba(17, 20, 29, 0.08);
+        -webkit-backdrop-filter: blur(18px);
+        backdrop-filter: blur(18px);
+      }
+
+      .cs-table-section {
+        max-width: 1200px;
         margin: 0 auto;
-        padding: 48px 24px 96px;
+        padding: 0 24px 96px;
       }
 
-      .md-body h1 {
-        font-size: 2rem;
-        font-weight: 800;
-        line-height: 1.2;
-        margin: 0 0 0.5rem;
-        letter-spacing: -0.04em;
-      }
-
-      .md-body h2 {
-        font-size: 1.25rem;
+      .cs-table-section h2 {
+        font-size: 1.18rem;
         font-weight: 700;
-        margin: 2.5rem 0 0.75rem;
-        padding-bottom: 0.4rem;
-        border-bottom: 1px solid var(--line-strong);
+        margin: 0 0 1rem;
+        letter-spacing: -0.02em;
       }
 
-      .md-body h3 {
-        font-size: 1rem;
-        font-weight: 700;
-        margin: 1.75rem 0 0.5rem;
-        color: var(--muted-strong);
+      .cs-table-wrap {
+        overflow-x: auto;
+        border-radius: var(--radius-md);
+        border: 1px solid var(--line-strong);
+        background: rgba(255, 255, 255, 0.74);
+        box-shadow: var(--shadow-card);
       }
 
-      .md-body p {
-        margin: 0.75rem 0;
-        color: var(--muted);
-      }
-
-      .md-body ul,
-      .md-body ol {
-        padding-left: 1.4rem;
-        margin: 0.5rem 0 1rem;
-        color: var(--muted);
-      }
-
-      .md-body li {
-        margin-bottom: 0.35rem;
-      }
-
-      .md-body code {
-        font-family: 'IBM Plex Mono', monospace;
+      .cs-table {
+        width: 100%;
+        border-collapse: collapse;
         font-size: 0.82rem;
+        min-width: 900px;
+      }
+
+      .cs-table th {
+        text-align: left;
+        font-weight: 700;
+        padding: 0.7rem 1rem;
+        background: var(--surface-dark);
+        color: #e8eaf0;
+        white-space: nowrap;
+        font-family: 'Manrope', sans-serif;
+        font-size: 0.78rem;
+        letter-spacing: 0.01em;
+      }
+
+      .cs-table th:first-child {
+        border-radius: var(--radius-md) 0 0 0;
+      }
+
+      .cs-table th:last-child {
+        border-radius: 0 var(--radius-md) 0 0;
+      }
+
+      .cs-table td {
+        padding: 0.7rem 1rem;
+        border-bottom: 1px solid var(--line);
+        vertical-align: top;
+        color: var(--muted);
+        line-height: 1.5;
+      }
+
+      .cs-table tbody tr:last-child td {
+        border-bottom: none;
+      }
+
+      .cs-table tbody tr:hover td {
+        background: rgba(21, 111, 247, 0.03);
+      }
+
+      .cs-table td strong {
+        color: var(--text);
+        font-weight: 700;
+      }
+
+      .cs-table td code {
+        font-family: 'IBM Plex Mono', monospace;
+        font-size: 0.78rem;
         background: var(--accent-soft);
         color: var(--accent-strong);
         padding: 0.1em 0.4em;
         border-radius: 6px;
-      }
-
-      .md-body blockquote {
-        border-left: 3px solid var(--accent);
-        margin: 1rem 0;
-        padding: 0.5rem 1rem;
-        background: var(--accent-soft);
-        border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
-        color: var(--muted-strong);
-      }
-
-      .md-body blockquote p {
-        margin: 0;
-      }
-
-      .md-body hr {
-        border: none;
-        border-top: 1px solid var(--line-strong);
-        margin: 2rem 0;
-      }
-
-      .md-body strong {
-        font-weight: 700;
-        color: var(--text);
-      }
-
-      /* Table */
-      .table-wrap {
-        overflow-x: auto;
-        margin: 1rem 0 1.5rem;
-        border-radius: var(--radius-md);
-        border: 1px solid var(--line-strong);
-      }
-
-      .md-body table {
-        width: 100%;
-        border-collapse: collapse;
-        font-size: 0.82rem;
-        min-width: 860px;
-      }
-
-      .md-body th {
-        text-align: left;
-        font-weight: 700;
-        padding: 0.65rem 0.9rem;
-        background: var(--surface-dark);
-        color: #e8eaf0;
-        white-space: nowrap;
-      }
-
-      .md-body td {
-        padding: 0.6rem 0.9rem;
-        border-bottom: 1px solid var(--line);
-        vertical-align: top;
-        color: var(--muted);
-      }
-
-      .md-body tr:last-child td {
-        border-bottom: none;
-      }
-
-      .md-body tr:hover td {
-        background: rgba(21, 111, 247, 0.03);
       }
     </style>
   </head>
@@ -159,29 +129,50 @@
       </div>
     </header>
 
-    <main class="md-shell">
-      <div class="md-body">
-        <h1>PassiveIntent Marketing Cheat Sheet</h1>
+    <main>
+      <!-- Hero + intro card — same pattern as privacy/terms -->
+      <div class="legal-main">
+        <section class="legal-hero">
+          <nav class="legal-back-nav">
+            <a href="./index.html">← Back to Home</a>
+            <a href="./index.html#pricing">See pricing →</a>
+          </nav>
+          <p class="eyebrow">Growth &amp; CX</p>
+          <h1>Marketing Cheat Sheet</h1>
+          <p class="legal-summary">
+            Intent signal reference for growth, CX, and sales teams. Map behavioral signals to the
+            right intervention at the right moment.
+          </p>
+          <div class="legal-meta">
+            <span class="legal-meta-item">Behavioral Topography Matrix</span>
+            <span class="legal-meta-item">9 intent states</span>
+            <span class="legal-meta-item">PassiveIntent Core</span>
+          </div>
+        </section>
 
-        <h2>Calibration Mandate</h2>
-        <p>
-          Important note on propensity thresholds: the Propensity to Convert values are not
-          universal constants. A 3-page checkout funnel and a 40-page discovery catalog have
-          entirely different structural probabilities.
-        </p>
-        <p>
-          The thresholds below assume a calibrated baseline. If you are not using a pre-calculated
-          Blueprint JSON, the engine defaults to raw Markov probabilities until it observes enough
-          organic traffic.
-        </p>
-        <p>
-          Always run <code>PassiveIntent.calibrate()</code> or inject a Blueprint for immediate
-          accuracy.
-        </p>
+        <article class="legal-page">
+          <h2>Calibration Mandate</h2>
+          <p>
+            The Propensity to Convert values below are not universal constants. A 3-page checkout
+            funnel and a 40-page discovery catalog have entirely different structural probabilities.
+          </p>
+          <p>
+            The thresholds below assume a calibrated baseline. If you are not using a pre-calculated
+            Blueprint JSON, the engine defaults to raw Markov probabilities until it observes enough
+            organic traffic.
+          </p>
+          <p>
+            Always run <code>PassiveIntent.calibrate()</code> or inject a Blueprint for immediate
+            accuracy.
+          </p>
+        </article>
+      </div>
 
+      <!-- Full-width table outside the narrow legal-page card -->
+      <div class="cs-table-section">
         <h2>Behavioral Topography Matrix</h2>
-        <div class="table-wrap">
-          <table>
+        <div class="cs-table-wrap">
+          <table class="cs-table">
             <thead>
               <tr>
                 <th>State / Intensity</th>
@@ -205,27 +196,17 @@
                 <td><strong>Mild</strong></td>
                 <td>The Window Shopper. Browsing, exploring options.</td>
                 <td><code>high_entropy</code></td>
-                <td>
-                  Normalized Entropy: &gt; 0.75. Check <code>payload.normalizedEntropy</code>.
-                </td>
+                <td>Normalized Entropy: &gt; 0.75. Check <code>payload.normalizedEntropy</code>.</td>
                 <td>0.40 – 0.84</td>
-                <td>
-                  Nudge. Do not discount yet. Show social proof such as "15 people bought this
-                  today."
-                </td>
+                <td>Nudge. Do not discount yet. Show social proof such as "15 people bought this today."</td>
               </tr>
               <tr>
                 <td><strong>High</strong></td>
                 <td>Cognitive Friction. Stuck reading fine print.</td>
                 <td><code>dwell_time_anomaly</code></td>
-                <td>
-                  Dwell Z-Score: &gt; 2.5. Check <code>payload.zScore &gt; 0</code> so it is slow,
-                  not fast.
-                </td>
+                <td>Dwell Z-Score: &gt; 2.5. Check <code>payload.zScore &gt; 0</code> so it is slow, not fast.</td>
                 <td>0.15 – 0.39</td>
-                <td>
-                  Incentivize. Trigger the margin-saving intervention. Fire a "Free Shipping" popup.
-                </td>
+                <td>Incentivize. Trigger the margin-saving intervention. Fire a "Free Shipping" popup.</td>
               </tr>
               <tr>
                 <td><strong>Critical</strong></td>
@@ -241,24 +222,15 @@
                 <td><code>hesitation_detected</code></td>
                 <td>Correlation: trajectory and dwell triggered within 30s of each other.</td>
                 <td>&lt; 0.39</td>
-                <td>
-                  The Kill Shot. Highest-confidence intervention. Fire your absolute best discount
-                  offer.
-                </td>
+                <td>The Kill Shot. Highest-confidence intervention. Fire your absolute best discount offer.</td>
               </tr>
               <tr>
                 <td><strong>Leaving</strong></td>
                 <td>Exit Intent. Mouse moving to close tab.</td>
                 <td><code>exit_intent</code></td>
-                <td>
-                  Kinematics + math: mouseleave toward chrome plus
-                  <code>likelyNext &gt;= 0.4</code>.
-                </td>
+                <td>Kinematics + math: mouseleave toward chrome plus <code>likelyNext &gt;= 0.4</code>.</td>
                 <td>Any</td>
-                <td>
-                  Last Chance. Trigger a targeted retention overlay using
-                  <code>payload.likelyNext</code> to personalize the message.
-                </td>
+                <td>Last Chance. Trigger a targeted retention overlay using <code>payload.likelyNext</code> to personalize the message.</td>
               </tr>
               <tr>
                 <td><strong>Ghost</strong></td>
@@ -274,10 +246,7 @@
                 <td><code>user_idle</code></td>
                 <td>Inactivity: &gt; 120s. Check <code>payload.idleMs</code>.</td>
                 <td>Any</td>
-                <td>
-                  Reactivate. Pulse the tab title or trigger a soft visual nudge to draw the eye
-                  back.
-                </td>
+                <td>Reactivate. Pulse the tab title or trigger a soft visual nudge to draw the eye back.</td>
               </tr>
               <tr>
                 <td><strong>Back</strong></td>

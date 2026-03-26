@@ -8,7 +8,7 @@
 /**
  * Remix clientLoader utilities for PassiveIntent.
  *
- * Remix route loaders run on the server — passive intent tracking is
+ * Remix route loaders run on the server — PassiveIntent tracking is
  * purely client-side. These helpers let you opt individual routes into
  * client-only data fetching so intent signals never leak to the server.
  */

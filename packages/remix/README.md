@@ -30,7 +30,7 @@ Built on top of [`@passiveintent/react`](../react) with SSR-safe dual entry poin
 
 ## Why a Remix adapter?
 
-Remix loaders and actions run on the server. Passive intent tracking is inherently a client-side
+Remix loaders and actions run on the server. PassiveIntent tracking is inherently a client-side
 concern — it models the user's in-browser behaviour (scroll depth, exit intent, idle time, Markov
 state transitions). Sending tracking signals to the server adds latency, creates a GDPR/CCPA
 surface, and defeats the purpose of privacy-first design.

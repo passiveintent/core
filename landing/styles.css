@@ -4423,10 +4423,6 @@ select {
   flex-direction: column;
 }
 
-.price-card .btn {
-  margin-top: auto;
-}
-
 .price {
   margin-top: 10px;
   font-size: 2.35rem;
@@ -4446,7 +4442,7 @@ select {
 
 .price-card .btn {
   width: 100%;
-  margin-top: 18px;
+  margin-top: auto;
 }
 
 .price-card-featured {

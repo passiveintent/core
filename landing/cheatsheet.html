@@ -87,9 +87,12 @@
         ]
       }
     </script>
-    <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
-    <link rel="apple-touch-icon" href="./apple-touch-icon.png" />
-    <link rel="manifest" href="./site.webmanifest" />
+    <link rel="icon" type="image/png" href="/favicon-96x96.png" sizes="96x96" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="shortcut icon" href="/favicon.ico" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+    <meta name="apple-mobile-web-app-title" content="PassiveIntent" />
+    <link rel="manifest" href="/site.webmanifest" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -132,7 +135,7 @@
             >
             <a
               class="btn btn-secondary"
-              href="./marketing-cheatsheet.md"
+              href="./marketing-cheatsheet.html"
               target="_blank"
               rel="noopener noreferrer"
               data-cheatsheet-markdown-link
@@ -145,22 +148,20 @@
         <div class="cheatsheet-page-note">
           <span>
             Save as PDF for customer packets, or share the link directly through email and WhatsApp.
-            The content matches the marketing markdown reference.
           </span>
         </div>
 
         <div class="cheatsheet-mandate">
-          <span class="cheatsheet-mandate-label">Calibration mandate</span>
+          <span class="cheatsheet-mandate-label">Important note on thresholds</span>
           <h3 data-cheatsheet-mandate-title>Propensity thresholds are not universal constants.</h3>
           <p data-cheatsheet-mandate-summary>
             A 3-page checkout funnel and a 40-page discovery catalog have entirely different
             structural probabilities.
           </p>
           <p data-cheatsheet-mandate-detail>
-            The thresholds below assume a calibrated baseline. If you are not using a pre-calculated
-            Blueprint JSON, the engine defaults to raw Markov probabilities until it observes enough
-            organic traffic. Always run PassiveIntent.calibrate() or inject a Blueprint for
-            immediate accuracy.
+            The thresholds below assume a calibrated baseline tuned to your site's traffic patterns.
+            For best accuracy, ensure your integration includes a calibration step before you apply
+            hard intervention rules in production.
           </p>
         </div>
 
@@ -179,12 +180,12 @@
             </div>
             <dl class="cheatsheet-card-list">
               <div>
-                <dt>SDK event</dt>
+                <dt>When it triggers</dt>
                 <dd>(None)</dd>
               </div>
               <div>
-                <dt>Engine math + developer check</dt>
-                <dd>Trajectory Z-Score: &lt; 1.5. No anomalies detected.</dd>
+                <dt>What the engine detected</dt>
+                <dd>Session path is direct and on-track. No hesitation signals present.</dd>
               </div>
               <div>
                 <dt>Propensity</dt>
@@ -213,12 +214,15 @@
             </div>
             <dl class="cheatsheet-card-list">
               <div>
-                <dt>SDK event</dt>
+                <dt>When it triggers</dt>
                 <dd>high_entropy</dd>
               </div>
               <div>
-                <dt>Engine math + developer check</dt>
-                <dd>Normalized Entropy: &gt; 0.75. Check payload.normalizedEntropy.</dd>
+                <dt>What the engine detected</dt>
+                <dd>
+                  Navigation entropy is elevated — the visitor is exploring without a clear
+                  destination.
+                </dd>
               </div>
               <div>
                 <dt>Propensity</dt>
@@ -247,14 +251,14 @@
             </div>
             <dl class="cheatsheet-card-list">
               <div>
-                <dt>SDK event</dt>
+                <dt>When it triggers</dt>
                 <dd>dwell_time_anomaly</dd>
               </div>
               <div>
-                <dt>Engine math + developer check</dt>
+                <dt>What the engine detected</dt>
                 <dd>
-                  Dwell Z-Score: &gt; 2.5. Check payload.zScore &gt; 0 to verify it is slow, not
-                  fast.
+                  Unusually long time spent on page — the visitor is stuck, not just reading
+                  carefully.
                 </dd>
               </div>
               <div>
@@ -284,12 +288,15 @@
             </div>
             <dl class="cheatsheet-card-list">
               <div>
-                <dt>SDK event</dt>
+                <dt>When it triggers</dt>
                 <dd>trajectory_anomaly</dd>
               </div>
               <div>
-                <dt>Engine math + developer check</dt>
-                <dd>Trajectory Z-Score: &gt; 3.5. Check payload.confidence.</dd>
+                <dt>What the engine detected</dt>
+                <dd>
+                  Session path has broken down — the visitor is looping, backtracking, or moving
+                  erratically.
+                </dd>
               </div>
               <div>
                 <dt>Propensity</dt>
@@ -317,12 +324,15 @@
             </div>
             <dl class="cheatsheet-card-list">
               <div>
-                <dt>SDK event</dt>
+                <dt>When it triggers</dt>
                 <dd>hesitation_detected</dd>
               </div>
               <div>
-                <dt>Engine math + developer check</dt>
-                <dd>Correlation: trajectory and dwell triggered within 30s of each other.</dd>
+                <dt>What the engine detected</dt>
+                <dd>
+                  Both erratic navigation and abnormal dwell time detected simultaneously — the
+                  strongest hesitation signal.
+                </dd>
               </div>
               <div>
                 <dt>Propensity</dt>
@@ -351,12 +361,15 @@
             </div>
             <dl class="cheatsheet-card-list">
               <div>
-                <dt>SDK event</dt>
+                <dt>When it triggers</dt>
                 <dd>exit_intent</dd>
               </div>
               <div>
-                <dt>Engine math + developer check</dt>
-                <dd>Kinematics + math: mouseleave toward chrome plus likelyNext &gt;= 0.4.</dd>
+                <dt>What the engine detected</dt>
+                <dd>
+                  Mouse trajectory heading toward the browser chrome — visitor is about to close or
+                  navigate away.
+                </dd>
               </div>
               <div>
                 <dt>Propensity</dt>
@@ -365,8 +378,8 @@
               <div>
                 <dt>Business action</dt>
                 <dd>
-                  <strong>Last Chance.</strong> Trigger a targeted retention overlay using
-                  payload.likelyNext to personalize the message.
+                  <strong>Last Chance.</strong> Trigger a targeted retention overlay personalized to
+                  where the visitor was most likely headed next.
                 </dd>
               </div>
             </dl>
@@ -385,12 +398,12 @@
             </div>
             <dl class="cheatsheet-card-list">
               <div>
-                <dt>SDK event</dt>
+                <dt>When it triggers</dt>
                 <dd>attention_return</dd>
               </div>
               <div>
-                <dt>Engine math + developer check</dt>
-                <dd>Time away: &gt;= 15s. Check payload.hiddenDuration.</dd>
+                <dt>What the engine detected</dt>
+                <dd>Tab was hidden then returned to — visitor stepped away and came back.</dd>
               </div>
               <div>
                 <dt>Propensity</dt>
@@ -419,12 +432,15 @@
             </div>
             <dl class="cheatsheet-card-list">
               <div>
-                <dt>SDK event</dt>
+                <dt>When it triggers</dt>
                 <dd>user_idle</dd>
               </div>
               <div>
-                <dt>Engine math + developer check</dt>
-                <dd>Inactivity: &gt; 120s. Check payload.idleMs.</dd>
+                <dt>What the engine detected</dt>
+                <dd>
+                  No mouse or keyboard activity for over 2 minutes — visitor has mentally
+                  disengaged.
+                </dd>
               </div>
               <div>
                 <dt>Propensity</dt>
@@ -453,12 +469,12 @@
             </div>
             <dl class="cheatsheet-card-list">
               <div>
-                <dt>SDK event</dt>
+                <dt>When it triggers</dt>
                 <dd>user_resumed</dd>
               </div>
               <div>
-                <dt>Engine math + developer check</dt>
-                <dd>Return from idle: event fires with total payload.idleMs.</dd>
+                <dt>What the engine detected</dt>
+                <dd>Visitor has re-engaged after an idle period — interaction has resumed.</dd>
               </div>
               <div>
                 <dt>Propensity</dt>

@@ -2,6 +2,7 @@
 <html lang="en">
   <head>
     <meta name="google-site-verification" content="0MEGurumf_77I0x8HPZLvA5_kgyEQX_efF7e9gf6nIc" />
+    <meta name="msvalidate.01" content="75ab4af7259743d79d4fd9fb4dc2e960" />
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>PassiveIntent | Privacy-First Intent SDK</title>
@@ -43,9 +44,12 @@
     <meta name="twitter:image:alt" content="PassiveIntent - The Privacy-First User Intent Engine" />
     <meta name="theme-color" content="#f6f3ee" />
     <link rel="sitemap" type="application/xml" href="/sitemap.xml" />
-    <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
-    <link rel="apple-touch-icon" href="./apple-touch-icon.png" />
-    <link rel="manifest" href="./site.webmanifest" />
+    <link rel="icon" type="image/png" href="/favicon-96x96.png" sizes="96x96" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="shortcut icon" href="/favicon.ico" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+    <meta name="apple-mobile-web-app-title" content="PassiveIntent" />
+    <link rel="manifest" href="/site.webmanifest" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -839,8 +843,8 @@
                 product decision your buyer can feel immediately.
               </p>
               <p class="playground-head-note">
-                Lead with the psychological state. Reveal the model only when the team wants to look
-                under the glass.
+                Expand the decision model below to inspect the raw engine output your product code
+                will read.
               </p>
             </div>
           </div>
@@ -1688,15 +1692,15 @@
         <div class="demo-shell">
           <div class="demo-copy">
             <p class="eyebrow eyebrow-demo">Demo labs</p>
-            <h2>Open the lab in its own tab. Keep the landing page clean.</h2>
+            <h2>Try the live demo in your own browser.</h2>
             <p class="section-copy section-copy-demo">
-              For hands-on evaluation, send people straight to StackBlitz. The landing page stays
-              fast and focused, and the lab gets the full browser window it needs.
+              Each lab opens in StackBlitz with the full window so you can interact with the signals
+              without any setup.
             </p>
             <ul class="demo-points">
-              <li>Choose React or Vanilla JS.</li>
-              <li>Open the full lab in StackBlitz as an embedded preview.</li>
-              <li>Use the landing page for the story and the lab for the proof.</li>
+              <li>Choose React or Vanilla JS — both open in a dedicated lab environment.</li>
+              <li>Interact with real intent signals in a full-window sandbox.</li>
+              <li>No account, no install, no configuration required.</li>
             </ul>
             <div class="demo-meta">
               <span class="live-pill">&#9679; Opens in new tab</span>
@@ -2122,54 +2126,78 @@
           <p class="eyebrow">Articles</p>
           <h2>Writing, launch notes, and technical explainers live here.</h2>
           <p class="section-copy">
-            Long-form writing belongs below the core product story, where it can deepen trust
-            without interrupting the main path.
+            Deeper reading for teams evaluating the model, integration patterns, and product
+            direction.
           </p>
         </div>
         <div class="article-grid" id="articles-grid">
           <article class="article-card article-card-row">
             <div>
-              <span class="article-source">Medium</span>
-              <h3>Why zero-egress intent detection belongs in the browser</h3>
+              <span class="article-source">GitHub</span>
+              <h3>Calibration guide</h3>
               <p>
-                A category piece on why privacy-first intent modeling should happen close to the
-                session.
+                How to tune PassiveIntent to your traffic patterns for accurate propensity scoring
+                from day one.
               </p>
             </div>
-            <span class="article-link article-link-disabled">Medium post coming soon</span>
+            <a
+              class="article-link"
+              href="https://github.com/passiveintent/core/blob/main/CALIBRATION_GUIDE.md"
+              target="_blank"
+              rel="noopener noreferrer"
+              >Read the guide</a
+            >
           </article>
           <article class="article-card article-card-row">
             <div>
-              <span class="article-source">dev.to</span>
-              <h3>Implementation notes from the guided lab</h3>
+              <span class="article-source">GitHub</span>
+              <h3>Core package documentation</h3>
               <p>
-                A developer walkthrough of the core package, signal model, and intervention patterns
-                shown in the lab.
+                Installation, API reference, event types, and integration examples for the
+                PassiveIntent Core library.
               </p>
             </div>
-            <span class="article-link article-link-disabled">dev.to post coming soon</span>
+            <a
+              class="article-link"
+              href="https://github.com/passiveintent/core/tree/main/packages/core"
+              target="_blank"
+              rel="noopener noreferrer"
+              >Read the docs</a
+            >
           </article>
           <article class="article-card article-card-row">
             <div>
-              <span class="article-source">Substack</span>
-              <h3>A note on product direction</h3>
+              <span class="article-source">GitHub</span>
+              <h3>React demo source</h3>
               <p>
-                Product thinking, launch context, and occasional notes on where the platform is
-                heading.
+                The full source for the React lab — useful for teams adapting the integration
+                patterns to their own stack.
               </p>
             </div>
-            <span class="article-link article-link-disabled">Substack post coming soon</span>
+            <a
+              class="article-link"
+              href="https://github.com/passiveintent/core/tree/main/demo-react"
+              target="_blank"
+              rel="noopener noreferrer"
+              >View source</a
+            >
           </article>
           <article class="article-card article-card-row">
             <div>
-              <span class="article-source">Hacker News</span>
-              <h3>Launch thread or technical discussion</h3>
+              <span class="article-source">GitHub</span>
+              <h3>Vanilla JS demo source</h3>
               <p>
-                A Show HN, launch post, or public technical thread worth sending curious visitors
-                to.
+                The plain-browser implementation of the lab for teams evaluating PassiveIntent
+                without React.
               </p>
             </div>
-            <span class="article-link article-link-disabled">HN thread coming soon</span>
+            <a
+              class="article-link"
+              href="https://github.com/passiveintent/core/tree/main/demo"
+              target="_blank"
+              rel="noopener noreferrer"
+              >View source</a
+            >
           </article>
         </div>
       </section>

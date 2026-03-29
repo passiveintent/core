@@ -272,7 +272,7 @@ describe('Amazon Clone - Intent Engine Integration', () => {
 
       // Verify localStorage was written
       cy.window().then((win) => {
-        const payload = win.localStorage.getItem('amazon-intent-demo');
+        const payload = win.localStorage.getItem('passiveintent:amazon-intent-demo');
         expect(payload).to.be.a('string');
 
         const parsed = JSON.parse(payload as string);

@@ -252,6 +252,12 @@ export interface IntentEngineConfig {
    */
   storageKey?: string;
   /**
+   * Namespace prefix prepended to every key passed to `IPersistenceAdapter`.
+   * Isolates storage between micro-frontend instances on the same origin.
+   * Default: `'passiveintent:'`.
+   */
+  namespace?: string;
+  /**
    * Optional custom state normalizer applied **after** the built-in
    * `normalizeRouteState()`.  Returning an empty string silently drops
    * the `track()` call.

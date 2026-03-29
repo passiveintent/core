@@ -7,6 +7,35 @@ This package adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ---
 
+## [1.0.2] — 2026-03-29
+
+### Fixed
+
+- **`useRoutePassiveIntent` — stale `track` closure removed** — the `useEffect` previously suppressed `react-hooks/exhaustive-deps` to avoid listing `intent` as a dependency, risking a stale closure if the context object changed identity. Replaced with a `useRef`-based stable callback pattern: `trackRef.current` is updated to `intent.track` on every render, and the effect calls `trackRef.current(pathname)`. The effect dependency array is now `[pathname]` with no lint suppression. Observable behaviour is unchanged: `track(pathname)` fires exactly once per pathname change, never on unrelated re-renders.
+
+- **`createIntentClientLoader(true)` — diagnostic error wrapping** — when `mergeServerData: true` and the route has no `export const loader`, Remix's `serverLoader()` throws a generic error with no mention of PassiveIntent. The error is now caught and rethrown with a message that names `createIntentClientLoader` as the source, states that `mergeServerData: true` requires a server loader export on the same route, and includes the original error message as context.
+
+### Added
+
+- **`withPassiveIntent` — dev-only config-change warning** — `withPassiveIntent` captures `config` at HOC creation time and does not re-read it on re-renders (by design — the `PassiveIntentProvider` is mounted once). A `console.warn` now fires in development when the `config` object reference changes between renders, clearly explaining that config is frozen at HOC creation time and instructing the user to remount via a `key` change to apply new config. Suppressed in `NODE_ENV=production`.
+
+### Tests
+
+- Test suite expanded from 57 to 63 tests:
+  - `useRoutePassiveIntent` — 2 new tests covering the `trackRef` forwarding mechanism
+  - `withPassiveIntent` — 3 new tests covering the dev config-change warning (fires on change, stable, production suppression)
+  - `loaders` — 1 additional test asserting the original error message is included in the wrapped diagnostic
+
+---
+
+## [1.0.1] — 2026-03-21
+
+### Fixed
+
+- **`usePropensityScore` call in examples** — corrected the API reference example in the README to use the current hook signature.
+
+---
+
 ## [1.0.0] — 2026-03-20
 
 Initial public release.

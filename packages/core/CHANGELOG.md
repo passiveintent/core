@@ -12,6 +12,41 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [1.3.0] - 2026-03-29
+
+### Added
+
+- **`namespace` option for `BrowserStorageAdapter`** — the constructor now accepts an optional `namespace` string prefix (`default: 'passiveintent:'`) prepended to every `localStorage` key. Prevents key collisions when multiple PassiveIntent instances share the same origin (micro-frontend architectures).
+
+  ```ts
+  // Each micro-frontend gets its own isolated key space
+  new BrowserStorageAdapter('checkout-mfe:')
+  new BrowserStorageAdapter('recommendations-mfe:')
+  ```
+
+- **`namespace` option for `LocalStorageAdapter`** — same isolation primitive on the `IntentEngine` (Layer 2) persistence adapter. Constructor: `new LocalStorageAdapter(namespace?)`. Defaults to `'passiveintent:'`. Pass `''` to disable prefixing entirely (not recommended when multiple instances share an origin).
+
+- **`LocalStorageAdapter.delete(key)`** — new method on `IPersistenceAdapter` that removes a previously saved key from `localStorage`. Silently no-ops when `localStorage` is unavailable.
+
+- **`namespace` field on `IntentManagerConfig`** — forwards a namespace prefix through `IntentManager` to `BrowserStorageAdapter`. Useful when constructing `IntentManager` directly rather than through adapters.
+
+  ```ts
+  new IntentManager({ storageKey: 'intent', namespace: 'checkout-mfe:' })
+  // writes to localStorage key 'checkout-mfe:intent'
+  ```
+
+- **`namespace` field on `BrowserConfig`** — same forwarding for the `createBrowserIntent()` factory.
+
+  ```ts
+  createBrowserIntent({ storageKey: 'intent', namespace: 'checkout-mfe:' })
+  ```
+
+### Changed
+
+- **Internal re-export refactor** — `intent-sdk.ts` (internal barrel) was removed. All exports now resolve directly to their canonical source modules (`./engine/intent-manager.js`, `./core/bloom.js`, etc.). No public API change — all previously exported names remain available from `@passiveintent/core`.
+
+---
+
 ## [1.2.2] - 2026-03-26
 
 ### Fixed

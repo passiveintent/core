@@ -357,6 +357,19 @@ export interface IntentManagerConfig {
   /** localStorage key used to persist the Bloom filter and Markov graph. Default: `'passive-intent'`. */
   storageKey?: string;
   /**
+   * Namespace prefix applied to every localStorage key written by the engine.
+   *
+   * Use this to isolate multiple PassiveIntent instances that share the same
+   * origin — for example, when several micro-frontends are mounted on the
+   * same page.  Each instance should receive a unique namespace so their
+   * persisted graphs never overwrite one another.
+   *
+   * The prefix is applied as `"${namespace}${storageKey}"`.
+   *
+   * Default: `'passiveintent:'`
+   */
+  namespace?: string;
+  /**
    * Delay in ms used for the **async retry / coalescing path** only. Default: `2000`.
    *
    * When `persistThrottleMs` is `0` (the default), `track()` calls

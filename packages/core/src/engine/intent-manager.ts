@@ -105,7 +105,7 @@ export class IntentManager {
       storageKey: opts.storageKey,
       persistDebounceMs: opts.persistDebounceMs,
       persistThrottleMs: opts.persistThrottleMs,
-      storage: config.storage ?? new BrowserStorageAdapter(),
+      storage: config.storage ?? new BrowserStorageAdapter(opts.namespace),
       asyncStorage: config.asyncStorage ?? null,
       timer: this.timer,
       onError: config.onError,

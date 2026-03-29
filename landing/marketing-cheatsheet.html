@@ -8,9 +8,45 @@
       name="description"
       content="PassiveIntent marketing cheat sheet — messaging, positioning, and intent signal reference for growth, CX, and sales teams."
     />
-    <meta name="robots" content="noindex,nofollow" />
+    <meta
+      name="robots"
+      content="index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1"
+    />
+    <link rel="canonical" href="https://passiveintent.dev/marketing-cheatsheet.html" />
+    <meta name="author" content="PassiveIntent" />
+    <meta property="og:title" content="Marketing Cheat Sheet | PassiveIntent" />
+    <meta
+      property="og:description"
+      content="PassiveIntent marketing cheat sheet — messaging, positioning, and intent signal reference for growth, CX, and sales teams."
+    />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://passiveintent.dev/marketing-cheatsheet.html" />
+    <meta property="og:site_name" content="PassiveIntent" />
+    <meta property="og:locale" content="en_US" />
+    <meta property="og:image" content="https://passiveintent.dev/social-preview.png" />
+    <meta property="og:image:url" content="https://passiveintent.dev/social-preview.png" />
+    <meta property="og:image:secure_url" content="https://passiveintent.dev/social-preview.png" />
+    <meta property="og:image:type" content="image/png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="PassiveIntent - The Privacy-First User Intent Engine" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:url" content="https://passiveintent.dev/marketing-cheatsheet.html" />
+    <meta name="twitter:title" content="Marketing Cheat Sheet | PassiveIntent" />
+    <meta
+      name="twitter:description"
+      content="PassiveIntent marketing cheat sheet — messaging, positioning, and intent signal reference for growth, CX, and sales teams."
+    />
+    <meta name="twitter:image" content="https://passiveintent.dev/social-preview.png" />
+    <meta name="twitter:image:alt" content="PassiveIntent - The Privacy-First User Intent Engine" />
+    <link rel="sitemap" type="application/xml" href="/sitemap.xml" />
     <meta name="theme-color" content="#f6f3ee" />
-    <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
+    <link rel="icon" type="image/png" href="/favicon-96x96.png" sizes="96x96" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="shortcut icon" href="/favicon.ico" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+    <meta name="apple-mobile-web-app-title" content="PassiveIntent" />
+    <link rel="manifest" href="/site.webmanifest" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -19,6 +55,45 @@
     />
     <link rel="stylesheet" href="./styles.css" />
     <link rel="stylesheet" href="./marketing-cheatsheet.css" />
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@graph": [
+          {
+            "@type": "BreadcrumbList",
+            "itemListElement": [
+              {
+                "@type": "ListItem",
+                "position": 1,
+                "name": "Home",
+                "item": "https://passiveintent.dev/"
+              },
+              {
+                "@type": "ListItem",
+                "position": 2,
+                "name": "Marketing Cheat Sheet",
+                "item": "https://passiveintent.dev/marketing-cheatsheet.html"
+              }
+            ]
+          },
+          {
+            "@type": "Article",
+            "@id": "https://passiveintent.dev/marketing-cheatsheet.html#article",
+            "headline": "PassiveIntent Marketing Cheat Sheet",
+            "description": "Intent signal reference for growth, CX, and sales teams. Map behavioral signals to the right intervention at the right moment.",
+            "url": "https://passiveintent.dev/marketing-cheatsheet.html",
+            "inLanguage": "en-US",
+            "publisher": {
+              "@type": "Organization",
+              "@id": "https://passiveintent.dev/#organization",
+              "name": "PassiveIntent",
+              "url": "https://passiveintent.dev/"
+            },
+            "dateModified": "2026-03-26"
+          }
+        ]
+      }
+    </script>
   </head>
   <body class="cheatsheet-page">
     <div class="page-orb page-orb-a"></div>
@@ -75,8 +150,8 @@
             organic traffic.
           </p>
           <p>
-            Always run <code>PassiveIntent.calibrate()</code> or inject a Blueprint for immediate
-            accuracy.
+            For best accuracy, ensure your integration includes a calibration step before applying
+            hard intervention rules in production.
           </p>
         </article>
       </div>
@@ -90,8 +165,8 @@
               <tr>
                 <th>State / Intensity</th>
                 <th>Psychological Profile</th>
-                <th>SDK Event Fired</th>
-                <th>Engine Math &amp; Developer Check</th>
+                <th>Signal Detected</th>
+                <th>What the Engine Detected</th>
                 <th>Propensity</th>
                 <th>The Business Action (UI Intervention)</th>
               </tr>
@@ -101,7 +176,7 @@
                 <td><strong>Low</strong></td>
                 <td>The Conviction Buyer. Decisive, linear path.</td>
                 <td><code>(None)</code></td>
-                <td>Trajectory Z-Score: &lt; 1.5. No anomalies detected.</td>
+                <td>Session path is direct and on-track. No hesitation signals present.</td>
                 <td>&gt; 0.85</td>
                 <td>Protect Margin. Suppress all popups and discount codes. Let them buy.</td>
               </tr>
@@ -110,7 +185,8 @@
                 <td>The Window Shopper. Browsing, exploring options.</td>
                 <td><code>high_entropy</code></td>
                 <td>
-                  Normalized Entropy: &gt; 0.75. Check <code>payload.normalizedEntropy</code>.
+                  Navigation entropy is elevated — the visitor is exploring without a clear
+                  destination.
                 </td>
                 <td>0.40 – 0.84</td>
                 <td>
@@ -123,8 +199,8 @@
                 <td>Cognitive Friction. Stuck reading fine print.</td>
                 <td><code>dwell_time_anomaly</code></td>
                 <td>
-                  Dwell Z-Score: &gt; 2.5. Check <code>payload.zScore &gt; 0</code> so it is slow,
-                  not fast.
+                  Unusually long time spent on page — the visitor is stuck, not just reading
+                  carefully.
                 </td>
                 <td>0.15 – 0.39</td>
                 <td>
@@ -135,7 +211,10 @@
                 <td><strong>Critical</strong></td>
                 <td>Anxiety / Frustration. Looping, lost, or erratic.</td>
                 <td><code>trajectory_anomaly</code></td>
-                <td>Trajectory Z-Score: &gt; 3.5. Check <code>payload.confidence</code>.</td>
+                <td>
+                  Session path has broken down — the visitor is looping, backtracking, or moving
+                  erratically.
+                </td>
                 <td>&lt; 0.15</td>
                 <td>Rescue. Trigger an immediate customer support modal or live chat.</td>
               </tr>
@@ -143,7 +222,10 @@
                 <td><strong>Compound</strong></td>
                 <td>Confirmed Hesitation. Frozen and confused.</td>
                 <td><code>hesitation_detected</code></td>
-                <td>Correlation: trajectory and dwell triggered within 30s of each other.</td>
+                <td>
+                  Both erratic navigation and abnormal dwell time detected simultaneously — the
+                  strongest hesitation signal.
+                </td>
                 <td>&lt; 0.39</td>
                 <td>
                   The Kill Shot. Highest-confidence intervention. Fire your absolute best discount
@@ -155,20 +237,20 @@
                 <td>Exit Intent. Mouse moving to close tab.</td>
                 <td><code>exit_intent</code></td>
                 <td>
-                  Kinematics + math: mouseleave toward chrome plus
-                  <code>likelyNext &gt;= 0.4</code>.
+                  Mouse trajectory heading toward the browser chrome — visitor is about to close or
+                  navigate away.
                 </td>
                 <td>Any</td>
                 <td>
-                  Last Chance. Trigger a targeted retention overlay using
-                  <code>payload.likelyNext</code> to personalize the message.
+                  Last Chance. Trigger a targeted retention overlay personalized to where the
+                  visitor was most likely headed next.
                 </td>
               </tr>
               <tr>
                 <td><strong>Ghost</strong></td>
                 <td>Attention Return. Tab hidden, then refocused.</td>
                 <td><code>attention_return</code></td>
-                <td>Time away: &gt;= 15s. Check <code>payload.hiddenDuration</code>.</td>
+                <td>Tab was hidden then returned to — visitor stepped away and came back.</td>
                 <td>Any</td>
                 <td>Re-engage. "Welcome back! Still thinking about [Last Product]?"</td>
               </tr>
@@ -176,7 +258,10 @@
                 <td><strong>Idle</strong></td>
                 <td>Mentally Gone. Tab open, user AFK.</td>
                 <td><code>user_idle</code></td>
-                <td>Inactivity: &gt; 120s. Check <code>payload.idleMs</code>.</td>
+                <td>
+                  No mouse or keyboard activity for over 2 minutes — visitor has mentally
+                  disengaged.
+                </td>
                 <td>Any</td>
                 <td>
                   Reactivate. Pulse the tab title or trigger a soft visual nudge to draw the eye
@@ -187,7 +272,7 @@
                 <td><strong>Back</strong></td>
                 <td>Resumed. User moves mouse after idle.</td>
                 <td><code>user_resumed</code></td>
-                <td>Return from idle: event fires with total <code>payload.idleMs</code>.</td>
+                <td>Visitor has re-engaged after an idle period — interaction has resumed.</td>
                 <td>Any</td>
                 <td>Welcome Back. Resume UI state where they left off.</td>
               </tr>

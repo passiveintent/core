@@ -1,6 +1,6 @@
 {
   "name": "@passiveintent/remix",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "type": "module",
   "description": "Remix/Shopify Hydrogen adapter for PassiveIntent — thin wrapper over @passiveintent/react with SSR-safe dual entry points.",
   "author": "Purushottam <purushottam@passiveintent.dev> (https://github.com/passiveintent)",

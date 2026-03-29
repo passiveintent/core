@@ -7,7 +7,7 @@
 
 import fs from 'node:fs';
 import path from 'node:path';
-import { IntentManager } from '../dist/src/intent-sdk.js';
+import { IntentManager } from '../dist/src/index.js';
 import { printPerfSummary } from '../dist/src/reporting-utils.js';
 
 class MemoryStorage {

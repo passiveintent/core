@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import type { ComponentType } from 'react';
+import { useRef, type ComponentType } from 'react';
 import { PassiveIntentProvider, type IntentManagerConfig } from '@passiveintent/react';
 import { ClientOnly } from './ClientOnly.js';
 
@@ -28,6 +28,18 @@ export function withPassiveIntent<P extends object>(
   config: IntentManagerConfig = {},
 ) {
   function PassiveIntentRoot(props: P) {
+    if (process.env.NODE_ENV !== 'production') {
+      // eslint-disable-next-line react-hooks/rules-of-hooks
+      const configRef = useRef(config);
+      if (!Object.is(configRef.current, config)) {
+        console.warn(
+          '[PassiveIntent] The config passed to withPassiveIntent() has changed between renders, ' +
+          'but config is frozen at HOC creation time and the new value will have no effect. ' +
+          'To apply a new config, remount the component by changing its `key` prop.',
+        );
+      }
+    }
+
     return (
       <ClientOnly>
         <PassiveIntentProvider config={config}>

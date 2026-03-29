@@ -34,7 +34,7 @@
 
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { IntentManager, MarkovGraph } from '../dist/src/intent-sdk.js';
+import { IntentManager, MarkovGraph } from '../dist/src/index.js';
 import { MemoryStorage, setupTestEnvironment } from '../tests/helpers/test-env.mjs';
 
 setupTestEnvironment();

@@ -22,7 +22,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 
-import { PropensityCalculator } from '../dist/src/intent-sdk.js';
+import { PropensityCalculator } from '../dist/src/index.js';
 import { setupTestEnvironment } from './helpers/test-env.mjs';
 
 setupTestEnvironment();

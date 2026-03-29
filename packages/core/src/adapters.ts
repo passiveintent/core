@@ -46,12 +46,27 @@ export interface AsyncStorageAdapter {
  * localStorage-backed adapter.
  * Falls back to no-ops when `window` or `localStorage` is unavailable
  * (e.g. SSR, Web Workers, or restrictive iframes).
+ *
+ * Accepts an optional `namespace` prefix that is prepended to every key
+ * before it reaches `localStorage`.  Use this to isolate multiple
+ * PassiveIntent instances that share the same origin (micro-frontend
+ * collision prevention).  Defaults to `'passiveintent:'`.
  */
 export class BrowserStorageAdapter implements StorageAdapter {
+  private readonly namespace: string;
+
+  constructor(namespace = 'passiveintent:') {
+    this.namespace = namespace;
+  }
+
+  private nsKey(key: string): string {
+    return `${this.namespace}${key}`;
+  }
+
   getItem(key: string): string | null {
     if (typeof window === 'undefined' || !window.localStorage) return null;
     try {
-      return window.localStorage.getItem(key);
+      return window.localStorage.getItem(this.nsKey(key));
     } catch {
       // SecurityError in sandboxed iframes / opaque origins
       return null;
@@ -63,7 +78,7 @@ export class BrowserStorageAdapter implements StorageAdapter {
     // QuotaExceededError / SecurityError are intentionally NOT caught here.
     // The caller (IntentManager.persist) wraps this in its own try/catch
     // so the error surfaces through the configured onError callback.
-    window.localStorage.setItem(key, value);
+    window.localStorage.setItem(this.nsKey(key), value);
   }
 }
 

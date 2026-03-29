@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { IntentManager, MarkovGraph } from './intent-sdk.js';
+import { IntentManager, MarkovGraph } from './index.js';
 import { MemoryStorageAdapter } from './adapters.js';
 import type { PerformanceReport } from './performance-instrumentation.js';
 import { SMOOTHING_EPSILON, MIN_WINDOW_LENGTH, MAX_WINDOW_LENGTH } from './engine/constants.js';

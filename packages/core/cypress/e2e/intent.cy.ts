@@ -102,7 +102,7 @@ describe('Privacy-First Intent Sandbox', () => {
 
     cy.wait(600);
     cy.window().then((win) => {
-      const payload = win.localStorage.getItem('passive-intent');
+      const payload = win.localStorage.getItem('passiveintent:passive-intent');
       expect(payload, 'passive-intent should be written to localStorage').to.be.a('string');
 
       const parsed = JSON.parse(payload as string);

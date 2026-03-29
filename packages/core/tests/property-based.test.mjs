@@ -8,7 +8,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 
-import { BloomFilter, MarkovGraph } from '../dist/src/intent-sdk.js';
+import { BloomFilter, MarkovGraph } from '../dist/src/index.js';
 
 function makeRng(seed) {
   let s = seed >>> 0;

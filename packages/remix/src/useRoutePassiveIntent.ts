@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { usePassiveIntent } from '@passiveintent/react';
 import type { UsePassiveIntentReturn } from '@passiveintent/react';
 
@@ -72,10 +72,11 @@ import type { UsePassiveIntentReturn } from '@passiveintent/react';
  */
 export function useRoutePassiveIntent(pathname: string): UsePassiveIntentReturn {
   const intent = usePassiveIntent();
+  const trackRef = useRef(intent.track);
+  trackRef.current = intent.track;
 
   useEffect(() => {
-    intent.track(pathname);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    trackRef.current(pathname);
   }, [pathname]);
 
   return intent;

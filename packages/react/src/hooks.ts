@@ -505,6 +505,29 @@ export interface UsePropensityOptions {
  * For multi-hop path-based propensity (BFS over the full Markov graph), use
  * `PropensityCalculator` directly with `IntentEngine`.
  *
+ * @remarks
+ * **`usePropensity` vs `usePropensityScore` — which to use?**
+ *
+ * Prefer `usePropensity` for all new code. The two hooks compute the same
+ * formula, but differ in *where* the computation lives:
+ *
+ * - **`usePropensity`** evaluates the score inside the event handler and
+ *   caches the result in a `snapshotRef`. `getSnapshot` is a trivial ref
+ *   read. This means repeated `getSnapshot` calls during the same concurrent
+ *   render always return the same cached value, which is the safest pattern
+ *   under React's concurrent renderer and tearing detection.
+ *
+ * - **`usePropensityScore`** evaluates the full formula inside `getSnapshot`
+ *   itself, calling `predictNextStates()` on every snapshot read. React may
+ *   call `getSnapshot` many times per render in concurrent mode; if the
+ *   engine's internal state advances between two of those calls the returned
+ *   values could differ, technically violating `useSyncExternalStore`'s
+ *   contract. In practice this is unlikely to cause visible bugs, but
+ *   `usePropensity`'s approach is strictly more correct.
+ *
+ * Use `usePropensityScore` only if you are maintaining code that already
+ * depends on it; all new consumers should use `usePropensity`.
+ *
  * @example
  * ```tsx
  * const score = usePropensity('/checkout');
@@ -604,6 +627,12 @@ export interface UsePropensityScoreOptions {
  * `usePropensityScore` — real-time, single-hop conversion score driven by
  * `useSyncExternalStore`.
  *
+ * @deprecated Use {@link usePropensity} instead. `usePropensity` computes the
+ * same formula but evaluates the score inside the event handler rather than
+ * inside `getSnapshot`, making it strictly safer under React's concurrent
+ * renderer. Migrate by replacing `usePropensityScore(target, options)` with
+ * `usePropensity(target, options)` — the call signature is identical.
+ *
  * Returns a number in `[0, 1]`:
  * ```
  * score = P(targetState | current) × exp(−α × max(0, z))
@@ -665,6 +694,8 @@ export function usePropensityScore<T = number>(
 ): number | T {
   const ctx = useContext(PassiveIntentContext);
 
+  const deprecationWarnedRef = useRef(false);
+
   // Latest dwell-time friction z-score — updated by the dwell_time_anomaly
   // handler and read inside getSnapshot. Mutated only in post-commit event
   // handlers, never during render, so reads in getSnapshot are consistent.
@@ -720,6 +751,18 @@ export function usePropensityScore<T = number>(
   const score = useSyncExternalStore(subscribe, getSnapshot, () => 0);
 
   useDebugValue(score, (s) => `propensityScore(${targetStateRef.current}) = ${s.toFixed(3)}`);
+
+  useEffect(() => {
+    if (process.env.NODE_ENV !== 'production' && !deprecationWarnedRef.current) {
+      deprecationWarnedRef.current = true;
+      console.warn(
+        '[PassiveIntent] usePropensityScore() is deprecated and will be removed in a future ' +
+        'major version. Migrate to usePropensity() — the call signature is identical and it ' +
+        'is safer under React\'s concurrent renderer.',
+      );
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Throw after all hooks — required by Rules of Hooks.
   if (!ctx) throw new Error(providerError('usePropensityScore'));

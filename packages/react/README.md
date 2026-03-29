@@ -193,7 +193,7 @@ All hooks in this section require a `PassiveIntentProvider` ancestor.
 | `useAttentionReturn(select?)`                        | `{ returned, hiddenDuration, dismiss, isPending }`     | Reacts when a user returns after triggering `attention_return`. `dismiss()` is deferred.                                  |
 | `useSignals()`                                       | `{ exitIntent, idle, attentionReturn }`                | Convenience composition of the three signal hooks above.                                                                  |
 | `usePropensity(targetState, options?, select?)`      | `number`                                               | Single-hop conversion score with dwell-time friction.                                                                     |
-| `usePropensityScore(targetState, options?, select?)` | `number`                                               | Same scoring model, but computed directly in `getSnapshot()` for strictly snapshot-driven updates.                        |
+| `usePropensityScore(targetState, options?, select?)` | `number`                                               | **Deprecated.** Use `usePropensity` instead — identical signature, safer under concurrent rendering. See migration note below. |
 | `usePredictiveLink(options?)`                        | `{ predictions }`                                      | Reads `predictNextStates()` on navigation and can inject `<link rel="prefetch">` tags.                                    |
 | `useEventLog(events, options?)`                      | `{ log, clear }`                                       | Bounded reverse-chronological log of selected engine events.                                                              |
 
@@ -250,9 +250,25 @@ const tier = usePropensity('/checkout', undefined, (s) =>
 | Hook                   | Default options                      |
 | ---------------------- | ------------------------------------ |
 | `usePropensity()`      | `alpha = 0.2`                        |
-| `usePropensityScore()` | `alpha = 0.2`                        |
+| `usePropensityScore()` | `alpha = 0.2` _(deprecated)_        |
 | `usePredictiveLink()`  | `threshold = 0.3`, `prefetch = true` |
 | `useEventLog()`        | `maxEntries = 100`                   |
+
+### Migrating from `usePropensityScore` to `usePropensity`
+
+`usePropensityScore` is deprecated. `usePropensity` is a drop-in replacement with an identical call signature:
+
+```ts
+// Before
+const score = usePropensityScore('/checkout', { alpha: 0.3 });
+const tier  = usePropensityScore('/checkout', undefined, (s) => s > 0.7 ? 'high' : 'low');
+
+// After
+const score = usePropensity('/checkout', { alpha: 0.3 });
+const tier  = usePropensity('/checkout', undefined, (s) => s > 0.7 ? 'high' : 'low');
+```
+
+The difference is internal: `usePropensity` computes the score inside the event handler and caches it in a ref, so `getSnapshot` is a cheap ref read. `usePropensityScore` calls `predictNextStates()` inside `getSnapshot` itself — React may invoke `getSnapshot` many times per render in concurrent mode, which technically violates the external-store contract if the engine advances between calls. Both work correctly in practice; `usePropensity` is the stricter implementation.
 
 ---
 
@@ -386,14 +402,14 @@ The `useSyncExternalStore` contract is followed directly:
 - `getSnapshot` returns a stable ref-backed snapshot, or computes directly from refs in `usePropensityScore()`.
 - `getServerSnapshot` always returns safe SSR defaults such as `EXIT_INITIAL`, `IDLE_INITIAL`, `0`, or `[]`.
 
-`usePropensity()` and `usePropensityScore()` intentionally differ:
+`usePropensity()` and `usePropensityScore()` use the same formula but differ in where the computation runs:
 
-| Hook                   | Where the formula runs                                      | Tradeoff                                              |
-| ---------------------- | ----------------------------------------------------------- | ----------------------------------------------------- |
-| `usePropensity()`      | Event handlers write a precomputed score into `snapshotRef` | Simple reads, slightly more work in the event path.   |
-| `usePropensityScore()` | `getSnapshot()` computes from refs on demand                | Pure snapshot reads with no precomputed-score window. |
+| Hook                             | Where the formula runs                                      | Tradeoff                                                                                                        |
+| -------------------------------- | ----------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
+| `usePropensity()` ✓ recommended  | Event handlers write a precomputed score into `snapshotRef` | `getSnapshot` is a trivial ref read — always returns the same value within a render pass. Strictly correct.     |
+| `usePropensityScore()` deprecated | `getSnapshot()` calls `predictNextStates()` on every read  | React may call `getSnapshot` multiple times per render; if the engine advances between calls, values could differ. Works in practice but is technically less correct under concurrent rendering. |
 
-Both approaches satisfy the external-store contract; `usePropensityScore()` is the stricter snapshot-driven form.
+Prefer `usePropensity()` for all new code. `usePropensityScore()` is deprecated and will be removed in a future major version.
 
 ### Memory and SSR behavior
 

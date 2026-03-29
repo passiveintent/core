@@ -67,6 +67,17 @@ export interface BrowserConfig {
   storageKey?: string;
 
   /**
+   * Namespace prefix applied to every localStorage key written by this instance.
+   *
+   * Essential when multiple micro-frontends share the same origin.  Each
+   * instance must receive a unique namespace so their persisted graphs never
+   * collide.  The full key becomes `"${namespace}${storageKey}"`.
+   *
+   * Default: `'passiveintent:'`
+   */
+  namespace?: string;
+
+  /**
    * Pre-trained baseline graph exported from a previous session via
    * `IntentManager.exportGraph()` or `MarkovGraph.toJSON()`.
    *
@@ -151,6 +162,7 @@ export interface BrowserConfig {
 export function createBrowserIntent(config: BrowserConfig = {}): IntentManager {
   return new IntentManager({
     storageKey: config.storageKey ?? 'passive-intent-engine',
+    namespace: config.namespace,
     baseline: config.baseline,
     graph: config.graph,
     bloom: config.bloom,

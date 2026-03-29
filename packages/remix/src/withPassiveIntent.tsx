@@ -34,8 +34,8 @@ export function withPassiveIntent<P extends object>(
       if (!Object.is(configRef.current, config)) {
         console.warn(
           '[PassiveIntent] The config passed to withPassiveIntent() has changed between renders, ' +
-          'but config is frozen at HOC creation time and the new value will have no effect. ' +
-          'To apply a new config, remount the component by changing its `key` prop.',
+            'but config is frozen at HOC creation time and the new value will have no effect. ' +
+            'To apply a new config, remount the component by changing its `key` prop.',
         );
       }
     }

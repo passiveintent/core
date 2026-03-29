@@ -171,9 +171,7 @@ describe('withPassiveIntent HOC', () => {
 
       // The warning should NOT fire on a normal re-render when config is stable
       // (the ref inside the HOC still holds the original object).
-      expect(warnSpy).not.toHaveBeenCalledWith(
-        expect.stringContaining('[PassiveIntent]'),
-      );
+      expect(warnSpy).not.toHaveBeenCalledWith(expect.stringContaining('[PassiveIntent]'));
 
       warnSpy.mockRestore();
     });

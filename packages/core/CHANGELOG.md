@@ -20,8 +20,8 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
   ```ts
   // Each micro-frontend gets its own isolated key space
-  new BrowserStorageAdapter('checkout-mfe:')
-  new BrowserStorageAdapter('recommendations-mfe:')
+  new BrowserStorageAdapter('checkout-mfe:');
+  new BrowserStorageAdapter('recommendations-mfe:');
   ```
 
 - **`namespace` option for `LocalStorageAdapter`** — same isolation primitive on the `IntentEngine` (Layer 2) persistence adapter. Constructor: `new LocalStorageAdapter(namespace?)`. Defaults to `'passiveintent:'`. Pass `''` to disable prefixing entirely (not recommended when multiple instances share an origin).
@@ -31,14 +31,14 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - **`namespace` field on `IntentManagerConfig`** — forwards a namespace prefix through `IntentManager` to `BrowserStorageAdapter`. Useful when constructing `IntentManager` directly rather than through adapters.
 
   ```ts
-  new IntentManager({ storageKey: 'intent', namespace: 'checkout-mfe:' })
+  new IntentManager({ storageKey: 'intent', namespace: 'checkout-mfe:' });
   // writes to localStorage key 'checkout-mfe:intent'
   ```
 
 - **`namespace` field on `BrowserConfig`** — same forwarding for the `createBrowserIntent()` factory.
 
   ```ts
-  createBrowserIntent({ storageKey: 'intent', namespace: 'checkout-mfe:' })
+  createBrowserIntent({ storageKey: 'intent', namespace: 'checkout-mfe:' });
   ```
 
 ### Changed

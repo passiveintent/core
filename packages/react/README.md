@@ -185,17 +185,17 @@ All returned methods are stable across re-renders.
 
 All hooks in this section require a `PassiveIntentProvider` ancestor.
 
-| Hook                                                 | Returns                                                | Purpose                                                                                                                   |
-| ---------------------------------------------------- | ------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------- |
-| `useRouteTracker(pathname)`                          | `void`                                                 | Syncs the current route into the engine on every pathname change. Drop into your root layout for push-state SPAs.         |
-| `useExitIntent(select?)`                             | `{ triggered, state, likelyNext, dismiss, isPending }` | Reacts to `exit_intent`. `dismiss()` is deferred via `useTransition`; `isPending` is `true` while the reset is in-flight. |
-| `useIdle(select?)`                                   | `{ isIdle, idleMs, isPending }`                        | Tracks `user_idle` and `user_resumed`. `isPending` included for interface consistency.                                    |
-| `useAttentionReturn(select?)`                        | `{ returned, hiddenDuration, dismiss, isPending }`     | Reacts when a user returns after triggering `attention_return`. `dismiss()` is deferred.                                  |
-| `useSignals()`                                       | `{ exitIntent, idle, attentionReturn }`                | Convenience composition of the three signal hooks above.                                                                  |
-| `usePropensity(targetState, options?, select?)`      | `number`                                               | Single-hop conversion score with dwell-time friction.                                                                     |
+| Hook                                                 | Returns                                                | Purpose                                                                                                                        |
+| ---------------------------------------------------- | ------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------ |
+| `useRouteTracker(pathname)`                          | `void`                                                 | Syncs the current route into the engine on every pathname change. Drop into your root layout for push-state SPAs.              |
+| `useExitIntent(select?)`                             | `{ triggered, state, likelyNext, dismiss, isPending }` | Reacts to `exit_intent`. `dismiss()` is deferred via `useTransition`; `isPending` is `true` while the reset is in-flight.      |
+| `useIdle(select?)`                                   | `{ isIdle, idleMs, isPending }`                        | Tracks `user_idle` and `user_resumed`. `isPending` included for interface consistency.                                         |
+| `useAttentionReturn(select?)`                        | `{ returned, hiddenDuration, dismiss, isPending }`     | Reacts when a user returns after triggering `attention_return`. `dismiss()` is deferred.                                       |
+| `useSignals()`                                       | `{ exitIntent, idle, attentionReturn }`                | Convenience composition of the three signal hooks above.                                                                       |
+| `usePropensity(targetState, options?, select?)`      | `number`                                               | Single-hop conversion score with dwell-time friction.                                                                          |
 | `usePropensityScore(targetState, options?, select?)` | `number`                                               | **Deprecated.** Use `usePropensity` instead — identical signature, safer under concurrent rendering. See migration note below. |
-| `usePredictiveLink(options?)`                        | `{ predictions }`                                      | Reads `predictNextStates()` on navigation and can inject `<link rel="prefetch">` tags.                                    |
-| `useEventLog(events, options?)`                      | `{ log, clear }`                                       | Bounded reverse-chronological log of selected engine events.                                                              |
+| `usePredictiveLink(options?)`                        | `{ predictions }`                                      | Reads `predictNextStates()` on navigation and can inject `<link rel="prefetch">` tags.                                         |
+| `useEventLog(events, options?)`                      | `{ log, clear }`                                       | Bounded reverse-chronological log of selected engine events.                                                                   |
 
 ### `useRouteTracker`
 
@@ -250,7 +250,7 @@ const tier = usePropensity('/checkout', undefined, (s) =>
 | Hook                   | Default options                      |
 | ---------------------- | ------------------------------------ |
 | `usePropensity()`      | `alpha = 0.2`                        |
-| `usePropensityScore()` | `alpha = 0.2` _(deprecated)_        |
+| `usePropensityScore()` | `alpha = 0.2` _(deprecated)_         |
 | `usePredictiveLink()`  | `threshold = 0.3`, `prefetch = true` |
 | `useEventLog()`        | `maxEntries = 100`                   |
 
@@ -261,11 +261,11 @@ const tier = usePropensity('/checkout', undefined, (s) =>
 ```ts
 // Before
 const score = usePropensityScore('/checkout', { alpha: 0.3 });
-const tier  = usePropensityScore('/checkout', undefined, (s) => s > 0.7 ? 'high' : 'low');
+const tier = usePropensityScore('/checkout', undefined, (s) => (s > 0.7 ? 'high' : 'low'));
 
 // After
 const score = usePropensity('/checkout', { alpha: 0.3 });
-const tier  = usePropensity('/checkout', undefined, (s) => s > 0.7 ? 'high' : 'low');
+const tier = usePropensity('/checkout', undefined, (s) => (s > 0.7 ? 'high' : 'low'));
 ```
 
 The difference is internal: `usePropensity` computes the score inside the event handler and caches it in a ref, so `getSnapshot` is a cheap ref read. `usePropensityScore` calls `predictNextStates()` inside `getSnapshot` itself — React may invoke `getSnapshot` many times per render in concurrent mode, which technically violates the external-store contract if the engine advances between calls. Both work correctly in practice; `usePropensity` is the stricter implementation.
@@ -404,10 +404,10 @@ The `useSyncExternalStore` contract is followed directly:
 
 `usePropensity()` and `usePropensityScore()` use the same formula but differ in where the computation runs:
 
-| Hook                             | Where the formula runs                                      | Tradeoff                                                                                                        |
-| -------------------------------- | ----------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
-| `usePropensity()` ✓ recommended  | Event handlers write a precomputed score into `snapshotRef` | `getSnapshot` is a trivial ref read — always returns the same value within a render pass. Strictly correct.     |
-| `usePropensityScore()` deprecated | `getSnapshot()` calls `predictNextStates()` on every read  | React may call `getSnapshot` multiple times per render; if the engine advances between calls, values could differ. Works in practice but is technically less correct under concurrent rendering. |
+| Hook                              | Where the formula runs                                      | Tradeoff                                                                                                                                                                                         |
+| --------------------------------- | ----------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `usePropensity()` ✓ recommended   | Event handlers write a precomputed score into `snapshotRef` | `getSnapshot` is a trivial ref read — always returns the same value within a render pass. Strictly correct.                                                                                      |
+| `usePropensityScore()` deprecated | `getSnapshot()` calls `predictNextStates()` on every read   | React may call `getSnapshot` multiple times per render; if the engine advances between calls, values could differ. Works in practice but is technically less correct under concurrent rendering. |
 
 Prefer `usePropensity()` for all new code. `usePropensityScore()` is deprecated and will be removed in a future major version.
 

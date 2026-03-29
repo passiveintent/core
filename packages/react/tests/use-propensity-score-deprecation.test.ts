@@ -43,7 +43,11 @@ function makeFakeInstance() {
 }
 
 function withProvider(children: React.ReactNode) {
-  return React.createElement(PassiveIntentProvider, { config: { storageKey: 'dep-test' } }, children);
+  return React.createElement(
+    PassiveIntentProvider,
+    { config: { storageKey: 'dep-test' } },
+    children,
+  );
 }
 
 describe('usePropensityScore — deprecation warning', () => {
@@ -65,29 +69,31 @@ describe('usePropensityScore — deprecation warning', () => {
 
   describe('1 — fires on first mount', () => {
     it('calls console.warn once on initial render', () => {
-      renderHook(() => usePropensityScore('/checkout'), { wrapper: ({ children }) => withProvider(children) });
+      renderHook(() => usePropensityScore('/checkout'), {
+        wrapper: ({ children }) => withProvider(children),
+      });
       expect(warnSpy).toHaveBeenCalledTimes(1);
     });
 
     it('warning message identifies the deprecated hook by name', () => {
-      renderHook(() => usePropensityScore('/checkout'), { wrapper: ({ children }) => withProvider(children) });
-      expect(warnSpy).toHaveBeenCalledWith(
-        expect.stringContaining('usePropensityScore'),
-      );
+      renderHook(() => usePropensityScore('/checkout'), {
+        wrapper: ({ children }) => withProvider(children),
+      });
+      expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining('usePropensityScore'));
     });
 
     it('warning message is prefixed with [PassiveIntent]', () => {
-      renderHook(() => usePropensityScore('/checkout'), { wrapper: ({ children }) => withProvider(children) });
-      expect(warnSpy).toHaveBeenCalledWith(
-        expect.stringContaining('[PassiveIntent]'),
-      );
+      renderHook(() => usePropensityScore('/checkout'), {
+        wrapper: ({ children }) => withProvider(children),
+      });
+      expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining('[PassiveIntent]'));
     });
 
     it('warning message mentions usePropensity as the migration target', () => {
-      renderHook(() => usePropensityScore('/checkout'), { wrapper: ({ children }) => withProvider(children) });
-      expect(warnSpy).toHaveBeenCalledWith(
-        expect.stringContaining('usePropensity'),
-      );
+      renderHook(() => usePropensityScore('/checkout'), {
+        wrapper: ({ children }) => withProvider(children),
+      });
+      expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining('usePropensity'));
     });
   });
 

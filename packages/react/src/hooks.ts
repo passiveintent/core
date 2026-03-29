@@ -757,11 +757,11 @@ export function usePropensityScore<T = number>(
       deprecationWarnedRef.current = true;
       console.warn(
         '[PassiveIntent] usePropensityScore() is deprecated and will be removed in a future ' +
-        'major version. Migrate to usePropensity() — the call signature is identical and it ' +
-        'is safer under React\'s concurrent renderer.',
+          'major version. Migrate to usePropensity() — the call signature is identical and it ' +
+          "is safer under React's concurrent renderer.",
       );
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Throw after all hooks — required by Rules of Hooks.

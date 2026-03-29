@@ -42,8 +42,8 @@ export function createIntentClientLoader(mergeServerData = false) {
         const original = err instanceof Error ? err.message : String(err);
         throw new Error(
           `[createIntentClientLoader] mergeServerData: true requires a server loader export ` +
-          `on the same route (e.g. \`export const loader = ...\`). ` +
-          `Original error: ${original}`,
+            `on the same route (e.g. \`export const loader = ...\`). ` +
+            `Original error: ${original}`,
         );
       }
     }

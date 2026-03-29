@@ -69,6 +69,8 @@ export interface ResolvedIntentManagerOptions {
 
   /* ── Persistence ───────────────────────────────────────────────────────── */
   storageKey: string;
+  /** Resolved namespace prefix. Always a string; defaults to `'passiveintent:'`. */
+  namespace: string;
   persistDebounceMs: number;
   persistThrottleMs: number;
 
@@ -142,6 +144,7 @@ export function buildIntentManagerOptions(
 
   // ── Persistence ─────────────────────────────────────────────────────────
   const storageKey = config.storageKey ?? 'passive-intent';
+  const namespace = typeof config.namespace === 'string' ? config.namespace : 'passiveintent:';
 
   const rawPersistDebounce = config.persistDebounceMs;
   const persistDebounceMs =
@@ -209,6 +212,7 @@ export function buildIntentManagerOptions(
     graphConfig,
     trajectorySmoothingEpsilon,
     storageKey,
+    namespace,
     persistDebounceMs,
     persistThrottleMs,
     eventCooldownMs,

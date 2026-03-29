@@ -39,7 +39,7 @@ describe('createBrowserIntent() — Layer 3 browser integration', () => {
   beforeEach(() => {
     cy.visit('/sandbox/browser-intent/index.html', {
       onBeforeLoad: (win) => {
-        win.localStorage.removeItem('passive-intent-browser-test');
+        win.localStorage.removeItem('passiveintent:passive-intent-browser-test');
       },
     });
 
@@ -110,7 +110,7 @@ describe('createBrowserIntent() — Layer 3 browser integration', () => {
       win.__engine.track('/checkout');
     });
     cy.window().then((win) => {
-      const stored = win.localStorage.getItem('passive-intent-browser-test');
+      const stored = win.localStorage.getItem('passiveintent:passive-intent-browser-test');
       expect(stored).to.not.be.null;
       // Wire format: JSON with bloomBase64 + graphBinary keys
       expect(stored).to.include('bloomBase64');

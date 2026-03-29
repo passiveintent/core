@@ -46,12 +46,48 @@ export interface AsyncStorageAdapter {
  * localStorage-backed adapter.
  * Falls back to no-ops when `window` or `localStorage` is unavailable
  * (e.g. SSR, Web Workers, or restrictive iframes).
+ *
+ * Accepts an optional `namespace` prefix that is prepended to every key
+ * before it reaches `localStorage`.  Use this to isolate multiple
+ * PassiveIntent instances that share the same origin (micro-frontend
+ * collision prevention).  Defaults to `'passiveintent:'`.
+ *
+ * **Legacy migration** — when using the default namespace, `getItem` first
+ * checks the namespaced key.  If not found it falls back to the legacy
+ * unprefixed key.  On a successful fallback the value is transparently
+ * migrated to the namespaced key and the old key is removed, so the
+ * one-time migration happens automatically on the first read after upgrade.
  */
 export class BrowserStorageAdapter implements StorageAdapter {
+  private readonly namespace: string;
+
+  constructor(namespace = 'passiveintent:') {
+    this.namespace = namespace;
+  }
+
+  private nsKey(key: string): string {
+    return `${this.namespace}${key}`;
+  }
+
   getItem(key: string): string | null {
     if (typeof window === 'undefined' || !window.localStorage) return null;
     try {
-      return window.localStorage.getItem(key);
+      const namespaced = window.localStorage.getItem(this.nsKey(key));
+      if (namespaced !== null) return namespaced;
+
+      // Legacy migration: when using the default namespace, check the old
+      // unprefixed key so existing installs are not silently wiped on upgrade.
+      if (this.namespace === 'passiveintent:') {
+        const legacy = window.localStorage.getItem(key);
+        if (legacy !== null) {
+          // Migrate to the namespaced key and remove the legacy entry.
+          window.localStorage.setItem(this.nsKey(key), legacy);
+          window.localStorage.removeItem(key);
+          return legacy;
+        }
+      }
+
+      return null;
     } catch {
       // SecurityError in sandboxed iframes / opaque origins
       return null;
@@ -63,7 +99,7 @@ export class BrowserStorageAdapter implements StorageAdapter {
     // QuotaExceededError / SecurityError are intentionally NOT caught here.
     // The caller (IntentManager.persist) wraps this in its own try/catch
     // so the error surfaces through the configured onError callback.
-    window.localStorage.setItem(key, value);
+    window.localStorage.setItem(this.nsKey(key), value);
   }
 }
 

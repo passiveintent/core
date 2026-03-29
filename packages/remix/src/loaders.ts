@@ -27,11 +27,25 @@
  * @example — merge with server loader data
  * export const loader = async () => json({ product: await fetchProduct() });
  * export const clientLoader = createIntentClientLoader(true);
+ *
+ * @throws {Error} When `mergeServerData` is `true` and the route has no
+ * `export const loader` — Remix's `serverLoader()` will throw in that case.
+ * The error is rethrown with a message that identifies `createIntentClientLoader`
+ * as the source and instructs the caller to add a server loader export.
  */
 export function createIntentClientLoader(mergeServerData = false) {
   return async function clientLoader({ serverLoader }: { serverLoader: () => Promise<unknown> }) {
     if (mergeServerData) {
-      return serverLoader();
+      try {
+        return await serverLoader();
+      } catch (err) {
+        const original = err instanceof Error ? err.message : String(err);
+        throw new Error(
+          `[createIntentClientLoader] mergeServerData: true requires a server loader export ` +
+            `on the same route (e.g. \`export const loader = ...\`). ` +
+            `Original error: ${original}`,
+        );
+      }
     }
     return null;
   };

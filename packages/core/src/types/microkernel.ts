@@ -221,6 +221,12 @@ export interface IPersistenceAdapter {
   load(key: string): string | null;
   /** Persist `value` under `key`. May throw on quota exhaustion. */
   save(key: string, value: string): void;
+  /**
+   * Remove a previously saved value.  Optional — adapters that do not support
+   * explicit deletion (e.g. in-memory or async backends) may omit this method.
+   * Callers must use optional chaining: `adapter.delete?.(key)`.
+   */
+  delete?(key: string): void;
 }
 
 /* ------------------------------------------------------------------ */
@@ -251,6 +257,12 @@ export interface IntentEngineConfig {
    * Default: `'passive-intent-engine'`.
    */
   storageKey?: string;
+  /**
+   * Namespace prefix prepended to every key passed to `IPersistenceAdapter`.
+   * Isolates storage between micro-frontend instances on the same origin.
+   * Default: `'passiveintent:'`.
+   */
+  namespace?: string;
   /**
    * Optional custom state normalizer applied **after** the built-in
    * `normalizeRouteState()`.  Returning an empty string silently drops

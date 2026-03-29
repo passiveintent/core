@@ -149,9 +149,68 @@ describe('withPassiveIntent HOC', () => {
     });
   });
 
-  // ── 6. displayName ────────────────────────────────────────────────────────
+  // ── 6. Config-change warning (dev-only) ──────────────────────────────────
+  //
+  // withPassiveIntent captures config at HOC creation time via a closure.
+  // A dev-only console.warn fires inside PassiveIntentRoot when
+  // !Object.is(configRef.current, config) — i.e. when the closed-over config
+  // reference differs from what configRef was seeded with on mount.
+  //
+  // NOTE: Because `config` is a fixed closure value and configRef.current is
+  // initialised to that same value and never mutated, the warning branch is
+  // unreachable through normal React rendering. The tests below verify the
+  // negative cases (no spurious warnings) and the production suppression.
+  // The warning message format is verified separately via the implementation
+  // source, which is the authoritative specification.
 
-  describe('6 — displayName', () => {
+  describe('6 — dev-only warning when config reference changes', () => {
+    it('does NOT warn on initial render', () => {
+      const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+      const Wrapped = withPassiveIntent(Page, { maxStates: 100 });
+      render(<Wrapped title="A" />);
+
+      expect(warnSpy).not.toHaveBeenCalledWith(expect.stringContaining('[PassiveIntent]'));
+
+      warnSpy.mockRestore();
+    });
+
+    it('does NOT warn on a normal re-render when config reference is stable', () => {
+      const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+      // config is captured at HOC creation and never changes — configRef.current
+      // will always Object.is-equal to the closed-over config.
+      const Wrapped = withPassiveIntent(Page, { maxStates: 100 });
+      const { rerender } = render(<Wrapped title="A" />);
+      rerender(<Wrapped title="B" />);
+
+      expect(warnSpy).not.toHaveBeenCalledWith(expect.stringContaining('[PassiveIntent]'));
+
+      warnSpy.mockRestore();
+    });
+
+    it('does not warn in production (NODE_ENV=production)', () => {
+      const original = process.env.NODE_ENV;
+      // @ts-expect-error — forcing production for this test
+      process.env.NODE_ENV = 'production';
+
+      const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+      const Wrapped = withPassiveIntent(Page, { maxStates: 10 });
+      const { rerender } = render(<Wrapped title="prod" />);
+      rerender(<Wrapped title="prod2" />);
+
+      expect(warnSpy).not.toHaveBeenCalled();
+
+      warnSpy.mockRestore();
+      // @ts-expect-error
+      process.env.NODE_ENV = original;
+    });
+  });
+
+  // ── 7. displayName ────────────────────────────────────────────────────────
+
+  describe('7 — displayName', () => {
     it('sets displayName to withPassiveIntent(ComponentName)', () => {
       const Wrapped = withPassiveIntent(Page);
       expect(Wrapped.displayName).toBe('withPassiveIntent(Page)');

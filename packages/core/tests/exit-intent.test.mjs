@@ -19,7 +19,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 
-import { IntentManager } from '../dist/src/intent-sdk.js';
+import { IntentManager } from '../dist/src/index.js';
 import { MemoryStorage, setupTestEnvironment } from './helpers/test-env.mjs';
 
 setupTestEnvironment();

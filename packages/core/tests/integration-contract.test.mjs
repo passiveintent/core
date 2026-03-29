@@ -9,7 +9,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 
-import { BloomFilter, IntentManager, MarkovGraph } from '../dist/src/intent-sdk.js';
+import { BloomFilter, IntentManager, MarkovGraph } from '../dist/src/index.js';
 import { setupTestEnvironment, storage } from './helpers/test-env.mjs';
 
 setupTestEnvironment();
@@ -94,12 +94,12 @@ test('dirty flag: persist() is a no-op when no new state has been tracked since 
   manager.track('home');
   manager.flushNow();
 
-  const firstPayload = storage.getItem('dirty-noop-test');
+  const firstPayload = storage.getItem('passiveintent:dirty-noop-test');
   assert.ok(firstPayload, 'Expected a persisted payload after first flush');
 
   // Second flush with no new track() — dirty flag should still be false.
   manager.flushNow();
-  const secondPayload = storage.getItem('dirty-noop-test');
+  const secondPayload = storage.getItem('passiveintent:dirty-noop-test');
 
   assert.equal(firstPayload, secondPayload, 'Expected payload unchanged after no-op flush');
 });
@@ -115,12 +115,12 @@ test('dirty flag: persist() writes again after a new track() call', () => {
 
   manager.track('home');
   manager.flushNow();
-  const firstPayload = storage.getItem('dirty-resave-test');
+  const firstPayload = storage.getItem('passiveintent:dirty-resave-test');
 
   // New transition — marks dirty again.
   manager.track('search');
   manager.flushNow();
-  const secondPayload = storage.getItem('dirty-resave-test');
+  const secondPayload = storage.getItem('passiveintent:dirty-resave-test');
 
   assert.notEqual(firstPayload, secondPayload, 'Expected payload to change after new track()');
 });
@@ -219,7 +219,7 @@ test('destroy() flushes pending state and removes all listeners', () => {
   manager.destroy();
 
   // After destroy: data must have been persisted
-  const raw = storage.getItem('destroy-test');
+  const raw = storage.getItem('passiveintent:destroy-test');
   assert.ok(raw, 'Storage must contain persisted state after destroy()');
 
   // After destroy: listeners are removed, new track() on a fresh instance

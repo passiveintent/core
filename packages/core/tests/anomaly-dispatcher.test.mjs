@@ -28,7 +28,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 
-import { IntentManager, MarkovGraph, AnomalyDispatcher } from '../dist/src/intent-sdk.js';
+import { IntentManager, MarkovGraph, AnomalyDispatcher } from '../dist/src/index.js';
 import { setupTestEnvironment, MemoryStorage } from './helpers/test-env.mjs';
 
 setupTestEnvironment();

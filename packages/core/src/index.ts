@@ -13,26 +13,45 @@
  *   import { IntentManager, BloomFilter, MarkovGraph } from '@passiveintent/core';
  */
 
-/* ---- Core SDK ---- */
-export {
-  BloomFilter,
-  computeBloomConfig,
-  MarkovGraph,
-  IntentManager,
-  BroadcastSync,
-  MAX_STATE_LENGTH,
-  MAX_PLAUSIBLE_DWELL_MS,
-  ATTENTION_RETURN_THRESHOLD_MS,
-  USER_IDLE_THRESHOLD_MS,
-  IDLE_CHECK_INTERVAL_MS,
-  normalizeRouteState,
-  AnomalyDispatcher,
-  SignalEngine,
-  EventEmitter,
-  DriftProtectionPolicy,
-  BenchmarkRecorder,
-} from './intent-sdk.js';
+/* ---- Core algorithms ---- */
+export { BloomFilter, computeBloomConfig } from './core/bloom.js';
+export { MarkovGraph } from './core/markov.js';
+export type { SerializedMarkovGraph } from './core/markov.js';
 
+/* ---- Engine ---- */
+export { IntentManager } from './engine/intent-manager.js';
+export { AnomalyDispatcher } from './engine/anomaly-dispatcher.js';
+export type {
+  AnomalyDispatcherConfig,
+  AnomalyEventEmitter,
+  DriftProtectionPolicyLike,
+} from './engine/anomaly-dispatcher.js';
+export { SignalEngine } from './engine/signal-engine.js';
+export type { SignalEngineConfig } from './engine/signal-engine.js';
+export { EventEmitter } from './engine/event-emitter.js';
+export { DriftProtectionPolicy } from './engine/policies/drift-protection-policy.js';
+export { PropensityCalculator } from './engine/propensity-calculator.js';
+export {
+  ATTENTION_RETURN_THRESHOLD_MS,
+  IDLE_CHECK_INTERVAL_MS,
+  MAX_PLAUSIBLE_DWELL_MS,
+  SMOOTHING_EPSILON,
+  USER_IDLE_THRESHOLD_MS,
+} from './engine/constants.js';
+export type {
+  AnomalyDecision,
+  EntropyDecision,
+  TrajectoryDecision,
+  DwellDecision,
+} from './engine/anomaly-decisions.js';
+
+/* ---- Sync ---- */
+export { BroadcastSync, MAX_STATE_LENGTH } from './sync/broadcast-sync.js';
+
+/* ---- Utils ---- */
+export { normalizeRouteState } from './utils/route-normalizer.js';
+
+/* ---- Event & config types ---- */
 export type {
   IntentEventName,
   IntentEventMap,
@@ -54,16 +73,7 @@ export type {
   IntentManagerConfig,
   PassiveIntentError,
   DwellTimeConfig,
-  SerializedMarkovGraph,
-  AnomalyDecision,
-  EntropyDecision,
-  TrajectoryDecision,
-  DwellDecision,
-  AnomalyDispatcherConfig,
-  AnomalyEventEmitter,
-  DriftProtectionPolicyLike,
-  SignalEngineConfig,
-} from './intent-sdk.js';
+} from './types/events.js';
 
 /* ---- Adapters ---- */
 export {
@@ -82,6 +92,7 @@ export type {
 } from './adapters.js';
 
 /* ---- Performance Instrumentation ---- */
+export { BenchmarkRecorder } from './performance-instrumentation.js';
 export type {
   BenchmarkConfig,
   MemoryFootprintReport,
@@ -110,7 +121,6 @@ export type {
  * });
  * ```
  */
-export { PropensityCalculator } from './engine/propensity-calculator.js';
 export { IntentEngine } from './engine/intent-engine.js';
 export type { IntentEngineConfig } from './types/microkernel.js';
 

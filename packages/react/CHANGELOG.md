@@ -5,6 +5,26 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [1.3.1] - 2026-03-29
+
+### Deprecated
+
+- **`usePropensityScore`** — marked `@deprecated` in JSDoc. The hook remains fully functional and will not be removed before the next major version. Migrate to `usePropensity`, which uses an identical call signature and is safer under React's concurrent renderer:
+
+  ```ts
+  // Before
+  const score = usePropensityScore('/checkout', { alpha: 0.3 });
+
+  // After — drop-in replacement
+  const score = usePropensity('/checkout', { alpha: 0.3 });
+  ```
+
+  **Why:** `usePropensity` evaluates the score formula inside the event handler and caches the result in a ref; `getSnapshot` is a trivial ref read. `usePropensityScore` evaluates the full formula (including `predictNextStates()`) inside `getSnapshot` itself, which React may call multiple times per render in concurrent mode. Both hooks satisfy the `useSyncExternalStore` contract in practice, but `usePropensity`'s approach is strictly more correct.
+
+  A dev-only `console.warn` now fires once per component mount when `usePropensityScore` is used (suppressed in `NODE_ENV=production`).
+
+---
+
 ## [1.3.0] - 2026-03-23
 
 ### Added

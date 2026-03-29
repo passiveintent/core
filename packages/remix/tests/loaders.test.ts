@@ -72,7 +72,18 @@ describe('createIntentClientLoader', () => {
       expect(result).toEqual(serverData);
     });
 
-    it('propagates serverLoader rejection', async () => {
+    it('wraps serverLoader rejection with a diagnostic message', async () => {
+      const serverLoader = vi.fn(async () => {
+        throw new Error('server error');
+      });
+      const loader = createIntentClientLoader(true);
+
+      await expect(loader({ serverLoader })).rejects.toThrow(
+        '[createIntentClientLoader] mergeServerData: true requires a server loader export',
+      );
+    });
+
+    it('includes the original error message in the wrapped error', async () => {
       const serverLoader = vi.fn(async () => {
         throw new Error('server error');
       });

@@ -15,7 +15,7 @@
  * - Hesitation patterns (trajectory anomalies)
  */
 
-import { IntentManager, SerializedMarkovGraph } from '../../src/intent-sdk.js';
+import { IntentManager, SerializedMarkovGraph } from '../../src/index.js';
 
 // ============================================
 // BASELINE GRAPH

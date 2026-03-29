@@ -333,6 +333,8 @@ function createIntentClientLoader(mergeServerData?: boolean): ClientLoader;
 | `false` (default) | Returns `null` — no server round-trip. Use when the route shows only intent-driven UI.                                         |
 | `true`            | Calls `serverLoader()` and returns its result. Use when you need server data (e.g. product details) alongside intent tracking. |
 
+> **Note:** When `mergeServerData: true` and the route has no `export const loader`, Remix's `serverLoader()` throws. `createIntentClientLoader` catches this and rethrows a diagnostic error that names itself as the source and tells you to add a server loader export to the route.
+
 When `mergeServerData` is `false` (default), export a `HydrateFallback` to avoid a flash of
 empty content:
 

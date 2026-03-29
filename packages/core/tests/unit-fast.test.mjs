@@ -8,12 +8,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 
-import {
-  BloomFilter,
-  IntentManager,
-  MarkovGraph,
-  computeBloomConfig,
-} from '../dist/src/intent-sdk.js';
+import { BloomFilter, IntentManager, MarkovGraph, computeBloomConfig } from '../dist/src/index.js';
 import { BrowserLifecycleAdapter } from '../dist/src/adapters.js';
 import {
   BenchmarkSimulationEngine,
@@ -2660,9 +2655,9 @@ test('normalizeRouteState: /checkout/?step=2 and /checkout resolve to the same s
 });
 
 // ─── Integration: normalizeRouteState exported from barrel ───────────────────
-import { normalizeRouteState as normalizeFromBarrel } from '../dist/src/intent-sdk.js';
+import { normalizeRouteState as normalizeFromBarrel } from '../dist/src/index.js';
 
-test('normalizeRouteState is re-exported from the intent-sdk barrel', () => {
+test('normalizeRouteState is re-exported from the public barrel', () => {
   assert.equal(typeof normalizeFromBarrel, 'function');
   assert.equal(normalizeFromBarrel('/checkout/'), '/checkout');
 });
@@ -2907,7 +2902,7 @@ test('IntentManager.predictNextStates uses default threshold of 0.3', () => {
 
 // ── BroadcastSync tests ──────────────────────────────────────────────────
 
-import { BroadcastSync, MAX_STATE_LENGTH } from '../dist/src/intent-sdk.js';
+import { BroadcastSync, MAX_STATE_LENGTH } from '../dist/src/index.js';
 
 test('BroadcastSync: MAX_STATE_LENGTH is 256', () => {
   assert.equal(MAX_STATE_LENGTH, 256);

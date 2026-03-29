@@ -14,7 +14,7 @@ import {
   BrowserLifecycleAdapter,
   PropensityCalculator,
   SerializedMarkovGraph,
-} from '../src/intent-sdk.js';
+} from '../src/index.js';
 
 const baseline: SerializedMarkovGraph = {
   states: ['/home', '/search', '/product', '/cart', '/checkout'],

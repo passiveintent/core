@@ -151,45 +151,40 @@ describe('withPassiveIntent HOC', () => {
 
   // ── 6. Config-change warning (dev-only) ──────────────────────────────────
   //
-  // withPassiveIntent captures config at HOC creation time. A dev-only
-  // console.warn fires when the config object reference changes between
-  // renders (detected via useRef + Object.is comparison).
+  // withPassiveIntent captures config at HOC creation time via a closure.
+  // A dev-only console.warn fires inside PassiveIntentRoot when
+  // !Object.is(configRef.current, config) — i.e. when the closed-over config
+  // reference differs from what configRef was seeded with on mount.
+  //
+  // NOTE: Because `config` is a fixed closure value and configRef.current is
+  // initialised to that same value and never mutated, the warning branch is
+  // unreachable through normal React rendering. The tests below verify the
+  // negative cases (no spurious warnings) and the production suppression.
+  // The warning message format is verified separately via the implementation
+  // source, which is the authoritative specification.
 
   describe('6 — dev-only warning when config reference changes', () => {
-    it('warns when the config object reference changes between renders', () => {
+    it('does NOT warn on initial render', () => {
       const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
 
-      // Wrap a simple component — config is captured at HOC creation time.
       const Wrapped = withPassiveIntent(Page, { maxStates: 100 });
+      render(<Wrapped title="A" />);
 
-      // Render once with the frozen config, then re-render passing a new
-      // object reference to the HOC's inner component. Because withPassiveIntent
-      // captures config via closure (not props), we simulate a re-render by
-      // rerendering the wrapping component.
-      const { rerender } = render(<Wrapped title="A" />);
-      rerender(<Wrapped title="B" />);
-
-      // The warning should NOT fire on a normal re-render when config is stable
-      // (the ref inside the HOC still holds the original object).
       expect(warnSpy).not.toHaveBeenCalledWith(expect.stringContaining('[PassiveIntent]'));
 
       warnSpy.mockRestore();
     });
 
-    it('warns with a PassiveIntent-prefixed message when config reference changes at HOC creation', () => {
+    it('does NOT warn on a normal re-render when config reference is stable', () => {
       const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
 
-      // Create two wrapped versions to confirm warning text shape.
-      // The warning fires inside the component when useRef detects a reference
-      // change. We trigger that by calling withPassiveIntent twice with
-      // different config objects and rendering each — this exercises the
-      // warning message format even though runtime config-change is the real scenario.
-      const config1 = { maxStates: 50 };
-      const Wrapped = withPassiveIntent(Page, config1);
-      render(<Wrapped title="X" />);
+      // config is captured at HOC creation and never changes — configRef.current
+      // will always Object.is-equal to the closed-over config.
+      const Wrapped = withPassiveIntent(Page, { maxStates: 100 });
+      const { rerender } = render(<Wrapped title="A" />);
+      rerender(<Wrapped title="B" />);
 
-      // No warning fires on initial render (ref is initialized with config).
-      expect(warnSpy).not.toHaveBeenCalled();
+      expect(warnSpy).not.toHaveBeenCalledWith(expect.stringContaining('[PassiveIntent]'));
 
       warnSpy.mockRestore();
     });

@@ -39,7 +39,7 @@ describe('createBrowserIntent() — Layer 3 browser integration', () => {
   beforeEach(() => {
     cy.visit('/sandbox/browser-intent/index.html', {
       onBeforeLoad: (win) => {
-        win.localStorage.removeItem('passive-intent-browser-test');
+        win.localStorage.removeItem('passiveintent:passive-intent-browser-test');
       },
     });
 

@@ -221,6 +221,12 @@ export interface IPersistenceAdapter {
   load(key: string): string | null;
   /** Persist `value` under `key`. May throw on quota exhaustion. */
   save(key: string, value: string): void;
+  /**
+   * Remove a previously saved value.  Optional — adapters that do not support
+   * explicit deletion (e.g. in-memory or async backends) may omit this method.
+   * Callers must use optional chaining: `adapter.delete?.(key)`.
+   */
+  delete?(key: string): void;
 }
 
 /* ------------------------------------------------------------------ */

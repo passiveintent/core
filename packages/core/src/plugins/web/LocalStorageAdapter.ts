@@ -21,6 +21,13 @@
  * `"${namespace}${key}"` so that instances never overwrite one another's
  * persisted state.  The default namespace is `'passiveintent:'`.
  *
+ * **Legacy migration** — when using the default namespace, `load` first
+ * checks the namespaced key.  If not found it falls back to the legacy
+ * unprefixed key and, on a successful read, transparently migrates the
+ * value to the namespaced key and removes the old entry.  This makes the
+ * migration automatic and invisible to callers on the first read after
+ * upgrade.
+ *
  * Note: `localStorage` is synchronous.  For async backends (React Native
  * AsyncStorage, Capacitor Preferences, IndexedDB) use `IntentManager.createAsync()`
  * with an `AsyncStorageAdapter` — that path remains in Layer 3 (IntentManager).
@@ -75,7 +82,23 @@ export class LocalStorageAdapter implements IPersistenceAdapter {
   load(key: string): string | null {
     try {
       if (typeof window === 'undefined' || !window.localStorage) return null;
-      return window.localStorage.getItem(this.nsKey(key));
+
+      const namespaced = window.localStorage.getItem(this.nsKey(key));
+      if (namespaced !== null) return namespaced;
+
+      // Legacy migration: when using the default namespace, check the old
+      // unprefixed key so existing installs are not silently wiped on upgrade.
+      if (this.namespace === DEFAULT_NAMESPACE) {
+        const legacy = window.localStorage.getItem(key);
+        if (legacy !== null) {
+          // Migrate to the namespaced key and remove the legacy entry.
+          window.localStorage.setItem(this.nsKey(key), legacy);
+          window.localStorage.removeItem(key);
+          return legacy;
+        }
+      }
+
+      return null;
     } catch {
       // SecurityError accessing window.localStorage on sandboxed/opaque origins,
       // or SecurityError / other errors from getItem.

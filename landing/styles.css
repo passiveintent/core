@@ -1041,6 +1041,14 @@ select {
     linear-gradient(180deg, #f6f3ee 0%, #f9f7f2 100%);
 }
 
+.cheatsheet-page .site-header .header-inner {
+  background: rgba(255, 255, 255, 0.92);
+  border-color: rgba(19, 22, 31, 0.08);
+  box-shadow: 0 10px 34px rgba(17, 20, 29, 0.08);
+  -webkit-backdrop-filter: blur(18px);
+  backdrop-filter: blur(18px);
+}
+
 .cheatsheet-page-main {
   max-width: 1320px;
   margin: 0 auto;
@@ -1138,7 +1146,7 @@ select {
 }
 
 .product-grid {
-  grid-template-columns: minmax(0, 1.3fr) repeat(2, minmax(0, 0.85fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
 .difference-card,
@@ -1157,6 +1165,12 @@ select {
   display: flex;
   flex-direction: column;
   gap: 14px;
+}
+
+.product-card {
+  display: flex;
+  flex-direction: column;
+  min-height: 100%;
 }
 
 .start-card-compact {
@@ -1186,14 +1200,8 @@ select {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
-  margin-top: 18px;
-}
-
-.product-card-featured-main {
-  background: linear-gradient(180deg, #ffffff 0%, #f5f8fe 100%);
-  border-color: rgba(21, 111, 247, 0.16);
-  padding: 28px;
-  min-height: 100%;
+  margin-top: auto;
+  padding-top: 18px;
 }
 
 .product-chip {
@@ -5154,6 +5162,10 @@ details p {
 
   body.cheatsheet-page {
     background: #fff;
+  }
+
+  .cheatsheet-page .site-header {
+    display: none !important;
   }
 
   .cheatsheet-page-main {

@@ -209,7 +209,7 @@ function setupMarketingCheatSheet() {
     MARKETING_CHEATSHEET.emailIntro,
     '',
     `Printable sheet: ${publicCheatSheetUrl}`,
-    `Markdown reference: ${publicMarkdownUrl}`,
+    `Quick reference: ${publicMarkdownUrl}`,
     '',
     'Use this to correlate the math, the psychological state, and the recommended intervention.',
   ].join('\n');

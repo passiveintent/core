@@ -199,11 +199,11 @@ function setupMarketingCheatSheet() {
     document.querySelector('link[rel="canonical"]')?.getAttribute('href') ?? window.location.href;
   const canonicalUrl = new URL(canonicalHref, window.location.href);
   const publicCheatSheetUrl = new URL('./cheatsheet.html', canonicalUrl).toString();
-  const publicMarkdownUrl = new URL('./marketing-cheatsheet.md', canonicalUrl).toString();
+  const publicMarkdownUrl = new URL('./marketing-cheatsheet.html', canonicalUrl).toString();
   const localCheatSheetUrl = new URL('./cheatsheet.html', window.location.href);
   const printCheatSheetUrl = new URL(localCheatSheetUrl.toString());
   printCheatSheetUrl.searchParams.set('print', '1');
-  const localMarkdownUrl = new URL('./marketing-cheatsheet.md', window.location.href).toString();
+  const localMarkdownUrl = new URL('./marketing-cheatsheet.html', window.location.href).toString();
 
   const emailBody = [
     MARKETING_CHEATSHEET.emailIntro,
@@ -221,9 +221,7 @@ function setupMarketingCheatSheet() {
     });
 
     root.querySelectorAll('[data-cheatsheet-markdown-link]').forEach((element) => {
-      if (!element.getAttribute('href').endsWith('.html')) {
-        element.setAttribute('href', localMarkdownUrl);
-      }
+      element.setAttribute('href', localMarkdownUrl);
     });
 
     root.querySelectorAll('[data-cheatsheet-email]').forEach((element) => {

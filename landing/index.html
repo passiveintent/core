@@ -8,7 +8,7 @@
     <title>PassiveIntent | Privacy-First Intent SDK</title>
     <meta
       name="description"
-      content="PassiveIntent Core is a privacy-first JavaScript and React SDK for in-session intent detection. Detect hesitation, exit intent, and path drift in the browser."
+      content="PassiveIntent is a privacy-first JavaScript and React intent SDK with an AGPL open-source core and enterprise extensions for multi-session, multi-tab, cross-domain, and dynamic-baseline detection."
     />
     <meta
       name="robots"
@@ -20,7 +20,7 @@
     <meta property="og:title" content="PassiveIntent | Privacy-First Intent SDK" />
     <meta
       property="og:description"
-      content="Detect hesitation, exit intent, entropy, and path drift in the browser with a privacy-first JavaScript and React SDK."
+      content="Compare the AGPL core with enterprise extensions for multi-session, multi-tab, cross-domain, and flash-sale resilient intent detection."
     />
     <meta property="og:type" content="website" />
     <meta property="og:url" content="https://passiveintent.dev/" />
@@ -38,7 +38,7 @@
     <meta name="twitter:title" content="PassiveIntent | Privacy-First Intent SDK" />
     <meta
       name="twitter:description"
-      content="Privacy-first JavaScript and React SDK for in-session intent detection with zero behavioral data egress by default."
+      content="Privacy-first JavaScript and React SDK with an AGPL core and enterprise extensions for multi-session, multi-tab, and cross-domain intent detection."
     />
     <meta name="twitter:image" content="https://passiveintent.dev/social-preview.png" />
     <meta name="twitter:image:alt" content="PassiveIntent - The Privacy-First User Intent Engine" />
@@ -66,7 +66,8 @@
             "@id": "https://passiveintent.dev/#website",
             "url": "https://passiveintent.dev/",
             "name": "PassiveIntent",
-            "description": "Privacy-first JavaScript and React SDK for in-session intent detection",
+            "description": "Privacy-first JavaScript and React SDK for in-session intent detection, with AGPL open-source and enterprise deployment paths.",
+            "image": "https://passiveintent.dev/web-app-manifest-512x512.png",
             "publisher": {
               "@id": "https://passiveintent.dev/#organization"
             },
@@ -77,7 +78,13 @@
             "@id": "https://passiveintent.dev/#organization",
             "name": "PassiveIntent",
             "url": "https://passiveintent.dev/",
-            "logo": "https://passiveintent.dev/favicon.svg",
+            "logo": {
+              "@type": "ImageObject",
+              "url": "https://passiveintent.dev/web-app-manifest-512x512.png",
+              "width": 512,
+              "height": 512
+            },
+            "image": "https://passiveintent.dev/web-app-manifest-512x512.png",
             "email": "support@passiveintent.dev",
             "sameAs": ["https://github.com/passiveintent/core"]
           },
@@ -88,7 +95,7 @@
             "url": "https://passiveintent.dev/",
             "applicationCategory": "DeveloperApplication",
             "operatingSystem": "Web Browser",
-            "description": "PassiveIntent Core is a privacy-first JavaScript and React SDK for in-session intent detection.",
+            "description": "PassiveIntent Core is a privacy-first JavaScript and React SDK for in-session intent detection, with enterprise extensions available for multi-session, multi-tab, and cross-domain orchestration.",
             "publisher": {
               "@id": "https://passiveintent.dev/#organization"
             },
@@ -99,6 +106,30 @@
               "availability": "https://schema.org/InStock",
               "url": "https://github.com/passiveintent/core"
             }
+          },
+          {
+            "@type": "SiteNavigationElement",
+            "@id": "https://passiveintent.dev/#nav-demo",
+            "name": "Demo Labs",
+            "url": "https://passiveintent.dev/demo.html"
+          },
+          {
+            "@type": "SiteNavigationElement",
+            "@id": "https://passiveintent.dev/#nav-cheatsheet",
+            "name": "Behavioral Topography Cheat Sheet",
+            "url": "https://passiveintent.dev/cheatsheet.html"
+          },
+          {
+            "@type": "SiteNavigationElement",
+            "@id": "https://passiveintent.dev/#nav-solutions",
+            "name": "Scenario Gallery",
+            "url": "https://passiveintent.dev/solutions.html"
+          },
+          {
+            "@type": "SiteNavigationElement",
+            "@id": "https://passiveintent.dev/#nav-licensing",
+            "name": "Licensing Detail",
+            "url": "https://passiveintent.dev/licensing.html"
           },
           {
             "@type": "FAQPage",
@@ -138,6 +169,14 @@
               },
               {
                 "@type": "Question",
+                "name": "What is the difference between PassiveIntent Core and the Enterprise pack?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "PassiveIntent Core is the AGPL open-source engine for one live session on one site in one tab. Enterprise expands that same privacy-first model for repeat visits, connected properties, tab-heavy research, and fast-changing traffic conditions."
+                }
+              },
+              {
+                "@type": "Question",
                 "name": "Can I use standard tiers to wrap PassiveIntent into my own SDK or app?",
                 "acceptedAnswer": {
                   "@type": "Answer",
@@ -165,13 +204,13 @@
         </a>
         <nav class="site-nav" id="site-nav" aria-label="Primary">
           <a href="#why-different">Why</a>
-          <a href="#how">How</a>
-          <a href="#use-cases">Use cases</a>
-          <a href="#demo">Demo</a>
-          <a href="#pricing">Pricing</a>
+          <a href="./solutions.html">Use cases</a>
+          <a href="./demo.html">Demo Labs</a>
+          <a href="./cheatsheet.html">Cheat Sheet</a>
+          <a href="./licensing.html">Pricing</a>
           <a href="#faq">FAQ</a>
         </nav>
-        <a class="header-cta" href="#demo">See demo labs</a>
+        <a class="header-cta" href="./demo.html">Open demo hub</a>
       </div>
     </header>
 
@@ -189,7 +228,7 @@
             intervene without exporting behavioral data to another vendor.
           </p>
           <div class="hero-actions">
-            <a class="btn btn-primary" href="#demo">See demo labs</a>
+            <a class="btn btn-primary" href="./demo.html">Browse demo hub</a>
             <a
               class="btn btn-secondary"
               href="https://github.com/passiveintent/core/tree/main/packages/core"
@@ -586,7 +625,8 @@
           <p class="eyebrow">Go deeper</p>
           <h2>Explore the demos, docs, and rollout details.</h2>
           <p class="section-copy">
-            Find the full scenario gallery, licensing detail, docs, and calibration guidance here.
+            Find the <a href="./demo.html">demo hub</a>, scenario gallery, licensing detail,
+            docs, and calibration guidance here.
           </p>
         </div>
         <div class="start-grid" id="start-grid">
@@ -641,6 +681,78 @@
         </div>
       </section>
 
+      <section id="compare-offerings" class="section reveal enterprise-compare-section">
+          <div class="enterprise-compare-shell">
+            <div class="section-head enterprise-compare-head">
+              <p class="eyebrow">Open-source core vs enterprise</p>
+              <h2>Start with the pure core. Expand when the journey gets bigger.</h2>
+              <p class="section-copy">
+                The AGPL core is built for one live session on one site in one tab. Enterprise is
+                for brands that need continuity across repeat visits, connected properties,
+                comparison-heavy journeys, and high-volatility campaigns.
+              </p>
+            </div>
+
+            <div class="enterprise-boundary-grid" aria-label="Enterprise boundary extensions">
+              <article class="enterprise-boundary-card">
+                <span class="enterprise-boundary-label">Visit scope</span>
+                <div class="enterprise-boundary-track">
+                  <strong>One live visit</strong>
+                  <span aria-hidden="true">→</span>
+                  <strong>Repeat visits</strong>
+                </div>
+                <p>Keep reading the customer even when the buying decision stretches across time.</p>
+              </article>
+              <article class="enterprise-boundary-card">
+                <span class="enterprise-boundary-label">Property scope</span>
+                <div class="enterprise-boundary-track">
+                  <strong>One site</strong>
+                  <span aria-hidden="true">→</span>
+                  <strong>Connected properties</strong>
+                </div>
+                <p>Carry context from brand site to store to checkout without breaking the flow.</p>
+              </article>
+              <article class="enterprise-boundary-card">
+                <span class="enterprise-boundary-label">Research behavior</span>
+                <div class="enterprise-boundary-track">
+                  <strong>One tab</strong>
+                  <span aria-hidden="true">→</span>
+                  <strong>Full comparison journey</strong>
+                </div>
+                <p>See the real buyer signal when people open, compare, and bounce across tabs.</p>
+              </article>
+              <article class="enterprise-boundary-card">
+                <span class="enterprise-boundary-label">Campaign resilience</span>
+                <div class="enterprise-boundary-track">
+                  <strong>Stable traffic</strong>
+                  <span aria-hidden="true">→</span>
+                  <strong>Launch and promo spikes</strong>
+                </div>
+                <p>Stay readable through launches, flash sales, and sudden shifts in buyer behavior.</p>
+              </article>
+            </div>
+
+            <div class="enterprise-compare-footer">
+              <p>
+                <strong>Same privacy promise.</strong> Enterprise keeps the zero-egress posture of
+                the core while widening the kinds of journeys you can understand.
+              </p>
+              <div class="cta-actions enterprise-compare-actions">
+                <a
+                  class="btn btn-primary"
+                  href="./licensing.html#offerings-compare"
+                  >See detailed comparison</a
+                >
+                <a
+                  class="btn btn-secondary"
+                  href="mailto:support@passiveintent.dev?subject=Enterprise%20Sales%20Inquiry%20-%20Boundary%20Extension"
+                  >Talk to enterprise sales</a
+                >
+              </div>
+            </div>
+          </div>
+      </section>
+
       <section id="pricing" class="section reveal">
         <div class="section-head">
           <p class="eyebrow">Pricing / licensing</p>
@@ -684,8 +796,8 @@
             <h3>Enterprise</h3>
             <p class="price price-custom">Custom</p>
             <p>
-              Premium Intent Catalog, custom engineering sprints, and Zero-Trust BYOC for Fortune
-              500 scale.
+              Built for repeat visits, connected properties, comparison-heavy journeys, and
+              enterprise rollout needs.
             </p>
             <a
               class="btn btn-secondary"
@@ -755,6 +867,14 @@
             </p>
           </details>
           <details>
+            <summary>What is the difference between PassiveIntent Core and the Enterprise pack?</summary>
+            <p>
+              PassiveIntent Core is the AGPL open-source engine for one live session on one site in
+              one tab. Enterprise expands that same privacy-first model for repeat visits,
+              connected properties, tab-heavy research, and fast-changing traffic conditions.
+            </p>
+          </details>
+          <details>
             <summary>
               Can I use standard tiers to wrap PassiveIntent into my own SDK or app?
             </summary>
@@ -781,6 +901,8 @@
         </div>
         <div class="footer-group">
           <span class="footer-title">Open</span>
+          <a href="./demo.html">Demo Labs</a>
+          <a href="./cheatsheet.html">Behavioral Matrix</a>
           <a href="./solutions.html">Scenario Gallery</a>
           <a href="https://github.com/passiveintent/core" target="_blank" rel="noopener noreferrer"
             >Source on GitHub</a

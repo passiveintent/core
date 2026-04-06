@@ -1,0 +1,369 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>PassiveIntent | Demo Labs and Interactive Walkthroughs</title>
+    <meta
+      name="description"
+      content="Open the PassiveIntent demo hub with a hosted e-commerce walkthrough plus React and Vanilla JS labs you can try immediately."
+    />
+    <meta
+      name="robots"
+      content="index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1"
+    />
+    <link rel="canonical" href="https://passiveintent.dev/demo.html" />
+    <meta name="author" content="PassiveIntent" />
+    <meta name="application-name" content="PassiveIntent Demo Labs" />
+    <meta property="og:title" content="PassiveIntent | Demo Labs and Interactive Walkthroughs" />
+    <meta
+      property="og:description"
+      content="Try the hosted e-commerce walkthrough, then open the React or Vanilla JS labs to inspect PassiveIntent in action."
+    />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://passiveintent.dev/demo.html" />
+    <meta property="og:site_name" content="PassiveIntent" />
+    <meta property="og:locale" content="en_US" />
+    <meta property="og:image" content="https://passiveintent.dev/social-preview.png" />
+    <meta property="og:image:url" content="https://passiveintent.dev/social-preview.png" />
+    <meta property="og:image:secure_url" content="https://passiveintent.dev/social-preview.png" />
+    <meta property="og:image:type" content="image/png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="PassiveIntent demo hub with interactive walkthroughs" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:url" content="https://passiveintent.dev/demo.html" />
+    <meta name="twitter:title" content="PassiveIntent | Demo Labs and Interactive Walkthroughs" />
+    <meta
+      name="twitter:description"
+      content="Hosted walkthroughs and browser-based labs for PassiveIntent across React and Vanilla JS."
+    />
+    <meta name="twitter:image" content="https://passiveintent.dev/social-preview.png" />
+    <meta name="twitter:image:alt" content="PassiveIntent demo hub with interactive walkthroughs" />
+    <meta name="theme-color" content="#f6f3ee" />
+    <link rel="sitemap" type="application/xml" href="/sitemap.xml" />
+    <link rel="icon" type="image/png" href="/favicon-96x96.png" sizes="96x96" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="shortcut icon" href="/favicon.ico" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+    <meta name="apple-mobile-web-app-title" content="PassiveIntent" />
+    <link rel="manifest" href="/site.webmanifest" />
+    <link rel="stylesheet" href="./styles.css" />
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@graph": [
+          {
+            "@type": "Organization",
+            "@id": "https://passiveintent.dev/#organization",
+            "name": "PassiveIntent",
+            "url": "https://passiveintent.dev/",
+            "logo": {
+              "@type": "ImageObject",
+              "url": "https://passiveintent.dev/web-app-manifest-512x512.png",
+              "width": 512,
+              "height": 512
+            },
+            "image": "https://passiveintent.dev/web-app-manifest-512x512.png",
+            "email": "support@passiveintent.dev",
+            "sameAs": ["https://github.com/passiveintent/core"]
+          },
+          {
+            "@type": "CollectionPage",
+            "@id": "https://passiveintent.dev/demo.html#page",
+            "url": "https://passiveintent.dev/demo.html",
+            "name": "PassiveIntent Demo Labs",
+            "description": "Interactive demos and developer labs for PassiveIntent, including a hosted e-commerce walkthrough and StackBlitz environments for React and Vanilla JS.",
+            "publisher": {
+              "@id": "https://passiveintent.dev/#organization"
+            },
+            "inLanguage": "en-US"
+          },
+          {
+            "@type": "BreadcrumbList",
+            "itemListElement": [
+              {
+                "@type": "ListItem",
+                "position": 1,
+                "name": "Home",
+                "item": "https://passiveintent.dev/"
+              },
+              {
+                "@type": "ListItem",
+                "position": 2,
+                "name": "Demo Labs",
+                "item": "https://passiveintent.dev/demo.html"
+              }
+            ]
+          },
+          {
+            "@type": "ItemList",
+            "@id": "https://passiveintent.dev/demo.html#labs",
+            "name": "PassiveIntent demo labs",
+            "itemListElement": [
+              {
+                "@type": "ListItem",
+                "position": 1,
+                "name": "E-commerce rescue walkthrough",
+                "url": "https://passiveintent.dev/ecommerce"
+              },
+              {
+                "@type": "ListItem",
+                "position": 2,
+                "name": "React demo lab",
+                "url": "https://stackblitz.com/github/passiveintent/core/tree/main/demo-react?embed=1&view=preview&hideNavigation=1"
+              },
+              {
+                "@type": "ListItem",
+                "position": 3,
+                "name": "Vanilla JS demo lab",
+                "url": "https://stackblitz.com/github/passiveintent/core/tree/main/demo?embed=1&view=preview&hideNavigation=1"
+              }
+            ]
+          }
+        ]
+      }
+    </script>
+  </head>
+  <body>
+    <div class="page-orb page-orb-a" aria-hidden="true"></div>
+    <div class="page-orb page-orb-b" aria-hidden="true"></div>
+
+    <header class="site-header" id="site-header">
+      <div class="header-inner">
+        <a class="brand" href="./index.html" aria-label="PassiveIntent home">
+          <span class="brand-mark" aria-hidden="true"></span>
+          <span class="brand-copy">
+            <strong>PassiveIntent</strong>
+            <span>Behavioral Intent Engine</span>
+          </span>
+        </a>
+        <nav class="site-nav" aria-label="Primary">
+          <a href="./index.html">Home</a>
+          <a href="./solutions.html">Scenario Gallery</a>
+          <a href="./cheatsheet.html">Cheat Sheet</a>
+          <a href="./licensing.html">Pricing</a>
+        </nav>
+        <a class="header-cta" href="./ecommerce/">Open walkthrough</a>
+      </div>
+    </header>
+
+    <main class="legal-main solutions-main" id="top">
+      <section class="legal-hero solutions-hero">
+        <nav class="legal-back-nav">
+          <a href="./index.html">← Back to Home</a>
+          <a href="./cheatsheet.html">Cheat Sheet →</a>
+        </nav>
+
+        <p class="eyebrow">Demo labs</p>
+        <h1>Try PassiveIntent in live product moments.</h1>
+        <p class="legal-summary">
+          This page gives search engines and your users a real on-site demo destination: a hosted
+          e-commerce walkthrough plus React and Vanilla JS labs that open instantly in the browser.
+        </p>
+        <div class="legal-meta">
+          <span class="legal-meta-item">Hosted walkthrough</span>
+          <span class="legal-meta-item">React lab</span>
+          <span class="legal-meta-item">Vanilla JS lab</span>
+        </div>
+
+        <div class="zero-egress-badge">
+          <span class="legal-callout-label">Demo hub</span>
+          <span>
+            <strong>Use this page as the branded entry point for search.</strong> It keeps the demo
+            journey on your domain first, then fans out to the best interactive environment for each
+            experience.
+          </span>
+        </div>
+
+        <div class="hero-actions">
+          <a class="btn btn-primary" href="./ecommerce/">Open e-commerce walkthrough</a>
+          <a
+            class="btn btn-secondary"
+            href="https://stackblitz.com/github/passiveintent/core/tree/main/demo-react?embed=1&view=preview&hideNavigation=1"
+            target="_blank"
+            rel="noopener noreferrer"
+            >Open React lab ↗</a
+          >
+        </div>
+      </section>
+
+      <section class="section reveal">
+        <div class="section-head">
+          <p class="eyebrow">Interactive options</p>
+          <h2>Pick the fastest way to inspect the engine.</h2>
+          <p class="section-copy">
+            Start with the hosted walkthrough for the cleanest story, or jump straight into code in
+            StackBlitz and GitHub.
+          </p>
+        </div>
+
+        <div class="start-grid">
+          <article class="start-card start-card-compact">
+            <span class="article-source">Hosted walkthrough</span>
+            <h3>E-commerce revenue rescue</h3>
+            <p>
+              See price shock, hesitation, and rescue logic in a dedicated on-site experience that
+              search engines can crawl directly.
+            </p>
+            <a class="start-link" href="./ecommerce/">Experience the walkthrough</a>
+          </article>
+          <article class="start-card start-card-compact">
+            <span class="article-source">React lab</span>
+            <h3>Open the React sandbox</h3>
+            <p>
+              Explore the full signal set in a browser-based React workspace with no install or
+              account required.
+            </p>
+            <a
+              class="start-link"
+              href="https://stackblitz.com/github/passiveintent/core/tree/main/demo-react?embed=1&view=preview&hideNavigation=1"
+              target="_blank"
+              rel="noopener noreferrer"
+              >Launch React lab</a
+            >
+          </article>
+          <article class="start-card start-card-compact">
+            <span class="article-source">Vanilla JS lab</span>
+            <h3>Open the browser implementation</h3>
+            <p>
+              Inspect the same intent flows in a plain JavaScript environment for teams not using
+              React.
+            </p>
+            <a
+              class="start-link"
+              href="https://stackblitz.com/github/passiveintent/core/tree/main/demo?embed=1&view=preview&hideNavigation=1"
+              target="_blank"
+              rel="noopener noreferrer"
+              >Launch Vanilla lab</a
+            >
+          </article>
+          <article class="start-card start-card-compact">
+            <span class="article-source">Source</span>
+            <h3>Inspect the demo code</h3>
+            <p>
+              Review the React and Vanilla implementations on GitHub before you integrate the SDK
+              into production flows.
+            </p>
+            <a
+              class="start-link"
+              href="https://github.com/passiveintent/core/tree/main/demo-react"
+              target="_blank"
+              rel="noopener noreferrer"
+              >Open demo source</a
+            >
+          </article>
+        </div>
+      </section>
+
+      <section class="section reveal">
+        <div class="section-head">
+          <p class="eyebrow">Keep exploring</p>
+          <h2>Round out the evaluation with docs, scenarios, and rollout guidance.</h2>
+          <p class="section-copy">
+            The demo works better when visitors can immediately move into implementation, use-case
+            review, and calibration.
+          </p>
+        </div>
+
+        <div class="start-grid">
+          <article class="start-card start-card-compact">
+            <span class="article-source">Use cases</span>
+            <h3>Scenario gallery</h3>
+            <p>See where the same engine fits across commerce, fintech, onboarding, and support.</p>
+            <a class="start-link" href="./solutions.html">Open scenario gallery</a>
+          </article>
+          <article class="start-card start-card-compact">
+            <span class="article-source">Cheat Sheet</span>
+            <h3>Behavioral Topography Matrix</h3>
+            <p>
+              Share a one-page explanation that connects the math, the psychological state, and the
+              business move.
+            </p>
+            <a class="start-link" href="./cheatsheet.html">Open cheat sheet</a>
+          </article>
+          <article class="start-card start-card-compact">
+            <span class="article-source">Pricing</span>
+            <h3>Licensing detail</h3>
+            <p>
+              Review plan coverage, internal-use boundaries, and OEM rules before moving into a
+              pilot.
+            </p>
+            <a class="start-link" href="./licensing.html">See pricing and licensing</a>
+          </article>
+          <article class="start-card start-card-compact">
+            <span class="article-source">Calibration</span>
+            <h3>Threshold tuning guide</h3>
+            <p>
+              Learn how to calibrate thresholds so demo behavior translates cleanly into production
+              scoring.
+            </p>
+            <a
+              class="start-link"
+              href="https://github.com/passiveintent/core/blob/main/CALIBRATION_GUIDE.md"
+              target="_blank"
+              rel="noopener noreferrer"
+              >Read the guide</a
+            >
+          </article>
+        </div>
+      </section>
+
+      <section class="section reveal">
+        <div class="cta-band">
+          <div>
+            <p class="eyebrow">Next step</p>
+            <h2>Bring one high-dropoff flow and map the intervention logic around it.</h2>
+          </div>
+          <div class="cta-actions">
+            <a
+              class="btn btn-primary"
+              href="mailto:support@passiveintent.dev?subject=PassiveIntent%20Pilot%20Request"
+              >Request pilot</a
+            >
+            <a class="btn btn-secondary" href="./licensing.html">See pricing</a>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer reveal">
+      <div class="footer-brand">
+        <strong>PassiveIntent</strong>
+        <p>Privacy-first intent engine for conversion, product, and CX teams.</p>
+      </div>
+      <div class="footer-links">
+        <div class="footer-group">
+          <span class="footer-title">Explore</span>
+          <a href="./index.html">Home</a>
+          <a href="./solutions.html">Scenario Gallery</a>
+          <a href="./licensing.html">Licensing Detail</a>
+        </div>
+        <div class="footer-group">
+          <span class="footer-title">Open</span>
+          <a href="./cheatsheet.html">Behavioral Matrix</a>
+          <a href="https://github.com/passiveintent/core" target="_blank" rel="noopener noreferrer"
+            >Source on GitHub</a
+          >
+          <a
+            href="https://github.com/passiveintent/core/blob/main/CALIBRATION_GUIDE.md"
+            target="_blank"
+            rel="noopener noreferrer"
+            >Calibration Guide</a
+          >
+        </div>
+        <div class="footer-group">
+          <span class="footer-title">Contact</span>
+          <a href="mailto:support@passiveintent.dev">support@passiveintent.dev</a>
+          <span class="footer-copy">© <span id="year">2026</span> PassiveIntent</span>
+        </div>
+      </div>
+    </footer>
+
+    <button class="back-to-top" id="back-to-top" type="button" aria-label="Back to top" hidden>
+      ↑
+    </button>
+
+    <script src="./script.js"></script>
+  </body>
+</html>

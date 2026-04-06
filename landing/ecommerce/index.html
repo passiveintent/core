@@ -76,7 +76,13 @@
             "@id": "https://passiveintent.dev/#organization",
             "name": "PassiveIntent",
             "url": "https://passiveintent.dev/",
-            "logo": "https://passiveintent.dev/favicon.svg",
+            "logo": {
+              "@type": "ImageObject",
+              "url": "https://passiveintent.dev/web-app-manifest-512x512.png",
+              "width": 512,
+              "height": 512
+            },
+            "image": "https://passiveintent.dev/web-app-manifest-512x512.png",
             "email": "support@passiveintent.dev",
             "sameAs": ["https://github.com/passiveintent/core"]
           },
@@ -182,9 +188,9 @@
         </a>
         <nav class="site-nav" aria-label="Primary">
           <a href="../index.html">Home</a>
-          <a href="../solutions.html#art-of-possible">Scenarios</a>
-          <a href="../solutions.html#products">Products</a>
-          <a href="../solutions.html#articles">Resources</a>
+          <a href="../demo.html">Demo Labs</a>
+          <a href="../cheatsheet.html">Cheat Sheet</a>
+          <a href="../solutions.html">Scenario Gallery</a>
         </nav>
         <a
           class="header-cta"
@@ -932,6 +938,8 @@
         </div>
         <div class="footer-group">
           <span class="footer-title">Open</span>
+          <a href="../demo.html">Demo Labs</a>
+          <a href="../cheatsheet.html">Cheat Sheet</a>
           <a href="https://github.com/passiveintent/core" target="_blank" rel="noopener noreferrer"
             >Source on GitHub</a
           >

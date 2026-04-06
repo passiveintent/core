@@ -71,9 +71,9 @@
         </a>
         <nav class="site-nav" aria-label="Primary">
           <a href="./index.html">Home</a>
-          <a href="./solutions.html#art-of-possible">Scenarios</a>
-          <a href="./solutions.html#products">Products</a>
-          <a href="./solutions.html#articles">Resources</a>
+          <a href="./demo.html">Demo Labs</a>
+          <a href="./cheatsheet.html">Cheat Sheet</a>
+          <a href="./solutions.html">Scenario Gallery</a>
         </nav>
         <a class="header-cta" href="mailto:support@passiveintent.dev">Contact support</a>
       </div>
@@ -176,16 +176,146 @@
       </section>
 
       <section id="compare" class="section reveal pricing-compare-section">
+        <div id="offerings-compare" class="enterprise-compare-shell">
+          <div class="section-head enterprise-compare-head">
+            <p class="eyebrow">Open-source core vs enterprise</p>
+            <h2>Choose based on how complex the buyer journey really is.</h2>
+            <p class="section-copy">
+              The AGPL core is deliberately narrow: one live session, one site, one tab. Enterprise
+              widens that model for repeat visits, connected properties, comparison-heavy research,
+              and campaign volatility, while keeping the same privacy-first posture.
+            </p>
+          </div>
+
+          <div class="enterprise-boundary-grid" aria-label="Open-source and enterprise boundaries">
+            <article class="enterprise-boundary-card">
+              <span class="enterprise-boundary-label">Visit scope</span>
+              <div class="enterprise-boundary-track">
+                <strong>One live visit</strong>
+                <span aria-hidden="true">→</span>
+                <strong>Repeat visits</strong>
+              </div>
+              <p>
+                Stay with the decision when a customer comes back later instead of starting from
+                zero each time.
+              </p>
+            </article>
+            <article class="enterprise-boundary-card">
+              <span class="enterprise-boundary-label">Property scope</span>
+              <div class="enterprise-boundary-track">
+                <strong>One site</strong>
+                <span aria-hidden="true">→</span>
+                <strong>Connected properties</strong>
+              </div>
+              <p>
+                Carry context across your brand site, store, and checkout flows without creating a
+                surveillance stack.
+              </p>
+            </article>
+            <article class="enterprise-boundary-card">
+              <span class="enterprise-boundary-label">Research behavior</span>
+              <div class="enterprise-boundary-track">
+                <strong>One tab</strong>
+                <span aria-hidden="true">→</span>
+                <strong>Full comparison journey</strong>
+              </div>
+              <p>
+                Understand buyers who open multiple tabs, compare options, disappear, and return
+                with a different level of intent.
+              </p>
+            </article>
+            <article class="enterprise-boundary-card">
+              <span class="enterprise-boundary-label">Campaign resilience</span>
+              <div class="enterprise-boundary-track">
+                <strong>Stable traffic</strong>
+                <span aria-hidden="true">→</span>
+                <strong>Launch and promo spikes</strong>
+              </div>
+              <p>
+                Keep the signal useful through launches, flash sales, and other abrupt shifts in
+                buyer behavior.
+              </p>
+            </article>
+          </div>
+
+          <div class="enterprise-tier-grid">
+            <article class="enterprise-tier-card">
+              <span class="article-source">AGPL open-source core</span>
+              <h3>Best for proving the loop inside one active decision window.</h3>
+              <p>
+                Use the core when you want a clean, transparent, privacy-first engine for in-session
+                intervention without commercial rollout complexity.
+              </p>
+              <ul class="enterprise-tier-list">
+                <li>
+                  Great for open-source adoption, evaluation, pilots, and internal exploration
+                </li>
+                <li>Designed for one site, one tab, and one live visit at a time</li>
+                <li>Deterministic intent math your product and engineering teams can inspect</li>
+                <li>Zero-egress by default for teams starting with the cleanest privacy posture</li>
+              </ul>
+            </article>
+
+            <article class="enterprise-tier-card enterprise-tier-card-featured">
+              <div class="enterprise-tier-topline">
+                <span class="article-source">Enterprise commercial pack</span>
+                <span class="enterprise-pill">Scaled journey coverage</span>
+              </div>
+              <h3>Built for revenue journeys that stretch across time, sites, and tabs.</h3>
+              <p>
+                Choose enterprise when a single isolated session is no longer enough to explain the
+                customer’s real buying journey.
+              </p>
+              <ul class="enterprise-tier-list">
+                <li>
+                  Carry intent across repeat visits, connected properties, and multi-tab research
+                </li>
+                <li>
+                  Add premium signals for high-value hesitation, comparison shopping, churn risk,
+                  and coercion patterns
+                </li>
+                <li>Stay resilient during launches, promotions, and flash-sale volatility</li>
+                <li>
+                  Validate access offline and fall back cleanly if enterprise features are
+                  unavailable
+                </li>
+              </ul>
+              <div class="enterprise-proof-list" aria-label="Enterprise assurances">
+                <span>Zero-egress preserved</span>
+                <span>No phone-home</span>
+                <span>Graceful fallback</span>
+              </div>
+            </article>
+          </div>
+
+          <div class="enterprise-compare-footer">
+            <p>
+              <strong>Operationally:</strong> Enterprise extends the core rather than replacing it.
+              It keeps the privacy boundary intact, validates offline, and drops back to the
+              open-source experience if enterprise access is not active.
+            </p>
+            <div class="cta-actions enterprise-compare-actions">
+              <a
+                class="btn btn-primary"
+                href="mailto:support@passiveintent.dev?subject=Commercial%20License%20Inquiry%20-%20Enterprise%20Tier"
+                >Talk to enterprise sales</a
+              >
+              <a class="btn btn-secondary" href="#compare-table">See tier table</a>
+            </div>
+          </div>
+        </div>
+
         <div class="pricing-compare-shell">
           <div class="section-head pricing-compare-head">
-            <p class="eyebrow">Plan comparison</p>
-            <h2>Choose the tier that matches your usage model.</h2>
+            <p class="eyebrow">Tier comparison</p>
+            <h2>Then choose the commercial tier that matches your rollout.</h2>
             <p class="section-copy">
               A side-by-side view of pricing, project coverage, and support.
             </p>
           </div>
 
           <div
+            id="compare-table"
             class="pricing-compare-table-wrap"
             role="region"
             aria-label="Pricing comparison"
@@ -227,23 +357,16 @@
                   <th scope="row">Enterprise</th>
                   <td>Custom</td>
                   <td>
-                    Multi-org deployments, highly regulated industries (FinTech / Healthcare), and
-                    large retail operations.
+                    Brands with repeat-visit journeys, connected domains, tab-heavy research,
+                    regulated rollout needs, or large-scale operations.
                   </td>
                   <td>
                     Unlimited scope. Includes AGPL commercial exemption, OEM wrapping rights, and
                     white-labeling.
                   </td>
                   <td>
-                    <strong>Premium Intent Catalog:</strong> Access the private
-                    @passiveintent/enterprise package for advanced detection modules, subject to
-                    request.<br />
-                    <strong>Custom Integration Sprints:</strong> Domain-specific kinematic adapters
-                    for your exact UI.<br />
-                    <strong>Zero-Trust BYOC:</strong> Custom telemetry egress adapters routed
-                    directly to your private AWS, Azure, or GCP environment.<br />
-                    <strong>Support:</strong> Dedicated private channel, priority triage, roadmap
-                    reviews, and optional extended coverage.
+                    Premium enterprise detection for complex journeys, private support channels,
+                    priority triage, roadmap reviews, and optional rollout guidance.
                   </td>
                 </tr>
               </tbody>
@@ -338,6 +461,8 @@
         </div>
         <div class="footer-group">
           <span class="footer-title">Open</span>
+          <a href="./demo.html">Demo Labs</a>
+          <a href="./cheatsheet.html">Cheat Sheet</a>
           <a href="./solutions.html">Scenario Gallery</a>
           <a href="https://github.com/passiveintent/core" target="_blank" rel="noopener noreferrer"
             >Source on GitHub</a

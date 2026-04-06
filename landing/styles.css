@@ -21,30 +21,37 @@
   --radius-md: 18px;
   --radius-sm: 14px;
   --max-width: 1200px;
+:root {
+  --bg: #f6f3ee;
+  --bg-2: #fdfbf8;
+  --surface: rgba(255, 255, 255, 0.78);
+  --surface-strong: #ffffff;
+  --surface-dark: #11141d;
+  --surface-dark-2: #181d28;
+  --text: #13161f;
+  --muted: #616a79;
+  --muted-strong: #475062;
+  --line: rgba(19, 22, 31, 0.09);
+  --line-strong: rgba(19, 22, 31, 0.16);
+  --accent: #156ff7;
+  --accent-strong: #0c4dc8;
+  --accent-soft: rgba(21, 111, 247, 0.12);
+  --warm: #a96324;
+  --shadow-soft: 0 22px 70px rgba(17, 20, 29, 0.08);
+  --shadow-card: 0 18px 44px rgba(17, 20, 29, 0.08);
+  --radius-xl: 34px;
+  --radius-lg: 24px;
+  --radius-md: 18px;
+  --radius-sm: 14px;
+  --max-width: 1200px;
 }
 
-*,
-*::before,
-*::after {
-  box-sizing: border-box;
-}
-
-html {
-  scroll-behavior: smooth;
-}
-
-body {
-  margin: 0;
-  font-family: 'Manrope', sans-serif;
-  background: linear-gradient(
-    180deg,
-    rgba(246, 243, 238, 0.84) 0%,
-    rgba(240, 238, 233, 0.92) 48%,
-    #f8f6f1 100%
-  );
-  color: var(--text);
-  line-height: 1.6;
-  overflow-x: hidden;
+@font-face {
+  font-family: 'Manrope';
+  font-style: normal;
+  font-weight: 400 800;
+  font-display: swap;
+  src: url('./fonts/manrope-latin-400-800.woff2') format('woff2');
 }
 
 a {

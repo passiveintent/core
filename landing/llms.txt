@@ -26,13 +26,13 @@ PassiveIntent uses deterministic math (Markov chains, entropy scoring, dwell-tim
 - Deterministic: uses Markov chain log-likelihood scoring + Shannon entropy + dwell-time, not a black-box ML model.
 - Self-calibrating: enterprise tier normalizes scores against your site's own μ/σ baseline, eliminating hardcoded thresholds.
 - Lightweight: ~11 kB gzip — safe for checkout and onboarding flows where page weight matters.
-- Dual-licensed: AGPL-3.0 free for open-source/internal use; commercial license available for SaaS products.
+- Dual-licensed: AGPL-3.0 free for open-source projects, personal projects, and non-commercial use; a commercial license is required for closed-source or proprietary products.
 
 ## Quick Start
 
 Install: `npm install @passiveintent/core`
 
-Vanilla JS: `import { createIntentEngine } from '@passiveintent/core';`
+Vanilla JS: `import { createBrowserIntent } from '@passiveintent/core';`
 
 React: `import { usePassiveIntent } from '@passiveintent/react';`
 
@@ -48,7 +48,7 @@ Q: What signals does it detect?
 A: Pricing hesitation, exit intent, trajectory drift, scroll reversal, dwell-time anomalies, high navigation entropy, and compound hesitation states. See the cheatsheet for the full behavioral topography matrix.
 
 Q: What is the licensing model?
-A: AGPL-3.0 for open-source/internal/self-hosted use (free). A commercial license is required if you embed PassiveIntent in a SaaS product you sell to customers.
+A: AGPL-3.0 for open-source projects, personal projects, and academic research (free). A commercial license is required for any closed-source or proprietary product, or to run PassiveIntent as a network service without releasing your full application source under AGPL.
 
 Q: What is the difference between PassiveIntent Core and the Enterprise pack?
 A: Core is the AGPL open-source engine for one live session on one site in one tab. Enterprise expands that for repeat visits, connected properties, tab-heavy research flows, and fast-changing traffic conditions using dynamic baseline calibration.

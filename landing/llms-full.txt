@@ -78,23 +78,28 @@ PassiveIntent maps detected signals to five propensity states:
 - GitHub: https://github.com/passiveintent/core/tree/main/packages/core
 
 ```js
-import { createIntentEngine } from '@passiveintent/core';
+import { IntentManager } from '@passiveintent/core';
 
-const engine = createIntentEngine({
-  threshold: 0.7,        // propensity score below which intervention triggers
-  calibrate: true,       // enable baseline self-calibration (enterprise)
+const manager = new IntentManager({
+  storageKey: 'my-app',         // localStorage key for the persisted graph
+  namespace: 'passiveintent:',  // prefix for multi-instance isolation on the same origin
+  baselineMeanLL: -1.8,         // pre-computed mean log-likelihood for z-score calibration
+  baselineStdLL: 0.4,           // pre-computed std dev of log-likelihood
+  smoothingAlpha: 0.1,          // Dirichlet regularization — prevents cold-start spikes
+  bloom: { bitSize: 2048, hashCount: 4 }, // optional Bloom filter sizing
 });
 
-engine.on('hesitation', (signal) => {
-  console.log('Hesitation detected:', signal);
+manager.on('hesitation_detected', ({ state, trajectoryZScore, dwellZScore }) => {
+  console.log('Hesitation detected:', state, { trajectoryZScore, dwellZScore });
   // trigger your intervention here
 });
 
-engine.on('exit_intent', (signal) => {
-  console.log('Exit intent:', signal);
+manager.on('exit_intent', ({ state, likelyNext }) => {
+  console.log('Exit intent from', state, '→ likely next:', likelyNext);
 });
 
-engine.start();
+// Track the initial route; call again on every client-side navigation
+manager.track(window.location.pathname);
 ```
 
 ### @passiveintent/react
@@ -105,15 +110,24 @@ engine.start();
 
 ```jsx
 import { usePassiveIntent } from '@passiveintent/react';
+import { useEffect, useState } from 'react';
 
 function PricingPage() {
-  const { signal, propensity } = usePassiveIntent({ threshold: 0.7 });
+  const { on, track } = usePassiveIntent({ storageKey: 'pricing-page' });
+  const [hesitating, setHesitating] = useState(false);
+
+  useEffect(() => track(window.location.pathname), [track]);
+
+  useEffect(() => {
+    return on('hesitation_detected', ({ state }) => {
+      console.log('Hesitation detected on', state);
+      setHesitating(true);
+    });
+  }, [on]);
 
   return (
     <div>
-      {signal === 'hesitation' && (
-        <DiscountModal />
-      )}
+      {hesitating && <DiscountModal />}
       <PricingTable />
     </div>
   );
@@ -160,13 +174,13 @@ Surface live chat or help articles when erratic navigation signals that the user
 ## Licensing
 
 ### AGPL-3.0 Core (Free)
-- Use for open-source projects
-- Use for internal business tooling
-- Use for self-hosted deployments where the AGPL copyleft requirement is acceptable
-- Free of charge
+- Use for open-source projects that publish their full source code
+- Use for personal projects and academic research
+- Free of charge; AGPL copyleft applies (running as a network service without releasing full application source requires a commercial license)
 
 ### Commercial License
-- Required if you embed PassiveIntent in a SaaS product sold to customers
+- Required for any closed-source or proprietary product
+- Required to run PassiveIntent as a network service without releasing your full application source under AGPL
 - Required for OEM/agency/wrapped-product scenarios
 - Enterprise extensions (multi-session, multi-tab, cross-domain, dynamic baseline) are included
 - Contact: support@passiveintent.dev

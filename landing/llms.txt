@@ -32,7 +32,7 @@ PassiveIntent uses deterministic math (Markov chains, entropy scoring, dwell-tim
 
 Install: `npm install @passiveintent/core`
 
-Vanilla JS: `import { createIntentEngine } from '@passiveintent/core';`
+Vanilla JS: `import { createBrowserIntent } from '@passiveintent/core';`
 
 React: `import { usePassiveIntent } from '@passiveintent/react';`
 

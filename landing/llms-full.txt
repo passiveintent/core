@@ -37,6 +37,9 @@ This normalizes scores against your site's own traffic baseline, eliminating the
 
 PassiveIntent maps detected signals to five propensity states:
 
+- Precedence rule: first check for a compound signal and classify as State 5 when two or more of `high_entropy`, `dwell_time_anomaly`, and `trajectory_anomaly` co-occur; otherwise fall back to numeric propensity thresholds: `> 0.85` => State 1, `0.40-0.84` => State 2, `0.15-0.39` => State 3, `< 0.15` => State 4.
+- Tie-breaker examples: `propensity = 0.30` plus a single signal stays State 3; `propensity = 0.30` plus two or more co-occurring signals escalates to State 5.
+
 ### State 1: Conviction Buyer (propensity > 0.85)
 - Signal: None — session path is direct, on-track, no hesitation
 - Interpretation: User is highly likely to convert
@@ -57,8 +60,8 @@ PassiveIntent maps detected signals to five propensity states:
 - Interpretation: Lost, frustrated, or anxious
 - Recommended action: Trigger an immediate customer support modal or live chat.
 
-### State 5: Confirmed Hesitation (propensity < 0.39, compound signal)
-- Signal: Multiple signals combined — dwell anomaly + high entropy + trajectory drift
+### State 5: Confirmed Hesitation (compound signal takes precedence over numeric propensity)
+- Signal: Two or more of `high_entropy`, `dwell_time_anomaly`, and `trajectory_anomaly` co-occur
 - Interpretation: Frozen and confused — maximum friction state
 - Recommended action: Highest-urgency intervention. Combine support + incentive.
 

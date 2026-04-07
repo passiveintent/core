@@ -1,0 +1,246 @@
+# PassiveIntent — Full LLM Content
+
+> Privacy-first behavioral intent detection SDK for JavaScript and React. Detects hesitation, pricing doubt, and exit intent entirely in-browser — zero data egress, no cookies, GDPR-compliant by design.
+
+This file is the extended version of https://passiveintent.dev/llms.txt, intended for AI tools that benefit from deeper context when answering technical questions about PassiveIntent.
+
+---
+
+## What PassiveIntent Does
+
+PassiveIntent is a client-side JavaScript library that detects user hesitation and behavioral friction signals — pricing doubt, exit intent, trajectory drift, dwell-time anomalies — while the user is still in session and the decision is still in motion. It enables real-time intervention (offers, support prompts, reassurance messages, next-best-step nudges) before the session is lost.
+
+The core insight: most analytics tools report on what happened after the drop-off. PassiveIntent acts during the session, while there is still an opportunity to intervene.
+
+### Architecture: Observe → Infer → Intervene
+
+1. **Observe**: Route changes, dwell time, lifecycle events, and page-path changes are fed to the engine.
+2. **Infer**: The engine scores hesitation, entropy, exit intent, and trajectory drift using deterministic math — no remote API calls required.
+3. **Intervene**: Your product receives the signal and decides how to respond: show a support modal, trigger a discount, display reassurance copy, or route to a better next step.
+
+---
+
+## Technical Approach
+
+PassiveIntent uses three main mathematical primitives:
+
+- **Markov chain log-likelihood**: Models the probability of the user's current navigation path given a learned transition matrix of normal user flows. Anomalously low log-likelihood = hesitation or lost state.
+- **Shannon entropy**: Measures the unpredictability of the user's navigation choices. High entropy = exploratory/confused browsing. Low entropy = confident, linear path.
+- **Dwell-time scoring**: Compares time-on-page against a baseline distribution. Statistically significant over-dwell = stuck/confused. Under-dwell with backtracking = friction.
+
+Enterprise calibration uses: `Z = (LL_observed - μ_your_site) / σ_your_site`
+This normalizes scores against your site's own traffic baseline, eliminating the need to hardcode thresholds.
+
+---
+
+## Behavioral Topography Matrix
+
+PassiveIntent maps detected signals to five propensity states:
+
+- Precedence rule: first check for a compound signal and classify as State 5 when two or more of `high_entropy`, `dwell_time_anomaly`, and `trajectory_anomaly` co-occur; otherwise fall back to numeric propensity thresholds: `> 0.85` => State 1, `0.40-0.84` => State 2, `0.15-0.39` => State 3, `< 0.15` => State 4.
+- Tie-breaker examples: `propensity = 0.30` plus a single signal stays State 3; `propensity = 0.30` plus two or more co-occurring signals escalates to State 5.
+
+### State 1: Conviction Buyer (propensity > 0.85)
+- Signal: None — session path is direct, on-track, no hesitation
+- Interpretation: User is highly likely to convert
+- Recommended action: Suppress all popups and discount codes. Protect margin. Let them buy.
+
+### State 2: Window Shopper (propensity 0.40–0.84)
+- Signal: `high_entropy` — navigation entropy is elevated, visitor is exploring without a clear destination
+- Interpretation: Browsing, comparing options
+- Recommended action: Show social proof ("15 people bought this today"). Do not discount yet.
+
+### State 3: Cognitive Friction (propensity 0.15–0.39)
+- Signal: `dwell_time_anomaly` — unusually long time on page, visitor is stuck, not just reading carefully
+- Interpretation: Reading fine print, confused by pricing, uncertain about next step
+- Recommended action: Trigger a margin-saving intervention — e.g., "Free Shipping" popup.
+
+### State 4: Anxiety / Frustration (propensity < 0.15)
+- Signal: `trajectory_anomaly` — session path has broken down, visitor is looping, backtracking, or moving erratically
+- Interpretation: Lost, frustrated, or anxious
+- Recommended action: Trigger an immediate customer support modal or live chat.
+
+### State 5: Confirmed Hesitation (compound signal takes precedence over numeric propensity)
+- Signal: Two or more of `high_entropy`, `dwell_time_anomaly`, and `trajectory_anomaly` co-occur
+- Interpretation: Frozen and confused — maximum friction state
+- Recommended action: Highest-urgency intervention. Combine support + incentive.
+
+---
+
+## Packages
+
+### @passiveintent/core
+- Type: Vanilla JS / TypeScript
+- License: AGPL-3.0 (open source)
+- Size: ~11 kB gzip
+- Framework: Framework-agnostic — works in any JS environment
+- npm: https://www.npmjs.com/package/@passiveintent/core
+- GitHub: https://github.com/passiveintent/core/tree/main/packages/core
+
+```js
+import { IntentManager } from '@passiveintent/core';
+
+const manager = new IntentManager({
+  storageKey: 'my-app',         // localStorage key for the persisted graph
+  namespace: 'passiveintent:',  // prefix for multi-instance isolation on the same origin
+  baselineMeanLL: -1.8,         // pre-computed mean log-likelihood for z-score calibration
+  baselineStdLL: 0.4,           // pre-computed std dev of log-likelihood
+  smoothingAlpha: 0.1,          // Dirichlet regularization — prevents cold-start spikes
+  bloom: { bitSize: 2048, hashCount: 4 }, // optional Bloom filter sizing
+});
+
+manager.on('hesitation_detected', ({ state, trajectoryZScore, dwellZScore }) => {
+  console.log('Hesitation detected:', state, { trajectoryZScore, dwellZScore });
+  // trigger your intervention here
+});
+
+manager.on('exit_intent', ({ state, likelyNext }) => {
+  console.log('Exit intent from', state, '→ likely next:', likelyNext);
+});
+
+// Track the initial route; call again on every client-side navigation
+manager.track(window.location.pathname);
+```
+
+### @passiveintent/react
+- Type: React hooks and components
+- License: AGPL-3.0
+- npm: https://www.npmjs.com/package/@passiveintent/react
+- GitHub: https://github.com/passiveintent/core/tree/main/packages/react
+
+```jsx
+import { usePassiveIntent } from '@passiveintent/react';
+import { useEffect, useState } from 'react';
+
+function PricingPage() {
+  const { on, track } = usePassiveIntent({ storageKey: 'pricing-page' });
+  const [hesitating, setHesitating] = useState(false);
+
+  useEffect(() => track(window.location.pathname), [track]);
+
+  useEffect(() => {
+    return on('hesitation_detected', ({ state }) => {
+      console.log('Hesitation detected on', state);
+      setHesitating(true);
+    });
+  }, [on]);
+
+  return (
+    <div>
+      {hesitating && <DiscountModal />}
+      <PricingTable />
+    </div>
+  );
+}
+```
+
+### @passiveintent/remix
+- Type: Remix framework integration
+- License: AGPL-3.0
+- npm: https://www.npmjs.com/package/@passiveintent/remix
+- GitHub: https://github.com/passiveintent/core/tree/main/packages/remix
+
+---
+
+## Use Cases
+
+### Ecommerce — Cart Abandonment & Checkout Recovery
+Detect hesitation while the user is still on the pricing/cart/checkout page. Trigger interventions (free shipping, social proof, support) before they leave. Suppresses discounts for conviction buyers (propensity > 0.85) to protect margin.
+
+### SaaS — Pricing Page & Plan Selection Friction
+Detect users who are comparing plans and show signs of confusion (dwell anomaly) or exploration (high entropy). Trigger reassurance copy, comparison tooltips, or a support chat prompt.
+
+### SaaS — Onboarding Friction
+Surface help when confusion shows up in navigation behavior during onboarding flows. Catch the session before it turns into a lost conversion or an avoidable support ticket.
+
+### Billing & Upgrade Flows
+Detect hesitation at the moment of payment decision. Common pattern: user reaches billing page → goes back to pricing → returns → dwells unusually long → trajectory anomaly fires.
+
+### Customer Support — Proactive Deflection
+Surface live chat or help articles when erratic navigation signals that the user is lost, before they give up and file a ticket.
+
+---
+
+## Privacy & Compliance
+
+- **Zero-egress by default**: All behavioral computation runs in the browser. No behavioral data is transmitted to PassiveIntent servers or any third party.
+- **Cookie-free**: Does not set or read any cookies. Does not use localStorage for tracking purposes.
+- **No fingerprinting**: Does not use browser fingerprinting techniques.
+- **GDPR/CCPA compatible**: Because no personal data is collected or transmitted, PassiveIntent does not require a consent banner to function.
+- **Zero Egress Attestation**: A formal PDF attestation is available at https://passiveintent.dev/PassiveIntent_Zero_Egress_Attestation.pdf
+
+---
+
+## Licensing
+
+### AGPL-3.0 Core (Free)
+- Use for open-source projects that publish their full source code
+- Use for personal projects and academic research
+- Free of charge; AGPL copyleft applies (running as a network service without releasing full application source requires a commercial license)
+
+### Commercial License
+- Required for any closed-source or proprietary product
+- Required to run PassiveIntent as a network service without releasing your full application source under AGPL
+- Required for OEM/agency/wrapped-product scenarios
+- Enterprise extensions (multi-session, multi-tab, cross-domain, dynamic baseline) are included
+- Contact: support@passiveintent.dev
+- Details: https://passiveintent.dev/licensing.html
+
+### What Enterprise Adds Over Core
+| Feature | Core (AGPL) | Enterprise |
+|---|---|---|
+| Single session, single tab | Yes | Yes |
+| Multi-session (repeat visitors) | No | Yes |
+| Multi-tab orchestration | No | Yes |
+| Cross-domain tracking | No | Yes |
+| Dynamic baseline calibration | No | Yes |
+| Flash-sale resilient scoring | No | Yes |
+
+---
+
+## Frequently Asked Questions
+
+Q: Does PassiveIntent send any data to external servers?
+A: No. The AGPL core is fully zero-egress. All behavioral math runs in the browser. Enterprise deployments can optionally stream anonymized calibration aggregates to your own infrastructure only — never to PassiveIntent.
+
+Q: Is it cookie-free and GDPR-compliant?
+A: Yes. PassiveIntent does not use cookies or browser fingerprinting. No personally identifiable information is collected or transmitted. No consent banner is required for the library itself to function.
+
+Q: What signals does it detect?
+A: Pricing hesitation (dwell_time_anomaly), exit intent (trajectory_anomaly toward close-tab), high navigation entropy (window_shopper state), compound hesitation (multiple signals co-occurring), and conviction buying (linear path, no intervention needed).
+
+Q: Is this only for engineers?
+A: The SDK is developer-facing, but the behavioral cheatsheet and solutions pages explain the concepts for product managers, growth teams, and CX leaders. The Behavioral Topography Matrix cheatsheet is designed as a customer handout.
+
+Q: What is the difference between PassiveIntent Core and the Enterprise pack?
+A: Core is the AGPL open-source engine for one live session on one site in one tab. Enterprise expands that for repeat visits, connected properties, tab-heavy research flows, and fast-changing traffic conditions using dynamic baseline calibration (Z-score normalization against your site's own μ/σ).
+
+Q: Can I use PassiveIntent in a product I sell to customers?
+A: Not under the AGPL. Standard commercial tiers are for internal business use. Agency, OEM, or wrapped-product scenarios require a separate commercial license.
+
+Q: How does calibration work?
+A: The enterprise tier computes a rolling mean (μ) and standard deviation (σ) of log-likelihood scores across your real traffic. Individual session scores are then normalized: Z = (LL_observed - μ) / σ. This means thresholds are relative to your site's own normal behavior, not hardcoded constants.
+
+Q: What is the Bloom filter feature in the demo?
+A: PassiveIntent includes a privacy-preserving Bloom filter for deduplication — tracking whether a user has been shown an intervention before, without storing their identity. The demo shows how it works.
+
+---
+
+## Demo & Interactive Resources
+
+- React demo (StackBlitz): https://stackblitz.com/github/passiveintent/core/tree/main/demo-react?embed=1&view=preview&hideNavigation=1
+- Vanilla JS demo (StackBlitz): https://stackblitz.com/github/passiveintent/core/tree/main/demo?embed=1&view=preview&hideNavigation=1
+- Demo hub: https://passiveintent.dev/demo.html
+- Behavioral topography cheatsheet (printable): https://passiveintent.dev/cheatsheet.html
+
+---
+
+## Contact & Links
+
+- Website: https://passiveintent.dev/
+- GitHub: https://github.com/passiveintent/core
+- npm (core): https://www.npmjs.com/package/@passiveintent/core
+- npm (react): https://www.npmjs.com/package/@passiveintent/react
+- npm (remix): https://www.npmjs.com/package/@passiveintent/remix
+- Email: support@passiveintent.dev
+- Summary file: https://passiveintent.dev/llms.txt

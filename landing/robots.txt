@@ -2,3 +2,4 @@ User-agent: *
 Allow: /
 
 Sitemap: https://passiveintent.dev/sitemap.xml
+LLMs: https://passiveintent.dev/llms.txt

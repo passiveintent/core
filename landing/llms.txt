@@ -1,0 +1,59 @@
+# PassiveIntent
+
+> Privacy-first behavioral intent detection SDK for JavaScript and React. Detects hesitation, pricing doubt, and exit intent entirely in-browser — zero data egress, no cookies, GDPR-compliant by design.
+
+PassiveIntent uses deterministic math (Markov chains, entropy scoring, dwell-time analysis) to infer user hesitation in real time. It self-calibrates against your site's own behavioral baseline using Z-scores, so no manual threshold tuning is needed. The AGPL core is free and open source; enterprise extensions add multi-session, multi-tab, cross-domain, and dynamic-baseline capabilities.
+
+## Packages
+
+- [@passiveintent/core](https://www.npmjs.com/package/@passiveintent/core): Vanilla JS/TypeScript core — AGPL-3.0 open source. ~11 kB gzip. Works in any framework.
+- [@passiveintent/react](https://www.npmjs.com/package/@passiveintent/react): React hooks and components wrapping the core.
+- [@passiveintent/remix](https://www.npmjs.com/package/@passiveintent/remix): Remix-specific integration with server-loader patterns.
+
+## Documentation
+
+- [Landing page & overview](https://passiveintent.dev/): Full feature overview, FAQ, and comparison of AGPL core vs Enterprise.
+- [Behavioral signal cheatsheet](https://passiveintent.dev/cheatsheet.html): Catalog of detectable intent states — hesitation, exit intent, trajectory drift, dwell anomaly, cognitive friction, and more. Includes propensity thresholds and recommended business interventions.
+- [Use-case solutions](https://passiveintent.dev/solutions.html): Ecommerce cart abandonment, SaaS onboarding friction, support-sensitive flows, billing page drop-off.
+- [Interactive demo](https://passiveintent.dev/demo.html): Live demos for ecommerce, SaaS, and Bloom filter deduplication — no install required.
+- [Licensing & pricing](https://passiveintent.dev/licensing.html): AGPL-3.0 open-source core + commercial enterprise license details.
+- [Full LLM content](https://passiveintent.dev/llms-full.txt): Extended version of this file with complete feature documentation, code examples, and behavioral signal catalog.
+
+## Key Differentiators
+
+- Zero-egress: all computation runs in the browser; no behavioral data is sent to any server by default.
+- Cookie-free: does not set or read cookies; no fingerprinting.
+- Deterministic: uses Markov chain log-likelihood scoring + Shannon entropy + dwell-time, not a black-box ML model.
+- Self-calibrating: enterprise tier normalizes scores against your site's own μ/σ baseline, eliminating hardcoded thresholds.
+- Lightweight: ~11 kB gzip — safe for checkout and onboarding flows where page weight matters.
+- Dual-licensed: AGPL-3.0 free for open-source projects, personal projects, and non-commercial use; a commercial license is required for closed-source or proprietary products.
+
+## Quick Start
+
+Install: `npm install @passiveintent/core`
+
+Vanilla JS: `import { createBrowserIntent } from '@passiveintent/core';`
+
+React: `import { usePassiveIntent } from '@passiveintent/react';`
+
+## Frequently Asked Questions
+
+Q: Does PassiveIntent send any data to external servers?
+A: No. The AGPL core is fully zero-egress. All behavioral math runs in the browser. Enterprise deployments can optionally stream anonymized calibration aggregates to your own infrastructure only.
+
+Q: Is it cookie-free and GDPR-compliant?
+A: Yes. PassiveIntent does not use cookies or browser fingerprinting. No personally identifiable information is collected or transmitted.
+
+Q: What signals does it detect?
+A: Pricing hesitation, exit intent, trajectory drift, scroll reversal, dwell-time anomalies, high navigation entropy, and compound hesitation states. See the cheatsheet for the full behavioral topography matrix.
+
+Q: What is the licensing model?
+A: AGPL-3.0 for open-source projects, personal projects, and academic research (free). A commercial license is required for any closed-source or proprietary product, or to run PassiveIntent as a network service without releasing your full application source under AGPL.
+
+Q: What is the difference between PassiveIntent Core and the Enterprise pack?
+A: Core is the AGPL open-source engine for one live session on one site in one tab. Enterprise expands that for repeat visits, connected properties, tab-heavy research flows, and fast-changing traffic conditions using dynamic baseline calibration.
+
+## Contact
+
+GitHub: https://github.com/passiveintent/core
+Email: support@passiveintent.dev

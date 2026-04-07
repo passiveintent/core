@@ -1105,24 +1105,34 @@ intent.<span class="fn">hasSeen</span>(<span class="str">'/checkout/payment'</sp
       el.querySelector('#btn-bloom-check')!.addEventListener('click', () => {
         const v = el.querySelector<HTMLInputElement>('#bloom-check-input')!.value;
         const seen = intent.hasSeen(v);
-        el.querySelector<HTMLElement>('#bloom-check-result')!.innerHTML =
-          `<div class="alert ${seen ? 'alert-warning' : 'alert-info'}">
-            <code>${v}</code> → <strong>${seen ? '✓ Probably seen' : '✗ Definitely not seen'}</strong>
-          </div>`;
+        const bloomCheckDiv = document.createElement('div');
+        bloomCheckDiv.className = `alert ${seen ? 'alert-warning' : 'alert-info'}`;
+        const bloomCheckCode = document.createElement('code');
+        bloomCheckCode.textContent = v;
+        bloomCheckDiv.appendChild(bloomCheckCode);
+        bloomCheckDiv.appendChild(document.createTextNode(` → `));
+        const bloomCheckStrong = document.createElement('strong');
+        bloomCheckStrong.textContent = seen ? '✓ Probably seen' : '✗ Definitely not seen';
+        bloomCheckDiv.appendChild(bloomCheckStrong);
+        el.querySelector<HTMLElement>('#bloom-check-result')!.replaceChildren(bloomCheckDiv);
       });
       el.querySelector('#btn-bloom-add')!.addEventListener('click', () => {
         const v = el.querySelector<HTMLInputElement>('#bloom-add-input')!.value;
         bf.add(v);
         bfItems++;
-        el.querySelector<HTMLElement>('#bloom-standalone-result')!.innerHTML =
-          `<div class="alert alert-success">Added "${v}". Estimated FPR: ${(bf.estimateCurrentFPR(bfItems) * 100).toFixed(3)}%</div>`;
+        const bloomAddDiv = document.createElement('div');
+        bloomAddDiv.className = 'alert alert-success';
+        bloomAddDiv.textContent = `Added "${v}". Estimated FPR: ${(bf.estimateCurrentFPR(bfItems) * 100).toFixed(3)}%`;
+        el.querySelector<HTMLElement>('#bloom-standalone-result')!.replaceChildren(bloomAddDiv);
         renderBits();
       });
       el.querySelector('#btn-bloom-test')!.addEventListener('click', () => {
         const v = el.querySelector<HTMLInputElement>('#bloom-add-input')!.value;
         const r = bf.check(v);
-        el.querySelector<HTMLElement>('#bloom-standalone-result')!.innerHTML =
-          `<div class="alert ${r ? 'alert-warning' : 'alert-info'}">Test "${v}": ${r ? '✓ Probably in set' : '✗ Definitely not in set'}</div>`;
+        const bloomTestDiv = document.createElement('div');
+        bloomTestDiv.className = `alert ${r ? 'alert-warning' : 'alert-info'}`;
+        bloomTestDiv.textContent = `Test "${v}": ${r ? '✓ Probably in set' : '✗ Definitely not in set'}`;
+        el.querySelector<HTMLElement>('#bloom-standalone-result')!.replaceChildren(bloomTestDiv);
       });
       el.querySelector('#btn-compute-bloom')!.addEventListener('click', () => {
         const items = parseInt(el.querySelector<HTMLInputElement>('#bloom-items')!.value);

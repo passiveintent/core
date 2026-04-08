@@ -10,8 +10,8 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@passiveintent/core": "^1.0.0",
-    "@passiveintent/react": "^1.0.0",
+    "@passiveintent/core": "latest",
+    "@passiveintent/react": "latest",
     "react": "^19.2.4",
     "react-dom": "^19.2.4"
   },

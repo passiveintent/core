@@ -51,25 +51,36 @@ npm version patch
 - `package-lock.json`
 - `CHANGELOG.md`
 
-Update these only when needed for compatibility or StackBlitz:
-
-- `demo/package.json`
-- `demo-react/package.json`
+Do **not** change `demo/package.json` or `demo-react/package.json` — both use `"latest"` which always resolves to the newest published version automatically.
 
 ## Demo / StackBlitz Rules
 
-- minor or patch core release: no `demo/package.json` change is needed because `@passiveintent/core` is already `^1.0.0`, which accepts later `1.x` versions
-- minor or patch React release: no `demo-react/package.json` change is needed because both package ranges are already `^1.0.0`
-- major core release: update `demo/package.json` to `@passiveintent/core@^X.0.0`
-- major React release: update `demo-react/package.json` to `@passiveintent/core@^X.0.0` and `@passiveintent/react@^X.0.0`
-- if `@passiveintent/react` starts requiring a newer minimum core minor, update `demo-react/package.json` and `packages/react/package.json` to that minimum compatible range
+Both demos pin their dependencies to `"latest"`:
 
-Practical rule:
+```json
+"@passiveintent/core": "latest"
+"@passiveintent/react": "latest"
+```
 
-- StackBlitz does not care about the demo app's own `version`
-- StackBlitz only cares that the dependency ranges in `demo/package.json` and `demo-react/package.json` can resolve the published npm packages
-- for normal `1.x` minor and patch releases, the existing `^1.0.0` ranges are enough
-- only change the demo dependency ranges when the published package compatibility range changes
+This means:
+
+- No `demo/package.json` or `demo-react/package.json` changes are ever needed on release
+- StackBlitz always installs the newest published version
+- The only required post-publish step is refreshing `package-lock.json` (see below), so `npm ci` in CI resolves to the new version instead of the previously locked one
+
+**After every publish**, run:
+
+```bash
+npm install --package-lock-only
+git add package-lock.json
+git commit -m "chore: refresh lock file after vX.Y.Z publish"
+```
+
+If you forget this step, CI will fail with:
+
+```text
+npm error Missing: @passiveintent/core@X.Y.Z from lock file
+```
 
 ## Release Checks
 

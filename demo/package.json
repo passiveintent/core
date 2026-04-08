@@ -10,7 +10,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@passiveintent/core": "^1.0.0"
+    "@passiveintent/core": "latest"
   },
   "devDependencies": {
     "typescript": "^5.6.3",

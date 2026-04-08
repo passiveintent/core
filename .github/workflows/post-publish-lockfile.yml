@@ -1,0 +1,42 @@
+name: post-publish / refresh lockfile
+
+# Runs after a release tag is pushed. Resolves "latest" in demo package.json
+# files to the newly published version and commits the updated lock file,
+# so npm ci never fails on the next CI run.
+
+permissions:
+  contents: write
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  refresh-lockfile:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Refresh lock file
+        run: npm install --package-lock-only
+
+      - name: Commit if changed
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git diff --quiet package-lock.json || (
+            git add package-lock.json &&
+            git commit -m "chore: refresh lock file after ${GITHUB_REF_NAME} publish"
+          )
+
+      - name: Push
+        run: git push origin main

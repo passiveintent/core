@@ -9,7 +9,12 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 
-import { BloomFilter, IntentManager, MarkovGraph } from '../dist/src/index.js';
+import {
+  BloomFilter,
+  BrowserStorageAdapter,
+  IntentManager,
+  MarkovGraph,
+} from '../dist/src/index.js';
 import { setupTestEnvironment, storage } from './helpers/test-env.mjs';
 
 setupTestEnvironment();
@@ -23,6 +28,7 @@ test('IntentManager emits events, tracks seen states, and persists/restores', as
 
   const manager = new IntentManager({
     storageKey: 'intent-test',
+    storage: new BrowserStorageAdapter(),
     persistDebounceMs: 5,
     graph: {
       highEntropyThreshold: 0,
@@ -70,6 +76,7 @@ test('IntentManager emits events, tracks seen states, and persists/restores', as
 
   const restored = new IntentManager({
     storageKey: 'intent-test',
+    storage: new BrowserStorageAdapter(),
     graph: {
       highEntropyThreshold: 0,
       divergenceThreshold: -0.1,
@@ -87,6 +94,7 @@ test('dirty flag: persist() is a no-op when no new state has been tracked since 
 
   const manager = new IntentManager({
     storageKey: 'dirty-noop-test',
+    storage: new BrowserStorageAdapter(),
     persistDebounceMs: 5,
     botProtection: false,
   });
@@ -109,6 +117,7 @@ test('dirty flag: persist() writes again after a new track() call', () => {
 
   const manager = new IntentManager({
     storageKey: 'dirty-resave-test',
+    storage: new BrowserStorageAdapter(),
     persistDebounceMs: 5,
     botProtection: false,
   });
@@ -176,6 +185,7 @@ test('persist/restore round-trip works with streaming base64 encoding', () => {
 
   const m1 = new IntentManager({
     storageKey: 'streaming-b64-test',
+    storage: new BrowserStorageAdapter(),
     persistDebounceMs: 5,
     botProtection: false,
   });
@@ -185,6 +195,7 @@ test('persist/restore round-trip works with streaming base64 encoding', () => {
 
   const m2 = new IntentManager({
     storageKey: 'streaming-b64-test',
+    storage: new BrowserStorageAdapter(),
     botProtection: false,
   });
 
@@ -203,6 +214,7 @@ test('destroy() flushes pending state and removes all listeners', () => {
 
   const manager = new IntentManager({
     storageKey: 'destroy-test',
+    storage: new BrowserStorageAdapter(),
     persistDebounceMs: 60000, // long debounce — flush should still happen via destroy()
     botProtection: false,
   });

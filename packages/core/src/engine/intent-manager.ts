@@ -7,7 +7,7 @@
 
 import { BenchmarkRecorder } from '../performance-instrumentation.js';
 import type { PerformanceReport } from '../performance-instrumentation.js';
-import { BrowserStorageAdapter, BrowserTimerAdapter } from '../adapters.js';
+import { BrowserTimerAdapter, MemoryStorageAdapter } from '../adapters.js';
 import type { AsyncStorageAdapter, StorageAdapter, TimerAdapter } from '../adapters.js';
 import { BloomFilter } from '../core/bloom.js';
 import { MarkovGraph } from '../core/markov.js';
@@ -105,7 +105,7 @@ export class IntentManager {
       storageKey: opts.storageKey,
       persistDebounceMs: opts.persistDebounceMs,
       persistThrottleMs: opts.persistThrottleMs,
-      storage: config.storage ?? new BrowserStorageAdapter(opts.namespace),
+      storage: config.storage ?? new MemoryStorageAdapter(),
       asyncStorage: config.asyncStorage ?? null,
       timer: this.timer,
       onError: config.onError,

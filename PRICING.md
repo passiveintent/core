@@ -13,12 +13,45 @@ PassiveIntent is **free and open-source** under AGPLv3 for open-source projects,
 
 ## Tiers
 
-| Tier       | Annual Fee | Target Audience                                                                                         | What You Get (Support & Features)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
-| ---------- | ---------- | ------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Free       | $0         | Open-source projects, students                                                                          | AGPLv3 copyleft license. Full SDK. **Support:** Community Forum / GitHub Issues only.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
-| Startup    | $599/yr    | Small teams (5–50 employees)                                                                            | Up to 3 Commercial Projects, AGPL exemption. **Support:** Priority Email Support — async, business days only.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
-| Growth     | $1,999/yr  | Scaling companies (50–200 employees)                                                                    | Unlimited Internal Projects (1 org). **Support:** Direct Founder Access — async email/chat, business days only.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
-| Enterprise | Custom     | Multi-org deployments, highly regulated industries (Fintech/Healthcare), and massive retail operations. | Unlimited scope. Includes AGPL commercial exemption, OEM wrapping rights, and white-labeling. **Premium Intent Catalog:** Access the private `@passiveintent/enterprise` NPM package (Fraud, VIP Whale, Rage-Quit detection — subject to request). **Custom Integration Sprints:** We build domain-specific kinematic adapters for your exact UI. **Zero-Trust BYOC:** Custom telemetry egress adapters routed directly to your private AWS/Azure/GCP VPC, bypassing third-party analytics. **Support:** Dedicated private Slack Connect channel — direct line to the engineer who built this. Priority issue triage before all other tiers. Quarterly roadmap review call included. Weekend/24-7 coverage available upon request at additional cost. |
+### Free
+
+Annual Fee: **$0**
+
+Target Audience: Open-source projects and students.
+
+What You Get: AGPLv3 copyleft license and the full SDK. Support is limited to the Community Forum and GitHub Issues.
+
+### Startup
+
+Annual Fee: **$599/yr**
+
+Target Audience: Small teams with roughly 5 to 50 employees.
+
+What You Get: Up to 3 commercial projects, AGPL exemption, and priority email support during business days.
+
+### Growth
+
+Annual Fee: **$1,999/yr**
+
+Target Audience: Scaling companies with roughly 50 to 200 employees.
+
+What You Get: Unlimited internal projects within one organization and direct founder access over async email and chat during business days.
+
+### Enterprise
+
+Annual Fee: **Custom**
+
+Target Audience: Multi-org deployments, highly regulated industries such as fintech and healthcare, and massive retail operations.
+
+What You Get: Unlimited scope, AGPL commercial exemption, OEM rights, white-labeling, premium enterprise modules, custom integration sprints, Persistent Graph Consolidator access, BYOC egress options, and dedicated support.
+
+Enterprise packages can additionally include:
+
+- Premium Intent Catalog access via the private `@passiveintent/enterprise` package.
+- Customer-specific kinematic adapters and integration sprints for your exact UI.
+- Persistent Graph Consolidator engagements for cross-session learning in short-session, high-consideration funnels.
+- Zero-Trust BYOC telemetry routing directly into your private AWS, Azure, or GCP environment.
+- Dedicated Slack Connect support, priority triage, roadmap reviews, and optional expanded coverage.
 
 ## What "commercial use" means
 
@@ -52,6 +85,12 @@ A single deployable web application or npm package that ships PassiveIntent. Mic
 
 **Is there a trial period?**  
 The Free (AGPLv3) tier has no time limit and no feature restrictions — it is the full SDK. Commercial tiers add a support channel, AGPL exemption, and (for Growth/Enterprise) premium features as they ship.
+
+**We have short user sessions. Should we start with a Blueprint or an Enterprise engagement?**  
+If your flow broadly matches a standard ecommerce or content journey, start with a Blueprint JSON. It seeds the engine with mature prior transition counts on day one and is usually the fastest way to bypass cold start for startup and growth-stage teams. If your journey is highly customized and users only generate a small number of events per session, a generic blueprint can be too coarse. In that case, we recommend an Enterprise engagement with the Persistent Graph Consolidator so the model can preserve learning across sessions and tune itself to your exact funnel. Engagements start at **$50,000**.
+
+**What changes when we outgrow the generic Blueprint?**  
+The open-source path is designed to deliver immediate value with synthetic baselines and live-session memory. That is often enough to catch hesitation and recover abandoned carts quickly. Teams typically move up when they want the engine to stop resetting to a generic prior and start retaining the organic behavior of their own customers over a longer window. That is the role of the Enterprise package: Persistent Graph Consolidator preserves customer-specific learning across sessions, supports long-horizon calibration, and keeps the model compounding instead of restarting.
 
 ---
 

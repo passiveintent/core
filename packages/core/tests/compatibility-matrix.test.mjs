@@ -60,6 +60,46 @@ test('BrowserStorageAdapter gracefully degrades when window/localStorage are una
   }
 });
 
+test('IntentManager defaults to volatile in-memory storage when no adapter is provided', () => {
+  const originalWindow = globalThis.window;
+  const backingStore = new Map();
+
+  try {
+    globalThis.window = {
+      localStorage: {
+        getItem: (key) => backingStore.get(key) ?? null,
+        setItem: (key, value) => backingStore.set(key, value),
+        removeItem: (key) => backingStore.delete(key),
+      },
+    };
+
+    const first = new IntentManager({
+      storageKey: 'volatile-default',
+      botProtection: false,
+    });
+
+    first.track('home');
+    first.flushNow();
+    first.destroy();
+
+    assert.equal(backingStore.get('passiveintent:volatile-default') ?? null, null);
+
+    const second = new IntentManager({
+      storageKey: 'volatile-default',
+      botProtection: false,
+    });
+
+    assert.equal(second.hasSeen('home'), false);
+    second.destroy();
+  } finally {
+    if (originalWindow !== undefined) {
+      globalThis.window = originalWindow;
+    } else {
+      delete globalThis.window;
+    }
+  }
+});
+
 test('BrowserTimerAdapter works with platform timers and monotonic fallback', () => {
   const timer = new BrowserTimerAdapter();
   let fired = false;

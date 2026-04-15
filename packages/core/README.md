@@ -20,7 +20,7 @@ _(Under the hood, it uses a highly-optimized sparse Markov graph and Bloom filte
 
 ## Why PassiveIntent?
 
-- **No Cookie Banners Required:** 100% local execution. No network requests, no PII sent to servers. Designed to help you meet GDPR and CCPA requirements when used with appropriate configuration and legal review.
+- **No Cookie Banners Required in the Default Path:** 100% local execution. No network requests, no PII sent to servers. Designed to help you meet GDPR and CCPA requirements when used with appropriate configuration and legal review.
 - **Sub-Millisecond Reactions:** Catch frustrated users _before_ they close the tab. Traditional analytics take minutes to process rage-clicks; PassiveIntent triggers in `< 2ms`.
 - **Detect True Hesitation:** Evaluates user reading speed and dwell-time anomalies dynamically, allowing you to trigger "Free Shipping" tooltips exactly when a user hesitates at checkout.
 - **Cold-Start Friendly Math:** Unlike brittle rule engines that overreact to brand-new users, PassiveIntent can apply Bayesian Laplace smoothing (`smoothingAlpha`) so Day-1 organic traffic is handled gracefully instead of being penalized by sparse-history spikes.
@@ -30,6 +30,8 @@ _(Under the hood, it uses a highly-optimized sparse Markov graph and Bloom filte
 - **Comparison Shopper Awareness:** Automatically detects users who leave and return after ≥ 15 seconds, firing an `attention_return` event so you can greet them with a personalized welcome-back offer.
 - **Idle-State Detection:** Tracks interaction silence with a lightweight polling loop and fires `user_idle` / `user_resumed` events, letting you dim overlays or pause expensive animations without any extra timers.
 - **Smart Exit-Intent:** Detects when the user is about to leave the page (pointer moves above the viewport) and fires `exit_intent` — **only** when the Markov graph confirms a likely continuation path. No spammy overlays; only data-backed interventions.
+
+Privacy note: this shorthand applies to the default zero-egress, in-memory deployment. If you enable persistent browser storage or export graph data to your own infrastructure, your consent and controller obligations depend on your implementation and legal review. No DPA with PassiveIntent is required because PassiveIntent does not receive the data.
 
 ## What can you build?
 
@@ -177,6 +179,13 @@ npm install @passiveintent/core
 `createBrowserIntent` is the Layer 3 factory. It returns a fully configured
 `IntentManager` with browser-standard adapters wired in — ready to use with the
 complete public API (`track`, `on`, `getTelemetry`, `predictNextStates`, counters, etc.).
+Direct `new IntentManager()` construction now defaults to the volatile
+`MemoryStorageAdapter`, so `createBrowserIntent()` is the simplest way to keep
+browser-local persistence enabled. Because `createBrowserIntent()` wires
+`BrowserStorageAdapter`, teams using it in production should place it behind
+their own consent and storage-compliance flow where browser persistence
+obligations apply. PassiveIntent does not receive the data; the deployer owns
+that implementation choice.
 
 ```ts
 import { createBrowserIntent } from '@passiveintent/core';
@@ -218,7 +227,9 @@ onUnmounted(() => intent.destroy());
 ### Full control (`IntentManager`)
 
 For dwell-time anomaly detection, bot protection, cross-tab sync, A/B holdout,
-and the complete event surface, use `IntentManager` directly:
+and the complete event surface, use `IntentManager` directly. Direct
+construction defaults to the volatile `MemoryStorageAdapter`, so pass
+`BrowserStorageAdapter` when you need cross-session browser persistence:
 
 ```ts
 import { IntentManager, BrowserStorageAdapter, BrowserTimerAdapter } from '@passiveintent/core';
@@ -468,9 +479,9 @@ All fields are optional. Pass them to `new IntentManager(config)` or `IntentMana
 
 | Field                           | Type                                                     | Default                                               | Description                                                                                                                                                                                                                                                                                           |
 | ------------------------------- | -------------------------------------------------------- | ----------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `storageKey`                    | `string`                                                 | `'passive-intent'`                                    | `localStorage` key used to persist the Bloom filter and Markov graph.                                                                                                                                                                                                                                 |
-| `namespace`                     | `string`                                                 | `'passiveintent:'`                                    | Prefix prepended to every `localStorage` key. Use distinct namespaces when multiple PassiveIntent instances share the same origin (micro-frontends). The full key becomes `"${namespace}${storageKey}"`.                                                                                              |
-| `storage`                       | `StorageAdapter`                                         | `BrowserStorageAdapter`                               | Synchronous storage backend. Override for custom persistence or tests.                                                                                                                                                                                                                                |
+| `storageKey`                    | `string`                                                 | `'passive-intent'`                                    | Key written to the active storage adapter. With `BrowserStorageAdapter` or `createBrowserIntent()`, this becomes the `localStorage` key for the Bloom filter and Markov graph.                                                                                                                        |
+| `namespace`                     | `string`                                                 | `'passiveintent:'`                                    | Prefix prepended to every browser `localStorage` key when `BrowserStorageAdapter` is active. Use distinct namespaces when multiple PassiveIntent instances share the same origin (micro-frontends). The full key becomes `"${namespace}${storageKey}"`.                                               |
+| `storage`                       | `StorageAdapter`                                         | `MemoryStorageAdapter`                                | Synchronous storage backend. Defaults to volatile Map-backed storage; pass `BrowserStorageAdapter` for browser `localStorage` persistence, or any custom adapter for tests / custom environments.                                                                                                     |
 | `asyncStorage`                  | `AsyncStorageAdapter`                                    | —                                                     | Async storage backend (React Native, IndexedDB, etc.). Use with `IntentManager.createAsync()`. Takes precedence over `storage` for writes.                                                                                                                                                            |
 | `timer`                         | `TimerAdapter`                                           | `BrowserTimerAdapter`                                 | Timer backend. Override for deterministic tests.                                                                                                                                                                                                                                                      |
 | `lifecycleAdapter`              | `LifecycleAdapter`                                       | `BrowserLifecycleAdapter`                             | Page-visibility adapter. Override for React Native, Electron, or SSR environments.                                                                                                                                                                                                                    |
@@ -870,7 +881,7 @@ If the user stays on the optimal path (low entropy), $P_{rt}$ remains high. The 
   - trajectory anomaly from baseline log-likelihood window and optional z-score calibration,
   - dwell-time anomaly from Welford's online z-score per state.
 - **Bot-resilient signals**: EntropyGuard uses a fixed circular buffer to detect impossibly-fast or robotic timing patterns without allocating on every `track()` call.
-- **Write-efficient persistence**: the dirty flag eliminates redundant `localStorage` writes when the user has not navigated since the last persist cycle.
+- **Write-efficient persistence**: the dirty flag eliminates redundant `StorageAdapter` writes when the user has not navigated since the last persist cycle.
 - **Memory-safe bigrams**: selective second-order Markov recording is frequency-gated to prevent state explosion. Only well-established unigram states generate bigram edges, and all states share the same `maxStates` cap with LFU pruning.
 - **Event flood protection**: per-channel cooldown gating ensures downstream consumers are not overwhelmed by rapid sequential anomaly events.
 

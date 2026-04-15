@@ -1016,6 +1016,37 @@ test('createBrowserIntent: track() and on() are functional on the returned engin
   engine.destroy();
 });
 
+test('createBrowserIntent: persists across instances with browser storage', () => {
+  const originalWindow = global.window;
+  const store = new Map();
+
+  try {
+    global.window = {
+      localStorage: {
+        getItem: (key) => store.get(key) ?? null,
+        setItem: (key, value) => store.set(key, value),
+        removeItem: (key) => store.delete(key),
+      },
+    };
+
+    const first = createBrowserIntent({ storageKey: 'test-factory-persist' });
+    first.track('/pricing');
+    first.destroy();
+
+    assert.ok(store.has('passiveintent:test-factory-persist'));
+
+    const second = createBrowserIntent({ storageKey: 'test-factory-persist' });
+    assert.equal(second.hasSeen('/pricing'), true);
+    second.destroy();
+  } finally {
+    if (originalWindow !== undefined) {
+      global.window = originalWindow;
+    } else {
+      delete global.window;
+    }
+  }
+});
+
 test('createBrowserIntent: custom onError is wired through to the engine', () => {
   const errors = [];
   const engine = createBrowserIntent({

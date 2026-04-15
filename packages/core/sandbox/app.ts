@@ -12,6 +12,7 @@ import {
   BroadcastSync,
   normalizeRouteState,
   BrowserLifecycleAdapter,
+  BrowserStorageAdapter,
   PropensityCalculator,
   SerializedMarkovGraph,
 } from '../src/index.js';
@@ -29,6 +30,7 @@ const baseline: SerializedMarkovGraph = {
 
 const intentManager = new IntentManager({
   storageKey: 'passive-intent',
+  storage: new BrowserStorageAdapter(),
   persistDebounceMs: 500,
   graph: {
     highEntropyThreshold: 0.8,

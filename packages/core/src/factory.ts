@@ -40,6 +40,7 @@
  *   Layer 4 — Framework SDKs   : usePassiveIntent (React hook)
  */
 
+import { BrowserStorageAdapter } from './adapters.js';
 import { IntentManager } from './engine/intent-manager.js';
 import type { MarkovGraphConfig, BloomFilterConfig } from './types/events.js';
 import type { SerializedMarkovGraph } from './core/markov.js';
@@ -138,6 +139,13 @@ export interface BrowserConfig {
  * Uses built-in browser adapters (`BrowserStorageAdapter`, `BrowserTimerAdapter`,
  * `BrowserLifecycleAdapter`) — all SSR-safe and no-op when browser globals are absent.
  *
+ * This factory intentionally wires `BrowserStorageAdapter`, so persisted graph
+ * data is written to browser `localStorage` when browser globals are available.
+ * If your deployment needs consent gating, ePrivacy review, or a managed
+ * storage policy, put `createBrowserIntent()` behind your own compliance flow
+ * or construct `IntentManager` directly with an explicit adapter strategy.
+ * PassiveIntent itself remains zero-egress and does not receive the data.
+ *
  * @param config  Optional tuning parameters.  Every field has a sensible default.
  * @returns       A live `IntentManager` instance, ready to receive `on()` subscriptions
  *                and `track()` calls.  Call `destroy()` in SPA teardown paths.
@@ -162,6 +170,7 @@ export interface BrowserConfig {
 export function createBrowserIntent(config: BrowserConfig = {}): IntentManager {
   return new IntentManager({
     storageKey: config.storageKey ?? 'passive-intent-engine',
+    storage: new BrowserStorageAdapter(config.namespace),
     namespace: config.namespace,
     baseline: config.baseline,
     graph: config.graph,

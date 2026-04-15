@@ -275,6 +275,10 @@ function withPassiveIntent<P extends object>(
 | `Component` | `ComponentType<P>`    | —       | The root component to wrap                  |
 | `config`    | `IntentManagerConfig` | `{}`    | Config forwarded to `PassiveIntentProvider` |
 
+The underlying core now defaults to in-memory storage, so pass
+`storage: new BrowserStorageAdapter()` when you want browser-local persistence
+across reloads.
+
 The wrapped component is given the `displayName` `withPassiveIntent(ComponentName)` for React
 DevTools.
 
@@ -407,6 +411,8 @@ signal compatibility; you must install it in your app.
 
 **Q: Does intent data leave the browser?**
 
-No. `@passiveintent/core` stores all Markov state, bloom filter, and telemetry data in
-`localStorage` by default. No network requests are made unless you configure a custom
-`StorageAdapter` that does so.
+No. `@passiveintent/core` keeps Markov state, bloom filter, and telemetry data in a
+volatile `MemoryStorageAdapter` by default. If you opt into `BrowserStorageAdapter`
+(for example via `withPassiveIntent(App, { storage: new BrowserStorageAdapter() })`),
+the data still remains in browser `localStorage` only. No network requests are made
+unless you configure a custom `StorageAdapter` that does so.

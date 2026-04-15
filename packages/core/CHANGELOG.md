@@ -12,6 +12,16 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [Unreleased]
+
+## [1.3.1] - 2026-04-16
+
+### Changed
+
+- **`IntentManager` now defaults to `MemoryStorageAdapter`** — constructing `new IntentManager()` without a `storage` override no longer writes to `localStorage`. State is kept in a volatile, Map-backed adapter and is discarded on reload, making direct construction side-effect-free by default.
+
+- **`createBrowserIntent()` now injects `BrowserStorageAdapter` explicitly** — the Layer 3 web factory still provides browser-local persistence out of the box. If you construct `IntentManager` directly and need cross-session browser storage, pass `storage: new BrowserStorageAdapter()`.
+
 ## [1.3.0] - 2026-03-29
 
 ### Added

@@ -140,7 +140,7 @@
                 "name": "Does PassiveIntent require cookie banners to work?",
                 "acceptedAnswer": {
                   "@type": "Answer",
-                  "text": "No. PassiveIntent calculates intent locally in the browser without exporting behavioral payloads to PassiveIntent servers."
+                  "text": "For the default zero-egress, in-memory deployment, no. If you enable persistent browser storage or export graph data to your own infrastructure, your consent and privacy obligations depend on your implementation and legal review."
                 }
               },
               {
@@ -894,8 +894,9 @@
           <details>
             <summary>Does PassiveIntent require cookie banners to work?</summary>
             <p>
-              No. PassiveIntent runs locally in the browser and does not export behavioral payloads
-              to our servers.
+              For the default zero-egress, in-memory deployment, no.* If you enable persistent
+              browser storage or export graph data to your own infrastructure, your consent and
+              privacy obligations depend on your implementation and legal review.
             </p>
           </details>
           <details>

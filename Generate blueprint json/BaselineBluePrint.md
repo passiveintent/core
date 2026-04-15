@@ -8,6 +8,21 @@ Because the engine evaluates strictly on the client side without cross-session e
 
 **Blueprints** solve this cold-start problem. By injecting a pre-calculated mathematical topography into the engine on Day 1, developers can achieve instant, zero-latency intent detection from the very first user session.
 
+## When to Use Blueprints vs. Custom Consolidation
+
+**Blueprints are the right starting point** when a team has short sessions but a
+fairly standard journey. A startup or mid-market ecommerce team can inject
+`ecommerce-strict-funnel.json`, start with mature prior transition counts, and
+get usable confidence immediately while the engine continues adapting to its own
+traffic.
+
+**Custom consolidation becomes valuable** when the customer journey is highly
+specialized. Enterprise teams with bespoke B2B checkout, approval, onboarding,
+or regulated intake flows often need a baseline that reflects their exact path,
+not a generic template. In those cases, a customer-specific blueprint plus the
+Persistent Graph Consolidator lets the engine preserve learning across short
+sessions and keep improving without depending on a single long visit.
+
 ---
 
 ## The Blueprints

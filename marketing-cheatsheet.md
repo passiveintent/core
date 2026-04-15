@@ -4,9 +4,34 @@
 
 Important note on propensity thresholds: the Propensity to Convert values are not universal constants. A 3-page checkout funnel and a 40-page discovery catalog have entirely different structural probabilities.
 
-The thresholds below assume a calibrated baseline. If you are not using a pre-calculated Blueprint JSON, the engine defaults to raw Markov probabilities until it observes enough organic traffic.
+The thresholds below assume a calibrated baseline. The engine starts from raw
+Markov probabilities, and how quickly it accumulates organic learning depends on
+your privacy and storage mode.
 
-Always run `PassiveIntent.calibrate()` or inject a Blueprint for immediate accuracy.
+In zero-consent, ephemeral deployments, the model resets with the tab. In that
+setup, Blueprint JSON is the practical path to instant, high-sensitivity
+funnel enforcement.
+
+Teams that want cross-session organic baseline learning can either enable
+persistent storage under their own ePrivacy and cookie compliance policy or
+move to Enterprise Persistent Graph Consolidator.
+
+Practical adoption note: most teams will start with the browser quickstart
+because it works immediately. If they choose browser persistence, they also own
+the responsibility to gate that deployment behind the right consent and storage
+policy for their environment.
+
+## Positioning Blueprints and Enterprise Memory
+
+Business framing to prefer: the open-source path gives teams a synthetic
+starting point plus live-session memory. The enterprise path is for teams that
+want the engine to retain and compound organic learning about their own
+customers over a longer horizon instead of resetting back to a generic prior.
+
+Commercial phrasing to prefer: "If your sessions are short and you need
+instant, high-sensitivity funnel enforcement, start with a Blueprint. If you want the model to retain
+customer-specific learning across sessions, you either need compliant persistent
+storage or Enterprise Persistent Graph Consolidator."
 
 ## Behavioral Topography Matrix
 

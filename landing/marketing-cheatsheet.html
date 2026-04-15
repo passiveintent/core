@@ -146,13 +146,18 @@
             funnel and a 40-page discovery catalog have entirely different structural probabilities.
           </p>
           <p>
-            The thresholds below assume a calibrated baseline. If you are not using a pre-calculated
-            Blueprint JSON, the engine defaults to raw Markov probabilities until it observes enough
-            organic traffic.
+            The thresholds below assume a calibrated baseline. The engine starts from raw Markov
+            probabilities, and how quickly it accumulates organic learning depends on your privacy
+            and storage mode.
           </p>
           <p>
-            For best accuracy, ensure your integration includes a calibration step before applying
-            hard intervention rules in production.
+            In zero-consent, ephemeral deployments, the model resets with the tab. In that setup,
+            Blueprint JSON is the practical path to instant, high-sensitivity funnel enforcement.
+          </p>
+          <p>
+            Teams that want cross-session organic baseline learning can either enable persistent
+            storage under their own ePrivacy and cookie compliance policy or move to Enterprise
+            Persistent Graph Consolidator.
           </p>
         </article>
       </div>

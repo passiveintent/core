@@ -127,6 +127,11 @@ Place this near your app root when multiple components should share one engine.
 | `onError`  | `(error: Error) => void`           | Optional. Called when `IntentManager` construction throws. When provided, the error is swallowed and all hooks return safe zero-value snapshots. When omitted, the error propagates to the nearest `<IntentErrorBoundary>` or React error boundary. |
 | `children` | `ReactNode`                        | Descendant components can call `usePassiveIntent()` with no arguments.                                                                                                                                                                              |
 
+The underlying core now defaults to the in-memory `MemoryStorageAdapter`, so add
+`config.storage` or `adapters.storage` when you want browser persistence across
+reloads. Use `new BrowserStorageAdapter()` for browser `localStorage`
+persistence.
+
 ### `IntentErrorBoundary`
 
 Wrap `PassiveIntentProvider` to catch errors thrown by the `IntentManager` constructor (invalid config, restricted storage, etc.) and prevent them from crashing the whole tree.

@@ -354,10 +354,19 @@ export interface IntentManagerConfig {
    * _this field wins_.
    */
   smoothingAlpha?: number;
-  /** localStorage key used to persist the Bloom filter and Markov graph. Default: `'passive-intent'`. */
+  /**
+   * Key written to the active storage adapter.
+   *
+   * When `BrowserStorageAdapter` is active (directly or via `createBrowserIntent()`),
+   * this becomes the `localStorage` key used to persist the Bloom filter and
+   * Markov graph.
+   *
+   * Default: `'passive-intent'`
+   */
   storageKey?: string;
   /**
-   * Namespace prefix applied to every localStorage key written by the engine.
+   * Namespace prefix applied to every browser `localStorage` key written by
+   * `BrowserStorageAdapter`.
    *
    * Use this to isolate multiple PassiveIntent instances that share the same
    * origin — for example, when several micro-frontends are mounted on the
@@ -365,6 +374,8 @@ export interface IntentManagerConfig {
    * persisted graphs never overwrite one another.
    *
    * The prefix is applied as `"${namespace}${storageKey}"`.
+   * Ignored by `MemoryStorageAdapter` and custom storage adapters that do not
+   * use browser `localStorage`.
    *
    * Default: `'passiveintent:'`
    */
@@ -438,7 +449,13 @@ export interface IntentManagerConfig {
    */
   baseline?: SerializedMarkovGraph;
   benchmark?: BenchmarkConfig;
-  /** Override the storage backend (useful for tests or custom persistence layers). */
+  /**
+   * Override the storage backend.
+   *
+   * Defaults to `MemoryStorageAdapter` (volatile Map-backed storage). Pass
+   * `BrowserStorageAdapter` or use `createBrowserIntent()` when you want
+   * browser `localStorage` persistence across reloads.
+   */
   storage?: StorageAdapter;
   /**
    * Async storage backend for environments where I/O is inherently asynchronous

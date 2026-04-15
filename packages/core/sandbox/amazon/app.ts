@@ -15,7 +15,7 @@
  * - Hesitation patterns (trajectory anomalies)
  */
 
-import { IntentManager, SerializedMarkovGraph } from '../../src/index.js';
+import { BrowserStorageAdapter, IntentManager, SerializedMarkovGraph } from '../../src/index.js';
 
 // ============================================
 // BASELINE GRAPH
@@ -67,6 +67,7 @@ const baseline: SerializedMarkovGraph = {
 // ============================================
 const intentManager = new IntentManager({
   storageKey: 'amazon-intent-demo',
+  storage: new BrowserStorageAdapter(),
   persistDebounceMs: 500,
   graph: {
     highEntropyThreshold: 0.75,

@@ -103,6 +103,12 @@ export class BrowserStorageAdapter implements StorageAdapter {
     window.localStorage.setItem(this.nsKey(key), value);
   }
 
+  /**
+   * Remove a previously persisted value from localStorage.
+   * Silently no-ops when localStorage is unavailable (SSR, sandboxed
+   * iframes, incognito with storage blocked) or when a `SecurityError` is
+   * thrown.  The key is automatically namespaced before the removal.
+   */
   removeItem(key: string): void {
     try {
       if (typeof window === 'undefined' || !window.localStorage) return;

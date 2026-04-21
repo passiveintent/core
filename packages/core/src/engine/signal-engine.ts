@@ -25,7 +25,7 @@ import type {
 
 export { EventEmitter };
 
-function getConfidence(sampleSize: number): 'low' | 'medium' | 'high' {
+export function getConfidence(sampleSize: number): 'low' | 'medium' | 'high' {
   if (sampleSize < 10) return 'low';
   if (sampleSize < 30) return 'medium';
   return 'high';

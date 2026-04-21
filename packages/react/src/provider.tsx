@@ -81,6 +81,28 @@ export interface PassiveIntentProviderProps {
 // ── Provider ──────────────────────────────────────────────────────────────────
 
 /**
+ * Merges adapter overrides from `adaptersRef` into the base config stored in
+ * `configRef`.  Extracted as a standalone helper so the identical logic is not
+ * copy-pasted between the synchronous render-phase init path and the React
+ * Strict Mode effect-phase re-init path.
+ */
+function buildMergedConfig(
+  configRef: React.RefObject<IntentManagerConfig>,
+  adaptersRef: React.RefObject<
+    Partial<{ storage: StorageAdapter; timer: TimerAdapter; lifecycle: LifecycleAdapter }>
+  >,
+): IntentManagerConfig {
+  return {
+    ...configRef.current,
+    ...(adaptersRef.current?.storage !== undefined && { storage: adaptersRef.current.storage }),
+    ...(adaptersRef.current?.timer !== undefined && { timer: adaptersRef.current.timer }),
+    ...(adaptersRef.current?.lifecycle !== undefined && {
+      lifecycleAdapter: adaptersRef.current.lifecycle,
+    }),
+  };
+}
+
+/**
  * `PassiveIntentProvider` — place once near the root of your React app to share
  * a single `IntentManager` instance across the entire component tree.
  *
@@ -136,16 +158,8 @@ export function PassiveIntentProvider({
   // this, domain hooks like useExitIntent() would call ctx.on() while
   // instanceRef is still null, silently dropping subscriptions.
   if (instanceRef.current === null && IS_BROWSER) {
-    const mergedConfig: IntentManagerConfig = {
-      ...configRef.current,
-      ...(adaptersRef.current?.storage !== undefined && { storage: adaptersRef.current.storage }),
-      ...(adaptersRef.current?.timer !== undefined && { timer: adaptersRef.current.timer }),
-      ...(adaptersRef.current?.lifecycle !== undefined && {
-        lifecycleAdapter: adaptersRef.current.lifecycle,
-      }),
-    };
     try {
-      instanceRef.current = new IntentManager(mergedConfig);
+      instanceRef.current = new IntentManager(buildMergedConfig(configRef, adaptersRef));
     } catch (err) {
       const error = err instanceof Error ? err : new Error(String(err));
       if (onErrorRef.current) {
@@ -180,16 +194,8 @@ export function PassiveIntentProvider({
       // Skip recreation if render-phase init already failed — retrying would
       // duplicate the expensive failure and fire onError a second time.
       if (failedInitRef.current) return;
-      const mergedConfig: IntentManagerConfig = {
-        ...configRef.current,
-        ...(adaptersRef.current?.storage !== undefined && { storage: adaptersRef.current.storage }),
-        ...(adaptersRef.current?.timer !== undefined && { timer: adaptersRef.current.timer }),
-        ...(adaptersRef.current?.lifecycle !== undefined && {
-          lifecycleAdapter: adaptersRef.current.lifecycle,
-        }),
-      };
       try {
-        instanceRef.current = new IntentManager(mergedConfig);
+        instanceRef.current = new IntentManager(buildMergedConfig(configRef, adaptersRef));
       } catch (err) {
         const error = err instanceof Error ? err : new Error(String(err));
         failedInitRef.current = true;

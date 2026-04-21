@@ -46,6 +46,14 @@ export interface PersistStrategy {
   close(): void;
 }
 
+/** Returns `true` when `err` is a storage quota exhaustion error. */
+function isQuotaError(err: unknown): boolean {
+  return (
+    err instanceof Error &&
+    (err.name === 'QuotaExceededError' || err.message.toLowerCase().includes('quota'))
+  );
+}
+
 export abstract class BasePersistStrategy implements PersistStrategy {
   protected lastPersistedAt = -Infinity;
   protected throttleTimer: TimerHandle | null = null;
@@ -134,14 +142,12 @@ export class SyncPersistStrategy extends BasePersistStrategy {
       this.lastPersistedAt = this.ctx.getTimer().now();
       this.ctx.setEngineHealth('healthy');
     } catch (err) {
-      const isQuota =
-        err instanceof Error &&
-        (err.name === 'QuotaExceededError' || err.message.toLowerCase().includes('quota'));
-      if (isQuota) {
+      const quota = isQuotaError(err);
+      if (quota) {
         this.ctx.setEngineHealth('quota_exceeded');
       }
       this.ctx.reportError(
-        isQuota ? 'QUOTA_EXCEEDED' : 'STORAGE_WRITE',
+        quota ? 'QUOTA_EXCEEDED' : 'STORAGE_WRITE',
         err instanceof Error ? err.message : String(err),
         err,
       );
@@ -202,14 +208,12 @@ export class AsyncPersistStrategy extends BasePersistStrategy {
     this.ctx.markDirty();
     this.asyncWriteFailCount += 1;
 
-    const isQuota =
-      err instanceof Error &&
-      (err.name === 'QuotaExceededError' || err.message.toLowerCase().includes('quota'));
-    if (isQuota) {
+    const quota = isQuotaError(err);
+    if (quota) {
       this.ctx.setEngineHealth('quota_exceeded');
     }
     this.ctx.reportError(
-      isQuota ? 'QUOTA_EXCEEDED' : 'STORAGE_WRITE',
+      quota ? 'QUOTA_EXCEEDED' : 'STORAGE_WRITE',
       err instanceof Error ? err.message : String(err),
       err,
     );

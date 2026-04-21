@@ -70,8 +70,8 @@ export class BrowserStorageAdapter implements StorageAdapter {
   }
 
   getItem(key: string): string | null {
-    if (typeof window === 'undefined' || !window.localStorage) return null;
     try {
+      if (typeof window === 'undefined' || !window.localStorage) return null;
       const namespaced = window.localStorage.getItem(this.nsKey(key));
       if (namespaced !== null) return namespaced;
 
@@ -89,7 +89,8 @@ export class BrowserStorageAdapter implements StorageAdapter {
 
       return null;
     } catch {
-      // SecurityError in sandboxed iframes / opaque origins
+      // SecurityError in sandboxed iframes / opaque origins — including the
+      // edge case where accessing window.localStorage as a property itself throws.
       return null;
     }
   }
@@ -100,6 +101,15 @@ export class BrowserStorageAdapter implements StorageAdapter {
     // The caller (IntentManager.persist) wraps this in its own try/catch
     // so the error surfaces through the configured onError callback.
     window.localStorage.setItem(this.nsKey(key), value);
+  }
+
+  removeItem(key: string): void {
+    try {
+      if (typeof window === 'undefined' || !window.localStorage) return;
+      window.localStorage.removeItem(this.nsKey(key));
+    } catch {
+      // SecurityError in sandboxed iframes / opaque origins
+    }
   }
 }
 

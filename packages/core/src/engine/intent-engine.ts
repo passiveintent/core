@@ -34,6 +34,7 @@ import type {
 import type { IntentEventMap } from '../types/events.js';
 import { EventEmitter } from './event-emitter.js';
 import { normalizeRouteState } from '../utils/route-normalizer.js';
+import { getConfidence } from './signal-engine.js';
 
 /** Maximum trajectory window kept for signal evaluation. */
 const TRAJECTORY_WINDOW = 20;
@@ -376,7 +377,7 @@ export class IntentEngine {
           expectedBaselineLogLikelihood: trajectoryResult.baselineLogLikelihood,
           zScore: trajectoryResult.zScore,
           sampleSize,
-          confidence: sampleSize < 10 ? 'low' : sampleSize < 30 ? 'medium' : 'high',
+          confidence: getConfidence(sampleSize),
         });
       }
     }

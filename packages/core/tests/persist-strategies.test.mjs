@@ -215,6 +215,24 @@ test('SyncPersistStrategy: reports QUOTA_EXCEEDED and sets engineHealth on quota
   assert.equal(state.engineHealth, 'quota_exceeded');
 });
 
+test('SyncPersistStrategy: detects quota error via message text when err.name is generic', () => {
+  // isQuotaError also matches errors whose message contains "quota", regardless of err.name.
+  const quotaErr = new Error('storage quota exceeded');
+
+  const { ctx, state } = makeCtx({
+    storageSetItem: () => {
+      throw quotaErr;
+    },
+  });
+
+  const strategy = new SyncPersistStrategy(ctx);
+  strategy.persist();
+
+  assert.equal(state.errors.length, 1);
+  assert.equal(state.errors[0].code, 'QUOTA_EXCEEDED');
+  assert.equal(state.engineHealth, 'quota_exceeded');
+});
+
 // ---------------------------------------------------------------------------
 // BasePersistStrategy – throttle + trailing flush
 // ---------------------------------------------------------------------------
@@ -442,6 +460,28 @@ test('AsyncPersistStrategy: second consecutive failure does NOT schedule another
 test('AsyncPersistStrategy: reports QUOTA_EXCEEDED and sets engineHealth on quota error', async () => {
   const quotaErr = new Error('QuotaExceededError');
   quotaErr.name = 'QuotaExceededError';
+
+  const { ctx, state } = makeCtx({
+    asyncStorageSetItem: async () => {
+      throw quotaErr;
+    },
+    debounceMs: 0,
+    timerNow: () => 0,
+  });
+
+  const strategy = new AsyncPersistStrategy(ctx);
+  strategy.persist();
+
+  await new Promise((r) => setTimeout(r, 20));
+
+  assert.equal(state.errors.length, 1);
+  assert.equal(state.errors[0].code, 'QUOTA_EXCEEDED');
+  assert.equal(state.engineHealth, 'quota_exceeded');
+});
+
+test('AsyncPersistStrategy: detects quota error via message text when err.name is generic', async () => {
+  // isQuotaError also matches errors whose message contains "quota", regardless of err.name.
+  const quotaErr = new Error('storage quota exceeded');
 
   const { ctx, state } = makeCtx({
     asyncStorageSetItem: async () => {

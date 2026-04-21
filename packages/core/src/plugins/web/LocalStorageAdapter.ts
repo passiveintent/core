@@ -51,12 +51,13 @@
  */
 
 import type { IPersistenceAdapter } from '../../types/microkernel.js';
+import { BrowserStorageAdapter } from '../../adapters.js';
 
 /** Default namespace prefix applied to every localStorage key. */
 const DEFAULT_NAMESPACE = 'passiveintent:';
 
 export class LocalStorageAdapter implements IPersistenceAdapter {
-  private readonly namespace: string;
+  private readonly storage: BrowserStorageAdapter;
 
   /**
    * @param namespace  Prefix prepended to every key before it is read from or
@@ -65,12 +66,7 @@ export class LocalStorageAdapter implements IPersistenceAdapter {
    *                   (not recommended when multiple instances share an origin).
    */
   constructor(namespace: string = DEFAULT_NAMESPACE) {
-    this.namespace = namespace;
-  }
-
-  /** Compute the namespaced key used for all localStorage operations. */
-  private nsKey(key: string): string {
-    return `${this.namespace}${key}`;
+    this.storage = new BrowserStorageAdapter(namespace);
   }
 
   /**
@@ -78,49 +74,28 @@ export class LocalStorageAdapter implements IPersistenceAdapter {
    * Returns `null` when the key is absent, when localStorage is unavailable
    * (SSR, incognito with storage blocked, sandboxed iframe), or when a
    * `SecurityError` is thrown.
+   *
+   * Namespace prefixing, SSR guarding, and legacy key migration are all
+   * handled by the underlying `BrowserStorageAdapter`.
    */
   load(key: string): string | null {
-    try {
-      if (typeof window === 'undefined' || !window.localStorage) return null;
-
-      const namespaced = window.localStorage.getItem(this.nsKey(key));
-      if (namespaced !== null) return namespaced;
-
-      // Legacy migration: when using the default namespace, check the old
-      // unprefixed key so existing installs are not silently wiped on upgrade.
-      if (this.namespace === DEFAULT_NAMESPACE) {
-        const legacy = window.localStorage.getItem(key);
-        if (legacy !== null) {
-          // Migrate to the namespaced key and remove the legacy entry.
-          window.localStorage.setItem(this.nsKey(key), legacy);
-          window.localStorage.removeItem(key);
-          return legacy;
-        }
-      }
-
-      return null;
-    } catch {
-      // SecurityError accessing window.localStorage on sandboxed/opaque origins,
-      // or SecurityError / other errors from getItem.
-      return null;
-    }
+    return this.storage.getItem(key);
   }
 
   /**
    * Save a value to localStorage.
    * Silently no-ops when localStorage is unavailable.
    *
-   * Unlike `BrowserStorageAdapter.setItem`, this method also catches and
-   * **swallows** `QuotaExceededError` so that a full storage partition does
-   * not surface an uncaught exception.  Higher-layer error handling
-   * (IntentEngine's `onError` callback) is the right place to observe this
-   * failure; the caller (`IntentEngine._persist()`) wraps this call in its
-   * own try/catch and routes any thrown error through `onError`.
+   * Wraps `BrowserStorageAdapter.setItem` in a try/catch so that
+   * `QuotaExceededError` and `SecurityError` are swallowed here rather than
+   * propagating to the caller.  Higher-layer error handling (IntentEngine's
+   * `onError` callback) is the right place to observe these failures; the
+   * caller (`IntentEngine._persist()`) already wraps this call in its own
+   * try/catch and routes any thrown error through `onError`.
    */
   save(key: string, value: string): void {
     try {
-      if (typeof window === 'undefined' || !window.localStorage) return;
-      window.localStorage.setItem(this.nsKey(key), value);
+      this.storage.setItem(key, value);
     } catch {
       // SecurityError (sandboxed/opaque origin) or QuotaExceededError — swallowed.
     }
@@ -131,11 +106,6 @@ export class LocalStorageAdapter implements IPersistenceAdapter {
    * Silently no-ops when localStorage is unavailable.
    */
   delete(key: string): void {
-    try {
-      if (typeof window === 'undefined' || !window.localStorage) return;
-      window.localStorage.removeItem(this.nsKey(key));
-    } catch {
-      // SecurityError or other storage errors — swallowed.
-    }
+    this.storage.removeItem(key);
   }
 }

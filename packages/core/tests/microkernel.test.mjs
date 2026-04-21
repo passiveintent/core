@@ -476,6 +476,46 @@ test('IntentEngine track(): emits trajectory_anomaly when evaluateTrajectory ret
   engine.destroy();
 });
 
+test('IntentEngine track(): trajectory_anomaly confidence is "medium" for sampleSize in [10, 30)', () => {
+  const { engine } = makeEngine({
+    model: {
+      trajectory: {
+        zScore: 3.1,
+        isAnomalous: true,
+        logLikelihood: -7,
+        baselineLogLikelihood: -2,
+        sampleSize: 20,
+      },
+    },
+  });
+  const events = [];
+  engine.on('trajectory_anomaly', (e) => events.push(e));
+  engine.track('/a');
+  engine.track('/b');
+  assert.equal(events[0].confidence, 'medium');
+  engine.destroy();
+});
+
+test('IntentEngine track(): trajectory_anomaly confidence is "low" for sampleSize < 10', () => {
+  const { engine } = makeEngine({
+    model: {
+      trajectory: {
+        zScore: 2.8,
+        isAnomalous: true,
+        logLikelihood: -5,
+        baselineLogLikelihood: -2,
+        sampleSize: 5,
+      },
+    },
+  });
+  const events = [];
+  engine.on('trajectory_anomaly', (e) => events.push(e));
+  engine.track('/a');
+  engine.track('/b');
+  assert.equal(events[0].confidence, 'low');
+  engine.destroy();
+});
+
 test('IntentEngine track(): does NOT emit trajectory_anomaly when evaluateTrajectory returns null', () => {
   const { engine } = makeEngine({ model: { trajectory: null } });
   const events = [];
@@ -986,6 +1026,97 @@ test('LocalStorageAdapter: multiple adapters sharing storage are independent by 
     assert.equal(a.load('app-a'), 'data-a');
     assert.equal(b.load('app-b'), 'data-b');
     assert.equal(a.load('app-b'), 'data-b'); // same backing store
+  } finally {
+    delete global.window;
+  }
+});
+
+test('LocalStorageAdapter: delete() removes a previously saved value', () => {
+  const store = new Map();
+  global.window = {
+    localStorage: {
+      getItem: (k) => store.get(k) ?? null,
+      setItem: (k, v) => store.set(k, v),
+      removeItem: (k) => store.delete(k),
+    },
+  };
+  try {
+    const adapter = new LocalStorageAdapter();
+    adapter.save('intent-key', 'some-value');
+    assert.equal(adapter.load('intent-key'), 'some-value');
+    adapter.delete('intent-key');
+    assert.equal(adapter.load('intent-key'), null);
+  } finally {
+    delete global.window;
+  }
+});
+
+test('LocalStorageAdapter: delete() is a no-op in Node.js (no window object)', () => {
+  const adapter = new LocalStorageAdapter();
+  assert.doesNotThrow(() => adapter.delete('any-key'));
+});
+
+test('LocalStorageAdapter: delete() swallows SecurityError from removeItem', () => {
+  global.window = {
+    localStorage: {
+      getItem: () => null,
+      setItem: () => {},
+      removeItem: () => {
+        const e = new Error('SecurityError');
+        e.name = 'SecurityError';
+        throw e;
+      },
+    },
+  };
+  try {
+    const adapter = new LocalStorageAdapter();
+    assert.doesNotThrow(() => adapter.delete('any-key'));
+  } finally {
+    delete global.window;
+  }
+});
+
+test('LocalStorageAdapter: load() migrates legacy unprefixed key to namespaced key on first read', () => {
+  const store = new Map();
+  // Pre-populate the store with a legacy (unprefixed) key, as if written by an old SDK version.
+  store.set('intent-key', 'legacy-value');
+  global.window = {
+    localStorage: {
+      getItem: (k) => store.get(k) ?? null,
+      setItem: (k, v) => store.set(k, v),
+      removeItem: (k) => store.delete(k),
+    },
+  };
+  try {
+    const adapter = new LocalStorageAdapter();
+    // First read: should find the legacy key, migrate it, and return the value.
+    assert.equal(adapter.load('intent-key'), 'legacy-value');
+    // After migration the value must be stored under the namespaced key.
+    assert.equal(store.get('passiveintent:intent-key'), 'legacy-value', 'namespaced key must be written');
+    // The old unprefixed key must be removed.
+    assert.equal(store.has('intent-key'), false, 'legacy key must be deleted after migration');
+  } finally {
+    delete global.window;
+  }
+});
+
+test('LocalStorageAdapter: load() does NOT perform legacy migration for custom namespaces', () => {
+  const store = new Map();
+  // A custom-namespace adapter must never touch the unprefixed key.
+  store.set('intent-key', 'legacy-value');
+  global.window = {
+    localStorage: {
+      getItem: (k) => store.get(k) ?? null,
+      setItem: (k, v) => store.set(k, v),
+      removeItem: (k) => store.delete(k),
+    },
+  };
+  try {
+    const adapter = new LocalStorageAdapter('my-mfe:');
+    // The namespaced key is absent; migration must NOT fall back to the unprefixed key.
+    assert.equal(adapter.load('intent-key'), null);
+    // Legacy key must remain untouched.
+    assert.equal(store.has('intent-key'), true, 'legacy key must not be touched by a custom-namespace adapter');
   } finally {
     delete global.window;
   }

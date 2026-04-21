@@ -53,10 +53,105 @@ test('BrowserStorageAdapter gracefully degrades when window/localStorage are una
     const adapter = new BrowserStorageAdapter();
     assert.equal(adapter.getItem('missing'), null);
     assert.doesNotThrow(() => adapter.setItem('k', 'v'));
+    assert.doesNotThrow(() => adapter.removeItem('k'));
   } finally {
     if (originalWindow !== undefined) {
       globalThis.window = originalWindow;
     }
+  }
+});
+
+test('BrowserStorageAdapter: removeItem() removes a namespaced key from localStorage', () => {
+  const store = new Map();
+  globalThis.window = {
+    localStorage: {
+      getItem: (k) => store.get(k) ?? null,
+      setItem: (k, v) => store.set(k, v),
+      removeItem: (k) => store.delete(k),
+    },
+  };
+  try {
+    const adapter = new BrowserStorageAdapter();
+    adapter.setItem('my-key', 'my-value');
+    assert.equal(adapter.getItem('my-key'), 'my-value');
+    adapter.removeItem('my-key');
+    assert.equal(adapter.getItem('my-key'), null, 'value must be absent after removeItem');
+    // Confirm the namespaced key (not the bare key) was removed.
+    assert.equal(store.has('passiveintent:my-key'), false);
+    assert.equal(store.has('my-key'), false);
+  } finally {
+    delete globalThis.window;
+  }
+});
+
+test('BrowserStorageAdapter: getItem() migrates legacy unprefixed key to namespaced key on first read', () => {
+  const store = new Map();
+  // Simulate an old SDK installation that wrote the key without a namespace prefix.
+  store.set('intent-key', 'legacy-value');
+  globalThis.window = {
+    localStorage: {
+      getItem: (k) => store.get(k) ?? null,
+      setItem: (k, v) => store.set(k, v),
+      removeItem: (k) => store.delete(k),
+    },
+  };
+  try {
+    const adapter = new BrowserStorageAdapter();
+    // First read must fall back to the unprefixed key and return the value.
+    assert.equal(adapter.getItem('intent-key'), 'legacy-value');
+    // The value must now be stored under the namespaced key.
+    assert.equal(store.get('passiveintent:intent-key'), 'legacy-value', 'value must be migrated to namespaced key');
+    // The legacy unprefixed key must be removed.
+    assert.equal(store.has('intent-key'), false, 'legacy key must be deleted after migration');
+    // Subsequent reads must hit the namespaced key directly.
+    assert.equal(adapter.getItem('intent-key'), 'legacy-value');
+  } finally {
+    delete globalThis.window;
+  }
+});
+
+test('BrowserStorageAdapter: getItem() does NOT migrate legacy key for custom namespaces', () => {
+  const store = new Map();
+  store.set('intent-key', 'legacy-value');
+  globalThis.window = {
+    localStorage: {
+      getItem: (k) => store.get(k) ?? null,
+      setItem: (k, v) => store.set(k, v),
+      removeItem: (k) => store.delete(k),
+    },
+  };
+  try {
+    const adapter = new BrowserStorageAdapter('my-mfe:');
+    // Custom-namespace adapter must not touch the unprefixed key.
+    assert.equal(adapter.getItem('intent-key'), null);
+    assert.equal(store.has('intent-key'), true, 'legacy key must remain untouched');
+  } finally {
+    delete globalThis.window;
+  }
+});
+
+test('BrowserStorageAdapter: custom namespace prefixes keys independently from the default namespace', () => {
+  const store = new Map();
+  globalThis.window = {
+    localStorage: {
+      getItem: (k) => store.get(k) ?? null,
+      setItem: (k, v) => store.set(k, v),
+      removeItem: (k) => store.delete(k),
+    },
+  };
+  try {
+    const def = new BrowserStorageAdapter();
+    const mfe = new BrowserStorageAdapter('checkout:');
+    def.setItem('state', 'global');
+    mfe.setItem('state', 'checkout');
+    // Each adapter must only see its own namespaced value.
+    assert.equal(def.getItem('state'), 'global');
+    assert.equal(mfe.getItem('state'), 'checkout');
+    // Underlying keys must be stored with the correct prefixes.
+    assert.equal(store.get('passiveintent:state'), 'global');
+    assert.equal(store.get('checkout:state'), 'checkout');
+  } finally {
+    delete globalThis.window;
   }
 });
 

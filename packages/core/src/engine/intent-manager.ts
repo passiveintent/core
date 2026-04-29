@@ -504,7 +504,7 @@ export class IntentManager {
    */
   predictNextStates(
     threshold = 0.3,
-    sanitize: (state: string) => boolean,
+    sanitize?: (state: string) => boolean,
   ): { state: string; probability: number }[] {
     if (this.previousState === null) return [];
     if (typeof sanitize !== 'function') {

@@ -6,8 +6,9 @@
  */
 
 import { normalizeRouteState } from './route-normalizer.js';
+import type { PassiveIntentError } from '../types/events.js';
 
-type ValidationError = { code: string; message: string };
+type ValidationError = Pick<PassiveIntentError, 'code' | 'message'> & { code: 'VALIDATION' };
 
 export function resolveTrackedState(
   raw: string,

@@ -59,7 +59,7 @@ export interface UsePassiveIntentReturn {
    */
   predictNextStates: (
     threshold?: number,
-    sanitize: (state: string) => boolean,
+    sanitize?: (state: string) => boolean,
   ) => { state: string; probability: number }[];
 
   /**

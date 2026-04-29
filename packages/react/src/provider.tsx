@@ -228,7 +228,7 @@ export function PassiveIntentProvider({
   const predictNextStates = useCallback(
     (
       threshold?: number,
-      sanitize?: (state: string) => boolean,
+      sanitize: (state: string) => boolean,
     ): { state: string; probability: number }[] => {
       return instanceRef.current?.predictNextStates(threshold, sanitize) ?? [];
     },

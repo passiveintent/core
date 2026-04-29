@@ -43,6 +43,7 @@
 import { IntentManager } from './engine/intent-manager.js';
 import type { MarkovGraphConfig, BloomFilterConfig } from './types/events.js';
 import type { SerializedMarkovGraph } from './core/markov.js';
+import { DEFAULT_STORAGE_KEY } from './defaults.js';
 
 /* ------------------------------------------------------------------ */
 /*  BrowserConfig                                                       */
@@ -62,7 +63,7 @@ export interface BrowserConfig {
    * Use a unique key per application to avoid collisions when multiple
    * PassiveIntent instances share the same origin.
    *
-   * Default: `'passive-intent-engine'`
+   * Default: `'passive-intent'`
    */
   storageKey?: string;
 
@@ -161,7 +162,7 @@ export interface BrowserConfig {
  */
 export function createBrowserIntent(config: BrowserConfig = {}): IntentManager {
   return new IntentManager({
-    storageKey: config.storageKey ?? 'passive-intent-engine',
+    storageKey: config.storageKey ?? DEFAULT_STORAGE_KEY,
     namespace: config.namespace,
     baseline: config.baseline,
     graph: config.graph,

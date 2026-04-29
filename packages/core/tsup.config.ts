@@ -8,7 +8,7 @@
 import { defineConfig } from 'tsup';
 
 export default defineConfig({
-  entry: ['src/index.ts', 'src/calibration.ts'],
+  entry: ['src/index.ts', 'src/calibration.ts', 'src/plugins/web/index.ts'],
   format: ['esm', 'cjs'],
   dts: false,
   splitting: false,

@@ -24,9 +24,11 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 
 import { IntentEngine } from '../dist/src/engine/intent-engine.js';
-import { ContinuousGraphModel } from '../dist/src/plugins/web/ContinuousGraphModel.js';
-import { LocalStorageAdapter } from '../dist/src/plugins/web/LocalStorageAdapter.js';
-import { MouseKinematicsAdapter } from '../dist/src/plugins/web/MouseKinematicsAdapter.js';
+import {
+  ContinuousGraphModel,
+  LocalStorageAdapter,
+  MouseKinematicsAdapter,
+} from '../dist/plugins/web/index.js';
 import { createBrowserIntent } from '../dist/src/factory.js';
 
 // ---------------------------------------------------------------------------
@@ -97,7 +99,7 @@ function makeModel({
 function makePersistence({ stored = null, throwOnSave = false } = {}) {
   const calls = { load: 0, save: /** @type {string[]} */ ([]) };
   const store = new Map();
-  if (stored !== null) store.set('passive-intent-engine', stored);
+  if (stored !== null) store.set('passive-intent', stored);
   return {
     persistence: {
       load(key) {

@@ -32,8 +32,9 @@ import type {
   IPersistenceAdapter,
 } from '../types/microkernel.js';
 import type { IntentEventMap } from '../types/events.js';
+import { DEFAULT_STORAGE_KEY } from '../defaults.js';
 import { EventEmitter } from './event-emitter.js';
-import { normalizeRouteState } from '../utils/route-normalizer.js';
+import { resolveTrackedState } from '../utils/tracked-state.js';
 
 /** Maximum trajectory window kept for signal evaluation. */
 const TRAJECTORY_WINDOW = 20;
@@ -61,7 +62,7 @@ export class IntentEngine {
     this.persistence = config.persistence;
     this.lifecycle = config.lifecycle;
     this.input = config.input;
-    this.storageKey = config.storageKey ?? 'passive-intent-engine';
+    this.storageKey = config.storageKey ?? DEFAULT_STORAGE_KEY;
     this.stateNormalizer = config.stateNormalizer;
     this.onError = config.onError;
 
@@ -261,37 +262,8 @@ export class IntentEngine {
    */
   private _processState(raw: string): void {
     // ── Normalize ────────────────────────────────────────────────────────────
-    let state = normalizeRouteState(raw);
-
-    if (this.stateNormalizer) {
-      try {
-        const normalized = this.stateNormalizer(state);
-        if (typeof normalized !== 'string') {
-          this.onError?.({
-            code: 'VALIDATION',
-            message: `IntentEngine.track(): stateNormalizer must return a string, got ${typeof normalized}`,
-          });
-          return;
-        }
-        // Empty string is a deliberate "skip this state" signal.
-        if (normalized === '') return;
-        state = normalized;
-      } catch (err) {
-        this.onError?.({
-          code: 'VALIDATION',
-          message: `IntentEngine.track(): stateNormalizer threw: ${
-            err instanceof Error ? err.message : String(err)
-          }`,
-        });
-        return;
-      }
-    }
-
-    if (state === '') {
-      this.onError?.({
-        code: 'VALIDATION',
-        message: 'IntentEngine.track(): state label must not be an empty string',
-      });
+    const state = resolveTrackedState(raw, 'IntentEngine', this.stateNormalizer, this.onError);
+    if (state === null) {
       return;
     }
 

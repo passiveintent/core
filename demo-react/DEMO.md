@@ -21,7 +21,7 @@ Built with Vite + TypeScript + the `usePassiveIntent` hook.
 | Idle Detection     | `user_idle` + `user_resumed`               | 2-min idle, resume with idleMs                   |
 | Exit Intent        | `exit_intent`                              | Smart — requires Markov confidence ≥ 0.4         |
 | Bloom Filter       | `hasSeen()` + `BloomFilter`                | O(k) membership, bit visualizer, sizing API      |
-| Markov Predictions | `predictNextStates()` + `MarkovGraph`      | Prefetch next page, binary vs JSON size          |
+| Markov Predictions | `predictNextStates(threshold, sanitize)` + `MarkovGraph` | Prefetch next page, binary vs JSON size |
 | Bot Detection      | `bot_detected`                             | EntropyGuard — 5-signal scoring system           |
 | Conversion         | `trackConversion()`                        | Local-only revenue correlation, zero egress      |
 | Counters           | `incrementCounter/getCounter/resetCounter` | Session counters, impression capping             |

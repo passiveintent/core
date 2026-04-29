@@ -412,7 +412,7 @@ Inject `IntentService` in your root `AppComponent` (or import it in the root mod
 
 | Method                 | Signature                                                                             | Description                                                                                                                                                                    |
 | ---------------------- | ------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `predictNextStates`    | `(threshold?: number, sanitize?: (s: string) => boolean) => { state, probability }[]` | Top-N Markov predictions above `threshold` (default `0.3`). Always provide a `sanitize` guard in production to exclude sensitive routes.                                       |
+| `predictNextStates`    | `(threshold?: number, sanitize: (s: string) => boolean) => { state, probability }[]`  | Top-N Markov predictions above `threshold` (default `0.3`). `sanitize` is required so prediction consumers fail closed unless they explicitly approve returned routes.          |
 | `hasSeen`              | `(state: string) => boolean`                                                          | Bloom filter membership test — O(k), no false negatives.                                                                                                                       |
 | `getTelemetry`         | `() => PassiveIntentTelemetry`                                                        | GDPR-safe aggregate snapshot: `sessionId`, `transitionsEvaluated`, `botStatus`, `anomaliesFired`, `engineHealth`, `baselineStatus`, `assignmentGroup`. No raw behavioral data. |
 | `exportGraph`          | `() => SerializedMarkovGraph`                                                         | Returns the full Markov graph as a JSON-serializable object.                                                                                                                   |
@@ -662,12 +662,12 @@ Layer 4 — Framework SDKs       usePassiveIntent (React hook)  wraps IntentMana
 
 | Field             | Type                                             | Default                       | Description                                                                                                   |
 | ----------------- | ------------------------------------------------ | ----------------------------- | ------------------------------------------------------------------------------------------------------------- |
-| `storageKey`      | `string`                                         | `'passive-intent-engine'`     | `localStorage` key for cross-session persistence.                                                             |
+| `storageKey`      | `string`                                         | `'passive-intent'`            | `localStorage` key for cross-session persistence.                                                             |
 | `namespace`       | `string`                                         | `'passiveintent:'`            | Prefix prepended to every `localStorage` key. Use distinct values per micro-frontend to avoid key collisions. |
 | `baseline`        | `SerializedMarkovGraph`                          | —                             | Pre-trained graph for `trajectory_anomaly` detection.                                                         |
 | `graph`           | `MarkovGraphConfig`                              | production defaults           | Entropy / divergence thresholds, smoothing, state cap.                                                        |
 | `bloom`           | `BloomFilterConfig`                              | `bitSize: 2048, hashCount: 4` | Bloom filter sizing.                                                                                          |
-| `stateNormalizer` | `(s: string) => string`                          | —                             | Custom normalizer applied after the built-in one. Return `''` to drop a state.                                |
+| `stateNormalizer` | `(s: string) => string`                          | —                             | Custom normalizer applied after the built-in one. Return `''` to drop a state; non-string returns are rejected with `VALIDATION`. |
 | `onError`         | `(e: { code: string; message: string }) => void` | —                             | Non-fatal error callback (storage errors, parse failures).                                                    |
 
 ### `IntentEngine` — Layer 2

@@ -6,6 +6,7 @@
  */
 
 import type { IntentManagerConfig, MarkovGraphConfig } from '../types/events.js';
+import { DEFAULT_NAMESPACE, DEFAULT_STORAGE_KEY } from '../defaults.js';
 import type { EnginePolicy } from './policies/engine-policy.js';
 import { SMOOTHING_EPSILON } from './constants.js';
 
@@ -143,8 +144,8 @@ export function buildIntentManagerOptions(
       : SMOOTHING_EPSILON;
 
   // ── Persistence ─────────────────────────────────────────────────────────
-  const storageKey = config.storageKey ?? 'passive-intent';
-  const namespace = typeof config.namespace === 'string' ? config.namespace : 'passiveintent:';
+  const storageKey = config.storageKey ?? DEFAULT_STORAGE_KEY;
+  const namespace = typeof config.namespace === 'string' ? config.namespace : DEFAULT_NAMESPACE;
 
   const rawPersistDebounce = config.persistDebounceMs;
   const persistDebounceMs =

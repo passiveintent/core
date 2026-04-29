@@ -49,13 +49,23 @@
         "types": "./dist/calibration.d.ts",
         "default": "./dist/calibration.cjs"
       }
+    },
+    "./plugins/web": {
+      "import": {
+        "types": "./dist/plugins/web/index.d.ts",
+        "default": "./dist/plugins/web/index.js"
+      },
+      "require": {
+        "types": "./dist/plugins/web/index.d.ts",
+        "default": "./dist/plugins/web/index.cjs"
+      }
     }
   },
   "files": [
-    "dist/*.js",
-    "dist/*.js.map",
-    "dist/*.cjs",
-    "dist/*.cjs.map",
+    "dist/**/*.js",
+    "dist/**/*.js.map",
+    "dist/**/*.cjs",
+    "dist/**/*.cjs.map",
     "dist/**/*.d.ts",
     "dist/**/*.d.ts.map"
   ],

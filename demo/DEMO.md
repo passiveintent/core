@@ -60,7 +60,7 @@ npm run dev
 | Idle Detection       | `user_idle`, `user_resumed`                                 |
 | Exit Intent          | `exit_intent`, `likelyNext` prediction                      |
 | Bloom Filter         | `BloomFilter`, `computeBloomConfig()`, `hasSeen()`          |
-| Markov Predictions   | `predictNextStates()`, `MarkovGraph`, binary vs JSON        |
+| Markov Predictions   | `predictNextStates(threshold, sanitize)`, `MarkovGraph`, binary vs JSON |
 | Bot Detection        | `bot_detected`, EntropyGuard                                |
 | Conversion Tracking  | `trackConversion()`, `conversion` event                     |
 | Session Counters     | `incrementCounter()`, `getCounter()`, `resetCounter()`      |

@@ -28,11 +28,21 @@ try {
 
   const smoke = `
 import { IntentManager, MarkovGraph, BloomFilter } from '@passiveintent/core';
+import {
+  BrowserLifecycleAdapter,
+  ContinuousGraphModel,
+  LocalStorageAdapter,
+  MouseKinematicsAdapter,
+} from '@passiveintent/core/plugins/web';
 const g = new MarkovGraph();
 g.incrementTransition('home', 'search');
 const b = new BloomFilter();
 b.add('home');
 const m = new IntentManager({ storageKey: 'smoke-test', botProtection: false });
+new ContinuousGraphModel();
+new LocalStorageAdapter();
+new BrowserLifecycleAdapter();
+new MouseKinematicsAdapter();
 m.track('home');
 m.track('search');
 if (!b.check('home') || g.getProbability('home', 'search') <= 0) {

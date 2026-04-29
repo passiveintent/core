@@ -2,7 +2,7 @@
   "name": "@passiveintent/angular",
   "version": "0.0.1",
   "private": true,
-  "description": "Placeholder — Angular adapter for SAP Spartacus / Composable Storefront. Not yet implemented.",
+  "description": "Archived placeholder — Angular adapter exploration, not part of the active workspace or release flow.",
   "type": "module",
   "main": "./src/index.ts",
   "scripts": {

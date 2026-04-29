@@ -173,7 +173,7 @@ All returned methods are stable across re-renders.
 | `track`             | `(state: string) => void`                                             | Records a page view or custom state transition.                    |
 | `on`                | `(event, listener) => () => void`                                     | Typed subscription API. Returns a no-op unsubscribe during SSR.    |
 | `getTelemetry`      | `() => PassiveIntentTelemetry`                                        | Returns a fully shaped zero-value object until the engine is live. |
-| `predictNextStates` | `(threshold?, sanitize?) => { state: string; probability: number }[]` | Sorted Markov predictions.                                         |
+| `predictNextStates` | `(threshold?, sanitize) => { state: string; probability: number }[]`  | Sorted Markov predictions. `sanitize` is required so callers fail closed by default. |
 | `hasSeen`           | `(state: string) => boolean`                                          | Bloom filter membership test.                                      |
 | `incrementCounter`  | `(key: string, by?: number) => number`                                | Exact session counter increment.                                   |
 | `getCounter`        | `(key: string) => number`                                             | Reads a session counter.                                           |
@@ -194,7 +194,7 @@ All hooks in this section require a `PassiveIntentProvider` ancestor.
 | `useSignals()`                                       | `{ exitIntent, idle, attentionReturn }`                | Convenience composition of the three signal hooks above.                                                                       |
 | `usePropensity(targetState, options?, select?)`      | `number`                                               | Single-hop conversion score with dwell-time friction.                                                                          |
 | `usePropensityScore(targetState, options?, select?)` | `number`                                               | **Deprecated.** Use `usePropensity` instead — identical signature, safer under concurrent rendering. See migration note below. |
-| `usePredictiveLink(options?)`                        | `{ predictions }`                                      | Reads `predictNextStates()` on navigation and can inject `<link rel="prefetch">` tags.                                         |
+| `usePredictiveLink(options?)`                        | `{ predictions }`                                      | Reads `predictNextStates()` on navigation and can inject `<link rel="prefetch">` tags. Provide `sanitize` to opt in; otherwise it fails closed with no predictions. |
 | `useEventLog(events, options?)`                      | `{ log, clear }`                                       | Bounded reverse-chronological log of selected engine events.                                                                   |
 
 ### `useRouteTracker`
@@ -251,7 +251,7 @@ const tier = usePropensity('/checkout', undefined, (s) =>
 | ---------------------- | ------------------------------------ |
 | `usePropensity()`      | `alpha = 0.2`                        |
 | `usePropensityScore()` | `alpha = 0.2` _(deprecated)_         |
-| `usePredictiveLink()`  | `threshold = 0.3`, `prefetch = true` |
+| `usePredictiveLink()`  | `threshold = 0.3`, `prefetch = true`, `sanitize = deny-all` |
 | `useEventLog()`        | `maxEntries = 100`                   |
 
 ### Migrating from `usePropensityScore` to `usePropensity`
@@ -431,7 +431,7 @@ SSR support is explicit:
 track(state); // no-op
 on(event, listener); // returns a no-op unsubscribe
 getTelemetry(); // returns TELEMETRY_DEFAULT
-predictNextStates(); // []
+predictNextStates(0.3, () => true); // []
 hasSeen(state); // false
 ```
 

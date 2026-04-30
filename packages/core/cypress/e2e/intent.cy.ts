@@ -411,7 +411,7 @@ describe('Predictive Prefetch Hints', () => {
   it('Test U: predictNextStates() returns an empty array before any navigation', () => {
     cy.window().then((win) => {
       const mgr = (win as any).__intentManager;
-      const hints = mgr.predictNextStates(0.1);
+      const hints = mgr.predictNextStates(0.1, () => true);
       expect(hints).to.deep.equal([]);
     });
   });
@@ -426,7 +426,7 @@ describe('Predictive Prefetch Hints', () => {
       }
       // After the loop the last tracked state is /search, so previousState = /search.
       // /search → /home is the only outgoing edge, so predictions should include /home.
-      const hints = mgr.predictNextStates(0.1);
+      const hints = mgr.predictNextStates(0.1, () => true);
       const states = hints.map((h: { state: string; probability: number }) => h.state);
       expect(states).to.include('/home');
     });
@@ -445,7 +445,7 @@ describe('Predictive Prefetch Hints', () => {
         mgr.track('/product');
       }
 
-      const hints = mgr.predictNextStates(0.0);
+      const hints = mgr.predictNextStates(0.0, () => true);
       for (let i = 1; i < hints.length; i++) {
         expect(hints[i].probability).to.be.at.most(
           hints[i - 1].probability,

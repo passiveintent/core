@@ -254,7 +254,7 @@ export interface IntentEngineConfig {
   input?: IInputAdapter;
   /**
    * Storage key used by `IPersistenceAdapter`.
-   * Default: `'passive-intent-engine'`.
+   * Default: `'passive-intent'`.
    */
   storageKey?: string;
   /**

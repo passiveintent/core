@@ -2,7 +2,7 @@
   "name": "@passiveintent/vanilla",
   "version": "0.0.1",
   "private": true,
-  "description": "Placeholder — Vanilla JS IIFE/UMD adapter for GTM, Wix Velo, Squarespace code injection. Not yet implemented.",
+  "description": "Archived placeholder — Vanilla adapter exploration, not part of the active workspace or release flow.",
   "type": "module",
   "main": "./src/index.ts",
   "scripts": {

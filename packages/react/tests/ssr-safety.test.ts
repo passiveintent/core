@@ -83,7 +83,7 @@ describe('SSR safety', () => {
       expect(result.current.getTelemetry().botStatus).toBe('human');
       expect(result.current.getTelemetry().engineHealth).toBe('healthy');
       expect(result.current.getTelemetry().transitionsEvaluated).toBe(0);
-      expect(result.current.predictNextStates()).toEqual([]);
+      expect(result.current.predictNextStates(0.3, () => true)).toEqual([]);
       expect(result.current.hasSeen('/any')).toBe(false);
       expect(result.current.getCounter('x')).toBe(0);
       expect(result.current.incrementCounter('x')).toBe(0);
@@ -120,7 +120,7 @@ describe('SSR safety', () => {
 
       expect(() => result.current.track('/page')).not.toThrow();
       expect(result.current.getTelemetry().sessionId).toBe('');
-      expect(result.current.predictNextStates()).toEqual([]);
+      expect(result.current.predictNextStates(0.3, () => true)).toEqual([]);
       expect(result.current.hasSeen('/x')).toBe(false);
       expect(result.current.getCounter('k')).toBe(0);
 

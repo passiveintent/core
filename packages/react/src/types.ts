@@ -52,8 +52,8 @@ export interface UsePassiveIntentReturn {
   /**
    * Returns `{ state, probability }[]` sorted descending by probability for
    * all next states whose transition probability exceeds `threshold` (default
-   * `0.3`). Pass a `sanitize` predicate to exclude sensitive or state-mutating
-   * routes before using results for prefetching — see architecture docs.
+   * `0.3`). A `sanitize` predicate is required so callers fail closed unless
+   * they explicitly approve returned routes for their use case.
    *
    * Returns an empty array during SSR or before the first `track()` call.
    */

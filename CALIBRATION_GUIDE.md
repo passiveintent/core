@@ -236,7 +236,7 @@ engine.on('trajectory_anomaly', (signal) => {
 ```typescript
 // Current API — poll predictNextStates after each navigation
 engine.on('state_change', () => {
-  const predictions = intent.predictNextStates(0.65);
+  const predictions = intent.predictNextStates(0.65, (state) => state.startsWith('/articles/'));
   for (const { state, probability } of predictions) {
     if (probability > 0.65) {
       const nextUrl = stateToUrlMap[state];

@@ -199,7 +199,7 @@ describe('usePassiveIntent', () => {
       const { result, unmount } = renderHook(() => usePassiveIntent(BASE_CONFIG));
       unmount();
 
-      expect(result.current.predictNextStates()).toEqual([]);
+      expect(result.current.predictNextStates(0.3, () => true)).toEqual([]);
     });
 
     it('hasSeen() returns false', () => {

@@ -22,7 +22,7 @@
 
 **Website:** [passiveintent.dev](https://passiveintent.dev)
 
-This repository is structured as an **npm workspaces monorepo** containing all PassiveIntent packages.
+This repository is structured as an **npm workspaces monorepo** containing the active PassiveIntent packages.
 
 ---
 
@@ -40,6 +40,8 @@ Full documentation for each package lives inside the package directory:
 - **React hook** — [packages/react/README.md](./packages/react/README.md)
 - **Remix adapter** — [packages/remix/README.md](./packages/remix/README.md)
 - **Architecture & API deep-dive** — [packages/core/docs/architecture.md](./packages/core/docs/architecture.md)
+
+Archived exploratory packages still live under `packages/`, but they are intentionally excluded from the active workspace and release flow.
 
 ---
 

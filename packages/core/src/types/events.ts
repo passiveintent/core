@@ -513,7 +513,9 @@ export interface IntentManagerConfig {
    * ```
    *
    * The return value of this function becomes the canonical state label.
-   * Returning an empty string causes the `track()` call to be silently dropped.
+   * Returning any non-string value triggers a `VALIDATION` error and drops the
+   * `track()` call. Returning an empty string causes the `track()` call to be
+   * silently dropped.
    */
   stateNormalizer?: (state: string) => string;
   /**

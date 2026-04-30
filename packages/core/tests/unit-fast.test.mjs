@@ -2828,7 +2828,7 @@ test('MarkovGraph.getLikelyNextStates returns empty array when threshold exceeds
   assert.deepEqual(graph.getLikelyNextStates('/home', 1.1), []);
 });
 
-test('IntentManager.predictNextStates returns likely next states from previousState', () => {
+test('IntentManager.predictNextStates returns likely next states from previousState when sanitize is provided', () => {
   storage.clear();
   const manager = new IntentManager({ storageKey: 'predict-basic', storage, botProtection: false });
   manager.track('/home');
@@ -2838,7 +2838,7 @@ test('IntentManager.predictNextStates returns likely next states from previousSt
   manager.track('/home');
   // Now previousState = '/home', graph has /home → /products with high probability
 
-  const hints = manager.predictNextStates(0.3);
+  const hints = manager.predictNextStates(0.3, () => true);
   assert.ok(hints.length > 0);
   assert.ok(hints.some(({ state }) => state === '/products'));
   manager.flushNow();
@@ -2847,7 +2847,7 @@ test('IntentManager.predictNextStates returns likely next states from previousSt
 test('IntentManager.predictNextStates returns empty array before any state is tracked', () => {
   storage.clear();
   const manager = new IntentManager({ storageKey: 'predict-empty', storage, botProtection: false });
-  assert.deepEqual(manager.predictNextStates(0.3), []);
+  assert.deepEqual(manager.predictNextStates(0.3, () => true), []);
   manager.flushNow();
 });
 
@@ -2871,6 +2871,26 @@ test('IntentManager.predictNextStates applies sanitize predicate to filter resul
   manager.flushNow();
 });
 
+test('IntentManager.predictNextStates fails closed when sanitize is omitted', () => {
+  storage.clear();
+  const errors = [];
+  const manager = new IntentManager({
+    storageKey: 'predict-fail-closed',
+    storage,
+    botProtection: false,
+    onError: (error) => errors.push(error),
+  });
+  manager.track('/home');
+  manager.track('/products');
+  manager.track('/home');
+
+  assert.deepEqual(manager.predictNextStates(0.1), []);
+  assert.equal(errors.length, 1);
+  assert.equal(errors[0].code, 'VALIDATION');
+  assert.match(errors[0].message, /sanitize must be provided/);
+  manager.flushNow();
+});
+
 test('IntentManager.predictNextStates uses default threshold of 0.3', () => {
   storage.clear();
   const manager = new IntentManager({
@@ -2888,7 +2908,7 @@ test('IntentManager.predictNextStates uses default threshold of 0.3', () => {
   manager.track('/home');
   // previousState = '/home'
 
-  const hints = manager.predictNextStates(); // default threshold = 0.3
+  const hints = manager.predictNextStates(undefined, () => true); // default threshold = 0.3
   assert.ok(
     hints.some(({ state }) => state === '/common'),
     '/common should be included',
@@ -5343,12 +5363,14 @@ test('stateNormalizer: throwing normalizer drops the track() call and fires onEr
   manager.flushNow();
 });
 
-test('stateNormalizer: non-string return is coerced to string and tracked normally', () => {
+test('stateNormalizer: non-string return is rejected and drops the track() call', () => {
   storage.clear();
+  const errors = [];
   const manager = new IntentManager({
     storageKey: 'normalizer-nonstring-test',
     storage,
     botProtection: false,
+    onError: (err) => errors.push(err),
     // @ts-ignore — intentional: simulate a JS caller returning a number
     stateNormalizer: () => 42,
   });
@@ -5356,8 +5378,10 @@ test('stateNormalizer: non-string return is coerced to string and tracked normal
   manager.on('state_change', ({ to }) => changes.push(to));
 
   manager.track('/home');
-  assert.equal(changes.length, 1, 'track() must succeed after string coercion');
-  assert.equal(changes[0], '42', 'state must be the string-coerced return value');
+  assert.equal(changes.length, 0, 'track() must be dropped for non-string normalizer output');
+  assert.equal(errors.length, 1, 'onError must fire once for non-string output');
+  assert.equal(errors[0].code, 'VALIDATION');
+  assert.match(errors[0].message, /stateNormalizer must return a string/);
   manager.flushNow();
 });
 

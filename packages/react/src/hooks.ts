@@ -42,6 +42,9 @@ import { PassiveIntentContext } from './context.js';
 
 // ── Shared ────────────────────────────────────────────────────────────────────
 
+const ALLOW_ALL_STATES = () => true;
+const DENY_ALL_STATES = () => false;
+
 const providerError = (hook: string) =>
   `[PassiveIntent] ${hook}() must be used within a <PassiveIntentProvider>.`;
 
@@ -572,7 +575,7 @@ export function usePropensity<T = number>(
       if (!ctx) return () => {};
 
       const recompute = () => {
-        const predictions = ctx.predictNextStates(0);
+        const predictions = ctx.predictNextStates(0, ALLOW_ALL_STATES);
         const target = predictions.find((p) => p.state === targetStateRef.current);
         const base = target?.probability ?? 0;
         const z = Math.max(0, zScoreRef.current);
@@ -651,7 +654,7 @@ export interface UsePropensityScoreOptions {
  * - React's tearing detection works correctly: repeated `getSnapshot()` calls
  *   during the same render return the same `number` (refs don't change
  *   mid-render; `Object.is` comparisons on scalars are exact).
- * - The computation is **pure and cheap** — a single `predictNextStates(0)`
+ * - The computation is **pure and cheap** — a single `predictNextStates(0, allowAll)`
  *   lookup (O(transitions from current state)), not a full graph traversal.
  *
  * **Multi-hop / BFS propensity:** For path-based propensity that traverses
@@ -739,7 +742,7 @@ export function usePropensityScore<T = number>(
   // via Object.is, so equal scores never schedule a re-render.
   const getSnapshot = useCallback((): number => {
     if (!ctx) return 0;
-    const predictions = ctx.predictNextStates(0);
+    const predictions = ctx.predictNextStates(0, ALLOW_ALL_STATES);
     const target = predictions.find((p) => p.state === targetStateRef.current);
     const base = target?.probability ?? 0;
     const z = Math.max(0, zScoreRef.current);
@@ -778,7 +781,7 @@ export interface UsePredictiveLinkOptions {
    * @default 0.3
    */
   threshold?: number;
-  /** Filter predicate to exclude sensitive routes from prefetching. */
+  /** Filter predicate to exclude sensitive routes from prefetching. When omitted, the hook fails closed and returns no predictions. */
   sanitize?: (state: string) => boolean;
   /**
    * Automatically inject `<link rel="prefetch">` into `document.head` for
@@ -804,10 +807,7 @@ export interface UsePredictiveLinkReturn {
  *
  * @example
  * ```tsx
- * // Auto-prefetch with defaults (threshold 0.3, prefetch enabled)
- * const { predictions } = usePredictiveLink();
- *
- * // Display predictions + exclude admin routes from prefetching
+ * // Auto-prefetch with an explicit allowlist
  * const { predictions } = usePredictiveLink({
  *   threshold: 0.4,
  *   sanitize: (s) => !s.startsWith('/admin'),
@@ -830,7 +830,10 @@ export function usePredictiveLink(options?: UsePredictiveLinkOptions): UsePredic
     (onStoreChange: () => void) => {
       if (!ctx) return () => {};
       return ctx.on('state_change', () => {
-        snapshotRef.current = ctx.predictNextStates(thresholdRef.current, sanitizeRef.current);
+        snapshotRef.current = ctx.predictNextStates(
+          thresholdRef.current,
+          sanitizeRef.current ?? DENY_ALL_STATES,
+        );
         onStoreChange();
       });
     },

@@ -2,7 +2,9 @@
   "name": "passiveintent-monorepo",
   "private": true,
   "workspaces": [
-    "packages/*",
+    "packages/core",
+    "packages/react",
+    "packages/remix",
     "demo",
     "demo-react"
   ],

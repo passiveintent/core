@@ -9,9 +9,10 @@ import { BenchmarkRecorder } from '../performance-instrumentation.js';
 import type { PerformanceReport } from '../performance-instrumentation.js';
 import { BrowserStorageAdapter, BrowserTimerAdapter } from '../adapters.js';
 import type { AsyncStorageAdapter, StorageAdapter, TimerAdapter } from '../adapters.js';
+import { DEFAULT_STORAGE_KEY } from '../defaults.js';
 import { BloomFilter } from '../core/bloom.js';
 import { MarkovGraph } from '../core/markov.js';
-import { normalizeRouteState } from '../utils/route-normalizer.js';
+import { resolveTrackedState } from '../utils/tracked-state.js';
 import type { SerializedMarkovGraph } from '../core/markov.js';
 import type {
   ConversionPayload,
@@ -286,7 +287,7 @@ export class IntentManager {
     }
     // Use the same default storage key as the config normalizer without
     // incurring a second full normalization pass.
-    const storageKey = config.storageKey ?? 'passive-intent';
+    const storageKey = config.storageKey ?? DEFAULT_STORAGE_KEY;
     // Await the single I/O call up-front so the constructor stays synchronous.
     const raw = await config.asyncStorage.getItem(storageKey);
 
@@ -322,41 +323,11 @@ export class IntentManager {
    * ```
    */
   track(state: string): void {
-    // Normalise first: strip query strings, hash fragments, trailing slashes,
-    // and replace dynamic ID segments (UUIDs, MongoDB ObjectIDs, numeric IDs) with ':id'.
-    state = normalizeRouteState(state);
-
-    // Apply optional custom normalizer (e.g. for SEO slugs).
-    if (this.stateNormalizer) {
-      try {
-        const normalized = this.stateNormalizer(state);
-        const coerced = String(normalized);
-        // Empty string is a deliberate "skip this state" signal from the
-        // normalizer — drop silently without firing a VALIDATION error.
-        if (coerced === '') return;
-        state = coerced;
-      } catch (err) {
-        if (this.onError) {
-          this.onError({
-            code: 'VALIDATION',
-            message: `IntentManager.track(): stateNormalizer threw: ${err instanceof Error ? err.message : String(err)}`,
-          });
-        }
-        return;
-      }
-    }
-
-    // Guard: '' is reserved internally as a tombstone marker.
-    // Silently drop and surface a non-fatal error rather than crashing the host.
-    if (state === '') {
-      if (this.onError) {
-        this.onError({
-          code: 'VALIDATION',
-          message: 'IntentManager.track(): state label must not be an empty string',
-        });
-      }
+    const normalizedState = resolveTrackedState(state, 'IntentManager', this.stateNormalizer, this.onError);
+    if (normalizedState === null) {
       return;
     }
+    state = normalizedState;
 
     const now = this.timer.now();
     const trackStart = this.benchmark.now();
@@ -524,10 +495,9 @@ export class IntentManager {
    *
    * @param threshold  Minimum probability in [0, 1] for a state to be included.
    *                   Defaults to `0.3`.
-   * @param sanitize   Optional predicate that receives each candidate state label
+   * @param sanitize   Required predicate that receives each candidate state label
    *                   and returns `true` to **include** it or `false` to **exclude**
-   *                   it.  When omitted all states above the threshold are returned,
-   *                   which is **unsafe** for production use — always supply this.
+   *                   it.  When omitted the method fails closed and returns `[]`.
    * @returns Filtered and sorted `{ state, probability }[]`, descending by
    *          probability.  Returns an empty array when no previous state is known
    *          or no transitions meet the threshold.
@@ -537,9 +507,28 @@ export class IntentManager {
     sanitize?: (state: string) => boolean,
   ): { state: string; probability: number }[] {
     if (this.previousState === null) return [];
+    if (typeof sanitize !== 'function') {
+      this.onError?.({
+        code: 'VALIDATION',
+        message:
+          'IntentManager.predictNextStates(): sanitize must be provided; returning [] to fail closed',
+      });
+      return [];
+    }
     const candidates = this.graph.getLikelyNextStates(this.previousState, threshold);
-    if (!sanitize) return candidates;
-    return candidates.filter(({ state }) => sanitize(state));
+    return candidates.filter(({ state }) => {
+      try {
+        return sanitize(state);
+      } catch (err) {
+        this.onError?.({
+          code: 'VALIDATION',
+          message: `IntentManager.predictNextStates(): sanitize threw: ${
+            err instanceof Error ? err.message : String(err)
+          }`,
+        });
+        return false;
+      }
+    });
   }
 
   flushNow(): void {

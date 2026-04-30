@@ -854,17 +854,13 @@ const intent = new IntentManager({
 intent.on('state_change', ({ to }) => {
   // Predict the most probable next states with probability >= 40 %
   // Returns { state: string; probability: number }[] sorted descending by probability
-  const likelyNextStates = intent.predictNextStates(0.4);
+  const likelyNextStates = intent.predictNextStates(0.4, (state) => !isSensitiveRoute(state));
 
-  likelyNextStates
-    // ─── COMPLIANCE GUARDRAIL: see warning below ───────────────────────────────
-    .filter(({ state }) => !isSensitiveRoute(state))
-    // ───────────────────────────────────────────────────────────────────────────
-    .forEach(({ state }) => {
-      // router.prefetch() fetches the page bundle without navigating to it.
-      // The page appears to load instantly when the user clicks.
-      router.prefetch(state);
-    });
+  likelyNextStates.forEach(({ state }) => {
+    // router.prefetch() fetches the page bundle without navigating to it.
+    // The page appears to load instantly when the user clicks.
+    router.prefetch(state);
+  });
 });
 
 // Track every route change
@@ -873,7 +869,7 @@ router.events.on('routeChangeComplete', (url) => intent.track(url));
 
 **Why this works:**
 
-`intent.predictNextStates(threshold)` returns `{ state: string; probability: number }[]` — the outgoing states from the current node whose transition probability exceeds `threshold`, sorted descending by probability. After 5–10 navigations, the Markov graph has enough signal to predict the next page with high accuracy on well-worn paths (e.g., `/dashboard` → `/billing` → `/upgrade`). Combining this with a framework router's prefetch API means those bundles are already in the browser's memory before the user clicks.
+`intent.predictNextStates(threshold, sanitize)` returns `{ state: string; probability: number }[]` — the outgoing states from the current node whose transition probability exceeds `threshold`, filtered through your required `sanitize` allowlist and sorted descending by probability. After 5–10 navigations, the Markov graph has enough signal to predict the next page with high accuracy on well-worn paths (e.g., `/dashboard` → `/billing` → `/upgrade`). Combining this with a framework router's prefetch API means those bundles are already in the browser's memory before the user clicks.
 
 The result is not just a performance gain — it is a **retention signal**. A fast, responsive app has measurably lower bounce rates. PassiveIntent turns behavioral data that was already being collected for churn detection into a free performance dividend.
 
@@ -1199,7 +1195,7 @@ import type { IntentManagerConfig, UsePassiveIntentReturn } from '@passiveintent
 | `track`             | `(event: string) => void`                                             | no-op before mount / after unmount        |
 | `on`                | `(event, handler) => () => void`                                      | returns a NOOP unsubscribe on SSR         |
 | `getTelemetry`      | `() => PassiveIntentTelemetry`                                        | empty object cast before mount            |
-| `predictNextStates` | `(threshold?, sanitize?) => { state: string; probability: number }[]` | `[]` before first mount                   |
+| `predictNextStates` | `(threshold?, sanitize) => { state: string; probability: number }[]`  | `[]` before first mount                   |
 | `hasSeen`           | `(route: string) => boolean`                                          | `false` before first mount                |
 | `incrementCounter`  | `(key: string, by?: number) => number`                                | returns new value; `0` before mount / SSR |
 | `getCounter`        | `(key: string) => number`                                             | `0` before first mount                    |
@@ -1332,7 +1328,7 @@ interface IntentEngineConfig {
   persistence: IPersistenceAdapter;
   lifecycle: ILifecycleAdapter;
   input?: IInputAdapter; // optional — or drive manually via track()
-  storageKey?: string; // default: 'passive-intent-engine'
+  storageKey?: string; // default: 'passive-intent'
   stateNormalizer?: (state: string) => string;
   onError?: (error: { code: string; message: string }) => void;
 }
@@ -1341,13 +1337,13 @@ interface IntentEngineConfig {
 #### Standard Web Plugins
 
 `src/plugins/web/` ships four concrete implementations for the microkernel
-`IntentEngine`. These adapters are **browser-specific** — they depend on
+`IntentEngine`, published via `@passiveintent/core/plugins/web`. These adapters are **browser-specific** — they depend on
 `document`, `window.localStorage`, and browser navigation APIs. They are
 suitable only for standard browser environments. Non-browser hosts such as
 React Native or Electron (when using a native shell rather than a web view)
 require custom adapter implementations that satisfy the same four interfaces
 (`IInputAdapter`, `ILifecycleAdapter`, `IStateModel`, `IPersistenceAdapter`)
-using platform-native APIs — the `src/plugins/web/` adapters cannot be
+using platform-native APIs — the `@passiveintent/core/plugins/web` adapters cannot be
 reused on those platforms.
 
 | File                         | Implements            | Mechanism                                                                                                                                                                                              |

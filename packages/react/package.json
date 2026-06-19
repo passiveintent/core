@@ -86,7 +86,7 @@
     "react-dom": "^19.2.4",
     "tsup": "^8.5.1",
     "typescript": "^5.6.3",
-    "vitest": "^4.0.18"
+    "vitest": "^4.1.9"
   },
   "publishConfig": {
     "access": "public",
